@@ -30,6 +30,7 @@ class LiveScene(QObject, Scene):
         self.communicate.end_scene.connect(self.end_scene)
         self.communicate.alert.connect(self.alert)
         self.current_code = None
+        self.codes = []
 
     def construct(self):
         while True:
@@ -45,6 +46,8 @@ class LiveScene(QObject, Scene):
                 logger.info(
                     f"Exception occured in live scene: {e}")
                 self.communicate.alert.emit(e)
+            else:
+                self.codes.append(self.current_code)
             self.current_code = None
 
     def wait(self, *args, frozen_frame=False, **kwargs):

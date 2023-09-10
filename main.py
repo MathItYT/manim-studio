@@ -11,7 +11,7 @@ def main():
     app = QApplication(sys.argv)
     communicate = Communicate()
     scene = LiveScene(communicate)
-    editor_window = EditorWidget(communicate)
+    editor_window = EditorWidget(communicate, scene)
     preview_window = PreviewWidget(communicate, scene)
     preview_window.show()
     editor_window.show()
