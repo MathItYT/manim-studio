@@ -1,1 +1,0 @@
-self.play(FadeOut(banner, scale=10))

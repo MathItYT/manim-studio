@@ -1,1 +1,0 @@
-self.play(banner.expand())
