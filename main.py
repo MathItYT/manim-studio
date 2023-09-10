@@ -13,7 +13,7 @@ def main():
     scene = LiveScene(communicate)
     editor_window = EditorWidget(communicate, scene)
     preview_window = PreviewWidget(communicate, scene)
-    preview_window.show()
+    preview_window.showMaximized()
     editor_window.show()
     sys.exit(app.exec())
 

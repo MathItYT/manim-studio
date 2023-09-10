@@ -60,6 +60,12 @@ class LiveScene(QObject, Scene):
     @pyqtSlot()
     def end_scene(self):
         self.current_code = "raise EndSceneEarlyException()"
+        alert = QMessageBox(
+            text="Your scene has ended. See the terminal for more information.")
+        alert.setWindowTitle("Scene ended")
+        alert.setIcon(QMessageBox.Icon.Information)
+        alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+        alert.exec()
 
     @pyqtSlot(Exception)
     def alert(self, e: Exception):
