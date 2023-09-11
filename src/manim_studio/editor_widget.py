@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QFileDialog, QMenuBar
+from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QFileDialog, QMenuBar, QMessageBox
 from PyQt6.QtGui import QAction
 
 from .communicate import Communicate
@@ -33,6 +33,11 @@ class EditorWidget(QWidget):
         self.save_snip_and_run_button.clicked.connect(
             self.save_snippet_and_run)
         self.communicate.save_snippet.connect(self.save_snippet_command)
+        self.next_slide_button = QPushButton("Next slide")
+        self.next_slide_button.setGeometry(0, 0, 100, 50)
+        self.communicate.next_slide.connect(self.next_slide)
+        self.next_slide_button.clicked.connect(
+            self.communicate.next_slide.emit)
 
         self.menu_bar = QMenuBar()
         self.file_menu = self.menu_bar.addMenu("File")
@@ -48,6 +53,7 @@ class EditorWidget(QWidget):
         self.layout_.addWidget(self.end_and_save_button)
         self.layout_.addWidget(self.save_snip_button)
         self.layout_.addWidget(self.save_snip_and_run_button)
+        self.layout_.addWidget(self.next_slide_button)
         self.setLayout(self.layout_)
 
     def send_code(self):
@@ -84,6 +90,17 @@ class EditorWidget(QWidget):
             with open(file_[0], "r") as f:
                 self.text_edit.setText(
                     f"{self.text_edit.toPlainText()}\n{f.read()}")
+
+    def next_slide(self):
+        if self.scene.freeze is False:
+            alert = QMessageBox(
+                text="The scene is not paused.")
+            alert.setWindowTitle("Scene not paused")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        self.scene.freeze = False
 
     def end_scene(self):
         self.communicate.end_scene.emit()

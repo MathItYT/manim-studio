@@ -8,3 +8,4 @@ class Communicate(QObject):
     end_scene = pyqtSignal()
     alert = pyqtSignal(Exception)
     save_snippet = pyqtSignal(str)
+    next_slide = pyqtSignal()

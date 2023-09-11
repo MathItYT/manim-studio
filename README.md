@@ -8,7 +8,7 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
 - [x] Live preview for Cairo animations.
 - [x] Saving and loading snippets.
 - [x] Saving full scene snipets.
-- [ ] Create slides with Manim Studio.
+- [x] Create slides with Manim Studio.
 - [ ] Basic editing for Manim videos.
 - [ ] Direct livestreaming with OBS.
 - [ ] Snippet gallery.
@@ -68,3 +68,5 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
            
            super().construct()
    ```
+
+   **Slide example at [examples/slide.py](https://github.com/MathItYT/manim-studio/blob/main/examples/slide.py)**

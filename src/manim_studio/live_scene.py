@@ -31,6 +31,7 @@ class LiveScene(QObject, Scene):
         self.communicate.alert.connect(self.alert)
         self.current_code = None
         self.codes = []
+        self.freeze = False
 
     def construct(self):
         while True:
@@ -55,6 +56,14 @@ class LiveScene(QObject, Scene):
 
     @pyqtSlot(str)
     def update_scene(self, code: str):
+        if self.freeze:
+            alert = QMessageBox(
+                text="You cannot update the scene while it is paused.")
+            alert.setWindowTitle("Scene paused")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
         self.current_code = code
 
     @pyqtSlot()
@@ -76,6 +85,11 @@ class LiveScene(QObject, Scene):
         alert.setStandardButtons(QMessageBox.StandardButton.Ok)
         alert.setInformativeText(f"{e.__class__.__name__}: {e}")
         alert.exec()
+
+    def pause_slide(self, delay: float = 1.0):
+        self.freeze = True
+        while self.freeze:
+            self.wait(delay)
 
     def no_instruction(self):
         return self.current_code is None
