@@ -1,4 +1,7 @@
 # Manim Studio
+
+![Manim Studio](/logo.png)
+
 Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, and also it's useful for many other things!
 
 ## Features
