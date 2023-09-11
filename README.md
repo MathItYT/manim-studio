@@ -1,6 +1,6 @@
 # Manim Studio
 
-![Manim Studio](/logo.png)
+![Manim Studio](https://raw.githubusercontent.com/MathItYT/manim-studio/main/logo.png)
 
 Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, and also it's useful for many other things!
 
@@ -13,17 +13,27 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
 - [ ] Direct livestreaming with OBS.
 - [ ] Snippet gallery.
 
-## Requirements
+## Requirements to install
+### Install with `git`
 - Installed Python 3.
 - Installed Manim.
 - Installed PyQt6.
 - Installed Git.
 
+### Install with `pip`
+`pip` installs all the requirements automatically, but you must have installed Python 3.
+
 ## Steps to use
-1. Once you have installed all the requirements, you must clone this repository.
+1. If you're installing with `git`, clone the repository with
    
-   ```git clone https://github.com/MathItYT/manim-studio)https://github.com/MathItYT/manim-studio```
-3. To use Manim Studio, simply go to manim-studio folder and run `main.py`.
+   ```
+   git clone https://github.com/MathItYT/manim-studio.git
+   cd manim-studio
+   pip install -e .
+   ```
    
-   ```python main.py```
-5. Use the program! We still don't have a documentation, but there will be one in the future!
+   If you're installing with `pip`, install the package with
+   
+   ```pip install manim-studio```
+
+2. Use the program! We still don't have a documentation, but there will be one in the future!

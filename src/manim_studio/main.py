@@ -7,10 +7,10 @@ from live_scene import LiveScene
 from communicate import Communicate
 
 
-def main():
+def main(scene_type: type[LiveScene]):
     app = QApplication(sys.argv)
     communicate = Communicate()
-    scene = LiveScene(communicate)
+    scene = scene_type(communicate)
     editor_window = EditorWidget(communicate, scene)
     preview_window = PreviewWidget(communicate, scene)
     preview_window.showMaximized()
@@ -19,4 +19,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(LiveScene)
