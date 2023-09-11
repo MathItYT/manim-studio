@@ -37,3 +37,34 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
    ```pip install manim-studio```
 
 2. Use the program! We still don't have a documentation, but there will be one in the future!
+
+
+## Examples
+
+1. **Basic example**
+   
+   ```python
+   from manim_studio import *
+
+
+   if __name__ == "__main__":
+       run_manim_studio(LiveScene)
+   ```
+
+2. **Example with initial part**
+   
+   ```python
+   from manim_studio import *
+
+
+   class InitialPartExample(LiveScene):
+       def construct(self):
+           txt = Tex("Hello world!")
+           self.play(Write(txt))
+           self.wait()
+           play_with_this = Tex("Play with the GUI!")
+           self.play(FadeIn(play_with_this))
+           self.wait()
+           
+           super().construct()
+   ```
