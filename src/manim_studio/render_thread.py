@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QThread
-from live_scene import LiveScene
+from .live_scene import LiveScene
 
 
 class RenderThread(QThread):

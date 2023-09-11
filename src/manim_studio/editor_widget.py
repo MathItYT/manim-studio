@@ -1,8 +1,8 @@
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QFileDialog, QMenuBar
 from PyQt6.QtGui import QAction
 
-from communicate import Communicate
-from live_scene import LiveScene
+from .communicate import Communicate
+from .live_scene import LiveScene
 
 
 class EditorWidget(QWidget):

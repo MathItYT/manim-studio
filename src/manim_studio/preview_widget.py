@@ -3,9 +3,9 @@ from PyQt6.QtCore import pyqtSlot, Qt
 from PyQt6.QtGui import QPixmap, QImage
 import numpy as np
 
-from communicate import Communicate
-from live_scene import LiveScene
-from render_thread import RenderThread
+from .communicate import Communicate
+from .live_scene import LiveScene
+from .render_thread import RenderThread
 
 
 class PreviewWidget(QWidget):

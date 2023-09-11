@@ -3,7 +3,7 @@ from PyQt6.QtCore import QObject, pyqtSlot
 from PyQt6.QtWidgets import QMessageBox
 from time import sleep
 
-from communicate import Communicate
+from .communicate import Communicate
 
 
 class CairoLiveRenderer(QObject, CairoRenderer):

@@ -1,10 +1,10 @@
 from PyQt6.QtWidgets import QApplication
 import sys
 
-from editor_widget import EditorWidget
-from preview_widget import PreviewWidget
-from live_scene import LiveScene
-from communicate import Communicate
+from .editor_widget import EditorWidget
+from .preview_widget import PreviewWidget
+from .live_scene import LiveScene
+from .communicate import Communicate
 
 
 def main(scene_type: type[LiveScene]):
