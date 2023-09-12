@@ -1,7 +1,6 @@
 from manim import *
 from PyQt6.QtCore import QObject, pyqtSlot
 from PyQt6.QtWidgets import QMessageBox
-from time import sleep
 
 from .communicate import Communicate
 
@@ -36,10 +35,10 @@ class LiveScene(QObject, Scene):
     def construct(self):
         while True:
             while self.no_instruction():
-                sleep(1.0)
+                self.wait()
             try:
                 scope = globals()
-                scope["self"] = self
+                scope.update(locals())
                 exec(self.current_code, scope)
             except EndSceneEarlyException:
                 raise EndSceneEarlyException()
@@ -86,10 +85,10 @@ class LiveScene(QObject, Scene):
         alert.setInformativeText(f"{e.__class__.__name__}: {e}")
         alert.exec()
 
-    def pause_slide(self, delay: float = 1.0):
+    def pause_slide(self):
         self.freeze = True
         while self.freeze:
-            self.wait(delay)
+            self.wait()
 
     def no_instruction(self):
         return self.current_code is None

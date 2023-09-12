@@ -12,13 +12,13 @@ class Slide(LiveScene):
             Text("Slide 5"),
         ]
         vg = VGroup(*slides)
-        now_slide = vg[0]
-        self.play(Write(now_slide))
+        self.now_slide = vg[0]
+        self.play(Write(self.now_slide))
         self.wait()
 
         for i in range(1, len(slides)):
             self.pause_slide()
-            self.play(Transform(now_slide, vg[i]))
+            self.play(Transform(self.now_slide, vg[i]))
 
         super().construct()
 
