@@ -69,4 +69,4 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
            super().construct()
    ```
 
-   **Slide example at [examples/slide.py](https://github.com/MathItYT/manim-studio/blob/main/examples/slide.py)**
+   **See examples at [examples folder](https://github.com/MathItYT/manim-studio/blob/main/examples/)**

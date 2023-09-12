@@ -1,8 +1,9 @@
 from manim import *
-from PyQt6.QtCore import QObject, pyqtSlot
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtCore import QObject, pyqtSlot, Qt
+from PyQt6.QtWidgets import QMessageBox, QSlider, QWidget
 
 from .communicate import Communicate
+from .int_value_tracker import IntValueTracker
 
 
 class CairoLiveRenderer(QObject, CairoRenderer):
@@ -30,6 +31,7 @@ class LiveScene(QObject, Scene):
         self.communicate.alert.connect(self.alert)
         self.current_code = None
         self.codes = []
+        self.sliders = dict()
         self.freeze = False
 
     def construct(self):
@@ -49,6 +51,20 @@ class LiveScene(QObject, Scene):
             else:
                 self.codes.append(self.current_code)
             self.current_code = None
+
+    def add_slider_command(self, name: str, default_value: str, min_value: str, max_value: str, step_value: str):
+        slider = QSlider()
+        slider.setOrientation(Qt.Orientation.Horizontal)
+        slider.setMinimum(int(min_value))
+        slider.setMaximum(int(max_value))
+        slider.setValue(int(default_value))
+        slider.setSingleStep(int(step_value))
+        slider.valueTracker = IntValueTracker(slider.value())
+        slider.valueChanged.connect(slider.valueTracker.set_value)
+        self.sliders[name] = slider
+        setattr(self, name, slider.valueTracker)
+        self.add(slider.valueTracker)
+        self.communicate.add_slider_to_editor.emit(name)
 
     def wait(self, *args, frozen_frame=False, **kwargs):
         super().wait(*args, frozen_frame=frozen_frame, **kwargs)
