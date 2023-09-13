@@ -141,7 +141,7 @@ class EditorWidget(QWidget):
         ok_button = QPushButton("OK", dialog)
         ok_button.clicked.connect(dialog.close)
         ok_button.clicked.connect(lambda: self.scene.add_color_widget_command(
-            text_edit.text(), np.array([default_r_edit.text(), default_g_edit.text(), default_b_edit.text(), default_a_edit.text()])))
+            text_edit.text(), np.array([int(default_r_edit.text()), int(default_g_edit.text()), int(default_b_edit.text()), int(default_a_edit.text())])))
         layout = QVBoxLayout()
         layout.addWidget(text_edit)
         layout.addWidget(default_r_edit)
