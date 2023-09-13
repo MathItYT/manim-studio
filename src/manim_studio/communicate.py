@@ -10,3 +10,4 @@ class Communicate(QObject):
     save_snippet = pyqtSignal(str)
     next_slide = pyqtSignal()
     add_slider_to_editor = pyqtSignal(str, str, str, str, str)
+    add_color_widget_to_editor = pyqtSignal(str, np.ndarray)

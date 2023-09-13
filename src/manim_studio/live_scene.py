@@ -30,6 +30,7 @@ class LiveScene(QObject, Scene):
         self.current_code = None
         self.codes = []
         self.sliders = dict()
+        self.color_widgets = dict()
         self.freeze = False
 
     def construct(self):
@@ -49,6 +50,10 @@ class LiveScene(QObject, Scene):
             else:
                 self.codes.append(self.current_code)
             self.current_code = None
+
+    def add_color_widget_command(self, name: str, default_value: np.ndarray):
+        self.communicate.add_color_widget_to_editor.emit(
+            name, default_value)
 
     def add_slider_command(self, name: str, default_value: str, min_value: str, max_value: str, step_value: str):
         self.communicate.add_slider_to_editor.emit(

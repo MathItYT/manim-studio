@@ -1,11 +1,13 @@
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QFileDialog, \
     QMenuBar, QMessageBox, QDialog, QLineEdit, QLabel
-from PyQt6.QtGui import QAction, QIntValidator
+from PyQt6.QtGui import QAction, QIntValidator, QColor
 from PyQt6.QtCore import pyqtSlot, Qt
+import numpy as np
 
 from .communicate import Communicate
 from .live_scene import LiveScene
 from .slider import Slider
+from .color_widget import ColorWidget
 
 
 class EditorWidget(QWidget):
@@ -68,6 +70,8 @@ class EditorWidget(QWidget):
         self.layout_.addWidget(self.next_slide_button)
         self.communicate.add_slider_to_editor.connect(
             self.add_slider_to_editor)
+        self.communicate.add_color_widget_to_editor.connect(
+            self.add_color_widget_to_editor)
         self.setLayout(self.layout_)
 
     def send_code(self):
@@ -108,6 +112,53 @@ class EditorWidget(QWidget):
         layout.addWidget(ok_button)
         dialog.setLayout(layout)
         dialog.exec()
+
+    def add_color_widget(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add color widget")
+        text_edit = QLineEdit(dialog)
+        text_edit.setPlaceholderText("Color widget name")
+        default_r_edit = QLineEdit(dialog)
+        default_r_edit.setValidator(QIntValidator(
+            0, 255))
+        default_r_edit.setPlaceholderText("Default red value")
+        default_g_edit = QLineEdit(dialog)
+        default_g_edit.setValidator(QIntValidator(
+            0, 255))
+        default_g_edit.setPlaceholderText("Default green value")
+        default_b_edit = QLineEdit(dialog)
+        default_b_edit.setValidator(QIntValidator(
+            0, 255))
+        default_b_edit.setPlaceholderText("Default blue value")
+        default_a_edit = QLineEdit(dialog)
+        default_a_edit.setValidator(QIntValidator(
+            0, 255))
+        default_a_edit.setPlaceholderText("Default alpha value")
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.close)
+        ok_button.clicked.connect(lambda: self.scene.add_color_widget_command(
+            text_edit.text(), np.array([default_r_edit.text(), default_g_edit.text(), default_b_edit.text(), default_a_edit.text()])))
+        layout = QVBoxLayout()
+        layout.addWidget(text_edit)
+        layout.addWidget(default_r_edit)
+        layout.addWidget(default_g_edit)
+        layout.addWidget(default_b_edit)
+        layout.addWidget(default_a_edit)
+        layout.addWidget(ok_button)
+        dialog.setLayout(layout)
+        dialog.exec()
+
+    @pyqtSlot(str, np.ndarray)
+    def add_color_widget_to_editor(self, name: str, default_value: np.ndarray):
+        default_value = np.array(default_value)
+        label = QLabel(text=name)
+        color_widget = ColorWidget()
+        color_widget.setCurrentColor(QColor(
+            default_value[0], default_value[1], default_value[2], default_value[3]))
+        self.scene.color_widgets[name] = color_widget
+        setattr(self.scene, name, color_widget.color_tracker)
+        self.layout_.addWidget(label)
+        self.layout_.addWidget(color_widget)
 
     @pyqtSlot(str, str, str, str, str)
     def add_slider_to_editor(self, name: str, default_value: str, min_value: str, max_value: str, step_value: str):

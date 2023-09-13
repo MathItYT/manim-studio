@@ -1,5 +1,6 @@
 from manim_studio import *
 from manim import *
+from time import sleep
 
 
 class SliderExample(LiveScene):
@@ -10,6 +11,7 @@ class SliderExample(LiveScene):
             "b", "1", "-10", "10", "1")
         self.add_slider_command(
             "c", "1", "-10", "10", "1")
+        sleep(1)  # wait for the slider widget to be created
         plane = NumberPlane()
         self.play(Write(plane))
         self.wait()
