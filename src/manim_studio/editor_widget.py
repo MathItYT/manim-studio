@@ -58,6 +58,10 @@ class EditorWidget(QWidget):
         self.add_slider_action.triggered.connect(
             self.add_slider)
         self.edit_menu.addAction(self.add_slider_action)
+        self.add_color_widget_action = QAction("Add color widget", self)
+        self.add_color_widget_action.triggered.connect(
+            self.add_color_widget)
+        self.edit_menu.addAction(self.add_color_widget_action)
 
         self.layout_ = QVBoxLayout()
         self.layout_.addWidget(self.menu_bar)
