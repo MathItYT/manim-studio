@@ -1,10 +1,11 @@
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QFileDialog, \
     QMenuBar, QMessageBox, QDialog, QLineEdit, QLabel
 from PyQt6.QtGui import QAction, QIntValidator
-from PyQt6.QtCore import pyqtSlot
+from PyQt6.QtCore import pyqtSlot, Qt
 
 from .communicate import Communicate
 from .live_scene import LiveScene
+from .slider import Slider
 
 
 class EditorWidget(QWidget):
@@ -12,7 +13,6 @@ class EditorWidget(QWidget):
         super().__init__(*args, **kwargs)
         self.communicate = communicate
         self.setWindowTitle("Manim Studio - Editor")
-        self.setGeometry(0, 0, 1920, 500)
         self.scene = scene
 
         self.text_edit = QTextEdit()
@@ -109,12 +109,19 @@ class EditorWidget(QWidget):
         dialog.setLayout(layout)
         dialog.exec()
 
-    @pyqtSlot(str)
-    def add_slider_to_editor(self, name: str):
+    @pyqtSlot(str, str, str, str, str)
+    def add_slider_to_editor(self, name: str, default_value: str, min_value: str, max_value: str, step_value: str):
         label = QLabel(text=name)
+        slider = Slider()
+        slider.setOrientation(Qt.Orientation.Horizontal)
+        slider.setMinimum(int(min_value))
+        slider.setMaximum(int(max_value))
+        slider.setValue(int(default_value))
+        slider.setSingleStep(int(step_value))
+        self.scene.sliders[name] = slider
+        setattr(self.scene, name, slider.value_tracker)
         self.layout_.addWidget(label)
-        self.layout_.addWidget(self.scene.sliders[name])
-        self.setGeometry(0, 0, 1920, self.height() + 50)
+        self.layout_.addWidget(slider)
 
     def save_snippet(self):
         self.communicate.save_snippet.emit(self.text_edit.toPlainText())

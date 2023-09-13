@@ -9,4 +9,4 @@ class Communicate(QObject):
     alert = pyqtSignal(Exception)
     save_snippet = pyqtSignal(str)
     next_slide = pyqtSignal()
-    add_slider_to_editor = pyqtSignal(str)
+    add_slider_to_editor = pyqtSignal(str, str, str, str, str)

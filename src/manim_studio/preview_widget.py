@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QWidget, QLabel, QVBoxLayout
-from PyQt6.QtCore import pyqtSlot, Qt
+from PyQt6.QtCore import pyqtSlot
 from PyQt6.QtGui import QPixmap, QImage
 import numpy as np
 
