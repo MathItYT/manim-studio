@@ -120,7 +120,7 @@ class EditorWidget(QWidget):
         default_value_edit.setPlaceholderText("Default value")
         ok_button = QPushButton("OK", dialog)
         ok_button.clicked.connect(dialog.close)
-        ok_button.clicked.connect(lambda: self.scene.add_line_editor_widget_command(
+        ok_button.clicked.connect(lambda: self.scene.add_line_edit_command(
             text_edit.text(), default_value_edit.text()))
         layout = QVBoxLayout()
         layout.addWidget(text_edit)
