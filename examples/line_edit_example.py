@@ -15,3 +15,7 @@ class LineEditExample(LiveScene):
         self.add(text)
 
         super().construct()
+
+
+if __name__ == "__main__":
+    run_manim_studio(LineEditExample)

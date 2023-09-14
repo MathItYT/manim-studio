@@ -13,3 +13,4 @@ class Communicate(QObject):
     add_color_widget_to_editor = pyqtSignal(str, np.ndarray)
     add_dropdown_to_editor = pyqtSignal(str, list)
     add_line_edit_to_editor = pyqtSignal(str, str)
+    add_text_editor_to_editor = pyqtSignal(str, str)

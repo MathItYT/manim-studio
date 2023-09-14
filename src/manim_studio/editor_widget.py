@@ -10,6 +10,7 @@ from .slider import Slider
 from .color_widget import ColorWidget
 from .dropdown_widget import DropdownWidget
 from .line_editor_widget import LineEditorWidget
+from .text_editor_widget import TextEditorWidget
 
 
 class EditorWidget(QWidget):
@@ -73,6 +74,11 @@ class EditorWidget(QWidget):
         self.add_line_editor_widget_action.triggered.connect(
             self.add_line_editor_widget)
         self.edit_menu.addAction(self.add_line_editor_widget_action)
+        self.add_text_editor_widget_action = QAction(
+            "Add text editor widget", self)
+        self.add_text_editor_widget_action.triggered.connect(
+            self.add_text_editor_widget)
+        self.edit_menu.addAction(self.add_text_editor_widget_action)
 
         self.layout_ = QVBoxLayout()
         self.layout_.addWidget(self.menu_bar)
@@ -91,7 +97,37 @@ class EditorWidget(QWidget):
             self.add_dropdown_to_editor)
         self.communicate.add_line_edit_to_editor.connect(
             self.add_line_editor_widget_to_editor)
+        self.communicate.add_text_editor_to_editor.connect(
+            self.add_text_editor_to_editor)
         self.setLayout(self.layout_)
+
+    def add_text_editor_widget(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add text editor widget")
+        text_edit = QLineEdit(dialog)
+        text_edit.setPlaceholderText("Text editor widget name")
+        default_value_edit = QLineEdit(dialog)
+        default_value_edit.setPlaceholderText("Default value")
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.close)
+        ok_button.clicked.connect(lambda: self.scene.add_text_editor_command(
+            text_edit.text(), default_value_edit.text()))
+        layout = QVBoxLayout()
+        layout.addWidget(text_edit)
+        layout.addWidget(default_value_edit)
+        layout.addWidget(ok_button)
+        dialog.setLayout(layout)
+        dialog.exec()
+
+    @pyqtSlot(str, str)
+    def add_text_editor_to_editor(self, name: str, default_value: str):
+        label = QLabel(text=name)
+        text_editor_widget = TextEditorWidget(name)
+        text_editor_widget.setText(default_value)
+        self.scene.text_editors[name] = text_editor_widget
+        setattr(self.scene, name, text_editor_widget.value_tracker)
+        self.layout_.addWidget(label)
+        self.layout_.addWidget(text_editor_widget)
 
     def add_dropdown(self):
         dialog = QDialog(self)
