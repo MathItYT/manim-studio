@@ -8,6 +8,8 @@ from .communicate import Communicate
 from .live_scene import LiveScene
 from .slider import Slider
 from .color_widget import ColorWidget
+from .dropdown_widget import DropdownWidget
+from .line_editor_widget import LineEditorWidget
 
 
 class EditorWidget(QWidget):
@@ -62,6 +64,15 @@ class EditorWidget(QWidget):
         self.add_color_widget_action.triggered.connect(
             self.add_color_widget)
         self.edit_menu.addAction(self.add_color_widget_action)
+        self.add_dropdown_action = QAction("Add dropdown", self)
+        self.add_dropdown_action.triggered.connect(
+            self.add_dropdown)
+        self.edit_menu.addAction(self.add_dropdown_action)
+        self.add_line_editor_widget_action = QAction(
+            "Add line editor widget", self)
+        self.add_line_editor_widget_action.triggered.connect(
+            self.add_line_editor_widget)
+        self.edit_menu.addAction(self.add_line_editor_widget_action)
 
         self.layout_ = QVBoxLayout()
         self.layout_.addWidget(self.menu_bar)
@@ -76,7 +87,57 @@ class EditorWidget(QWidget):
             self.add_slider_to_editor)
         self.communicate.add_color_widget_to_editor.connect(
             self.add_color_widget_to_editor)
+        self.communicate.add_dropdown_to_editor.connect(
+            self.add_dropdown_to_editor)
+        self.communicate.add_line_edit_to_editor.connect(
+            self.add_line_editor_widget_to_editor)
         self.setLayout(self.layout_)
+
+    def add_dropdown(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add dropdown")
+        text_edit = QLineEdit(dialog)
+        text_edit.setPlaceholderText("Dropdown name")
+        options_edit = QLineEdit(dialog)
+        options_edit.setPlaceholderText("Dropdown options")
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.close)
+        ok_button.clicked.connect(lambda: self.scene.add_dropdown_command(
+            text_edit.text(), options_edit.text().split(",")))
+        layout = QVBoxLayout()
+        layout.addWidget(text_edit)
+        layout.addWidget(options_edit)
+        layout.addWidget(ok_button)
+        dialog.setLayout(layout)
+        dialog.exec()
+
+    def add_line_editor_widget(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add line editor widget")
+        text_edit = QLineEdit(dialog)
+        text_edit.setPlaceholderText("Line editor widget name")
+        default_value_edit = QLineEdit(dialog)
+        default_value_edit.setPlaceholderText("Default value")
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.close)
+        ok_button.clicked.connect(lambda: self.scene.add_line_editor_widget_command(
+            text_edit.text(), default_value_edit.text()))
+        layout = QVBoxLayout()
+        layout.addWidget(text_edit)
+        layout.addWidget(default_value_edit)
+        layout.addWidget(ok_button)
+        dialog.setLayout(layout)
+        dialog.exec()
+
+    @pyqtSlot(str, str)
+    def add_line_editor_widget_to_editor(self, name: str, default_value: str):
+        label = QLabel(text=name)
+        line_editor_widget = LineEditorWidget(name)
+        line_editor_widget.setText(default_value)
+        self.scene.line_edits[name] = line_editor_widget
+        setattr(self.scene, name, line_editor_widget.value_tracker)
+        self.layout_.addWidget(label)
+        self.layout_.addWidget(line_editor_widget)
 
     def send_code(self):
         self.communicate.update_scene.emit(self.text_edit.toPlainText())
@@ -177,6 +238,16 @@ class EditorWidget(QWidget):
         setattr(self.scene, name, slider.value_tracker)
         self.layout_.addWidget(label)
         self.layout_.addWidget(slider)
+
+    @pyqtSlot(str, list)
+    def add_dropdown_to_editor(self, name: str, options: list[str]):
+        label = QLabel(text=name)
+        dropdown = DropdownWidget()
+        dropdown.addItems(options)
+        self.scene.dropdowns[name] = dropdown
+        setattr(self.scene, name, dropdown.value_tracker)
+        self.layout_.addWidget(label)
+        self.layout_.addWidget(dropdown)
 
     def save_snippet(self):
         self.communicate.save_snippet.emit(self.text_edit.toPlainText())
