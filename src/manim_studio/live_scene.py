@@ -29,11 +29,6 @@ class LiveScene(QObject, Scene):
         self.communicate.alert.connect(self.alert)
         self.current_code = None
         self.codes = []
-        self.sliders = dict()
-        self.color_widgets = dict()
-        self.dropdowns = dict()
-        self.line_edits = dict()
-        self.text_editors = dict()
         self.freeze = False
 
     def construct(self):
@@ -53,6 +48,10 @@ class LiveScene(QObject, Scene):
             else:
                 self.codes.append(self.current_code)
             self.current_code = None
+
+    def add_checkbox_command(self, name: str, default_value: bool):
+        self.communicate.add_checkbox_to_editor.emit(
+            name, default_value)
 
     def add_text_editor_command(self, name: str, default_value: str):
         self.communicate.add_text_editor_to_editor.emit(

@@ -11,3 +11,4 @@ class ColorWidget(QColorDialog):
         self.color_tracker = ColorValueTracker(np.array([0, 0, 0, 255]))
         self.currentColorChanged.connect(lambda qcolor: self.color_tracker.set_value(
             np.array([qcolor.red() / 255, qcolor.green() / 255, qcolor.blue() / 255, qcolor.alpha() / 255])))
+        self.setOption(QColorDialog.ColorDialogOption.NoButtons, True)

@@ -1,8 +1,10 @@
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QFileDialog, \
-    QMenuBar, QMessageBox, QDialog, QLineEdit, QLabel
+    QMenuBar, QMessageBox, QDialog, QLineEdit, QLabel, QCheckBox
 from PyQt6.QtGui import QAction, QIntValidator, QColor
 from PyQt6.QtCore import pyqtSlot, Qt
 import numpy as np
+from pathlib import Path
+import pickle
 
 from .communicate import Communicate
 from .live_scene import LiveScene
@@ -11,6 +13,8 @@ from .color_widget import ColorWidget
 from .dropdown_widget import DropdownWidget
 from .line_editor_widget import LineEditorWidget
 from .text_editor_widget import TextEditorWidget
+from .checkbox_widget import CheckboxWidget
+from .control_dialog import ControlDialog
 
 
 class EditorWidget(QWidget):
@@ -19,10 +23,11 @@ class EditorWidget(QWidget):
         self.communicate = communicate
         self.setWindowTitle("Manim Studio - Editor")
         self.scene = scene
+        self.controls = dict()
 
-        self.text_edit = QTextEdit()
-        self.text_edit.setPlaceholderText("Enter your code here")
-        self.text_edit.setGeometry(0, 0, 1920, 250)
+        self.code_cell_edit = QTextEdit()
+        self.code_cell_edit.setPlaceholderText("Enter your code here")
+        self.code_cell_edit.setGeometry(0, 0, 1920, 250)
 
         self.send_button = QPushButton("Send code")
         self.send_button.setGeometry(0, 0, 100, 50)
@@ -79,16 +84,25 @@ class EditorWidget(QWidget):
         self.add_text_editor_widget_action.triggered.connect(
             self.add_text_editor_widget)
         self.edit_menu.addAction(self.add_text_editor_widget_action)
+        self.add_checkbox_widget_action = QAction(
+            "Add checkbox widget", self)
+        self.add_checkbox_widget_action.triggered.connect(
+            self.add_checkbox_widget)
+        self.edit_menu.addAction(self.add_checkbox_widget_action)
 
         self.layout_ = QVBoxLayout()
         self.layout_.addWidget(self.menu_bar)
-        self.layout_.addWidget(self.text_edit)
+        self.layout_.addWidget(self.code_cell_edit)
         self.layout_.addWidget(self.send_button)
         self.layout_.addWidget(self.end_button)
         self.layout_.addWidget(self.end_and_save_button)
         self.layout_.addWidget(self.save_snip_button)
         self.layout_.addWidget(self.save_snip_and_run_button)
         self.layout_.addWidget(self.next_slide_button)
+        self.controls_widget = QWidget()
+        self.controls_layout = QVBoxLayout()
+        self.controls_widget.setLayout(self.controls_layout)
+        self.layout_.addWidget(self.controls_widget)
         self.communicate.add_slider_to_editor.connect(
             self.add_slider_to_editor)
         self.communicate.add_color_widget_to_editor.connect(
@@ -99,6 +113,8 @@ class EditorWidget(QWidget):
             self.add_line_editor_widget_to_editor)
         self.communicate.add_text_editor_to_editor.connect(
             self.add_text_editor_to_editor)
+        self.communicate.add_checkbox_to_editor.connect(
+            self.add_checkbox_to_editor)
         self.setLayout(self.layout_)
 
     def add_text_editor_widget(self):
@@ -106,8 +122,8 @@ class EditorWidget(QWidget):
         dialog.setWindowTitle("Add text editor widget")
         text_edit = QLineEdit(dialog)
         text_edit.setPlaceholderText("Text editor widget name")
-        default_value_edit = QLineEdit(dialog)
-        default_value_edit.setPlaceholderText("Default value")
+        default_value_edit = QCheckBox(dialog)
+        default_value_edit.setText("Is default value True?")
         ok_button = QPushButton("OK", dialog)
         ok_button.clicked.connect(dialog.close)
         ok_button.clicked.connect(lambda: self.scene.add_text_editor_command(
@@ -119,15 +135,43 @@ class EditorWidget(QWidget):
         dialog.setLayout(layout)
         dialog.exec()
 
+    @pyqtSlot(str, bool)
+    def add_checkbox_to_editor(self, name: str, default_value: bool):
+        label = QLabel(text=name)
+        checkbox = CheckboxWidget(name)
+        checkbox.setChecked(default_value)
+        self.controls[name] = checkbox
+        setattr(self.scene, name, checkbox.value_tracker)
+        self.controls_layout.addWidget(label)
+        self.controls_layout.addWidget(checkbox)
+
     @pyqtSlot(str, str)
     def add_text_editor_to_editor(self, name: str, default_value: str):
         label = QLabel(text=name)
         text_editor_widget = TextEditorWidget(name)
         text_editor_widget.setText(default_value)
-        self.scene.text_editors[name] = text_editor_widget
+        self.controls[name] = text_editor_widget
         setattr(self.scene, name, text_editor_widget.value_tracker)
-        self.layout_.addWidget(label)
-        self.layout_.addWidget(text_editor_widget)
+        self.controls_layout.addWidget(label)
+        self.controls_layout.addWidget(text_editor_widget)
+
+    def add_checkbox_widget(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add checkbox widget")
+        text_edit = QLineEdit(dialog)
+        text_edit.setPlaceholderText("Checkbox widget name")
+        default_value_edit = QCheckBox(dialog)
+        default_value_edit.setText("Is default value True?")
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.close)
+        ok_button.clicked.connect(lambda: self.scene.add_checkbox_command(
+            text_edit.text(), default_value_edit.isChecked()))
+        layout = QVBoxLayout()
+        layout.addWidget(text_edit)
+        layout.addWidget(default_value_edit)
+        layout.addWidget(ok_button)
+        dialog.setLayout(layout)
+        dialog.exec()
 
     def add_dropdown(self):
         dialog = QDialog(self)
@@ -170,14 +214,14 @@ class EditorWidget(QWidget):
         label = QLabel(text=name)
         line_editor_widget = LineEditorWidget(name)
         line_editor_widget.setText(default_value)
-        self.scene.line_edits[name] = line_editor_widget
+        self.controls[name] = line_editor_widget
         setattr(self.scene, name, line_editor_widget.value_tracker)
-        self.layout_.addWidget(label)
-        self.layout_.addWidget(line_editor_widget)
+        self.controls_layout.addWidget(label)
+        self.controls_layout.addWidget(line_editor_widget)
 
     def send_code(self):
-        self.communicate.update_scene.emit(self.text_edit.toPlainText())
-        self.text_edit.clear()
+        self.communicate.update_scene.emit(self.code_cell_edit.toPlainText())
+        self.code_cell_edit.clear()
 
     def add_slider(self):
         dialog = QDialog(self)
@@ -256,10 +300,10 @@ class EditorWidget(QWidget):
         color_widget = ColorWidget()
         color_widget.setCurrentColor(QColor(
             default_value[0], default_value[1], default_value[2], default_value[3]))
-        self.scene.color_widgets[name] = color_widget
+        self.controls[name] = color_widget
         setattr(self.scene, name, color_widget.color_tracker)
-        self.layout_.addWidget(label)
-        self.layout_.addWidget(color_widget)
+        self.controls_layout.addWidget(label)
+        self.controls_layout.addWidget(color_widget)
 
     @pyqtSlot(str, str, str, str, str)
     def add_slider_to_editor(self, name: str, default_value: str, min_value: str, max_value: str, step_value: str):
@@ -270,38 +314,65 @@ class EditorWidget(QWidget):
         slider.setMaximum(int(max_value))
         slider.setValue(int(default_value))
         slider.setSingleStep(int(step_value))
-        self.scene.sliders[name] = slider
+        self.controls[name] = slider
         setattr(self.scene, name, slider.value_tracker)
-        self.layout_.addWidget(label)
-        self.layout_.addWidget(slider)
+        self.controls_layout.addWidget(label)
+        self.controls_layout.addWidget(slider)
 
     @pyqtSlot(str, list)
     def add_dropdown_to_editor(self, name: str, options: list[str]):
         label = QLabel(text=name)
         dropdown = DropdownWidget()
         dropdown.addItems(options)
-        self.scene.dropdowns[name] = dropdown
+        self.controls[name] = dropdown
         setattr(self.scene, name, dropdown.value_tracker)
-        self.layout_.addWidget(label)
-        self.layout_.addWidget(dropdown)
+        self.controls_layout.addWidget(label)
+        self.controls_layout.addWidget(dropdown)
 
     def save_snippet(self):
-        self.communicate.save_snippet.emit(self.text_edit.toPlainText())
+        self.communicate.save_snippet.emit(self.code_cell_edit.toPlainText())
 
     def save_snippet_command(self, code: str):
+        controls_dialog = ControlDialog(self.controls)
+        controls_dialog.exec()
+        add_controls = controls_dialog.add_controls
+        if add_controls is True:
+            controls_toggle = controls_dialog.controls_toggle
+            controls_toggle = {k: v for k,
+                               v in controls_toggle.items() if v is True}
         file_ = QFileDialog.getSaveFileName(
             self, "Save snippet", ".", "Manim Studio Snippet (*.mss)")
         if file_[0]:
             with open(file_[0], "w") as f:
                 f.write(code)
+            if add_controls is True:
+                controls = {k: v for k, v in self.controls.items()
+                            if k in controls_toggle.keys()}
+
+                def get_tup(v):
+                    if isinstance(v, Slider):
+                        return ("Slider", v.value(), v.minimum(), v.maximum(), v.singleStep())
+                    elif isinstance(v, ColorWidget):
+                        return ("ColorWidget", v.currentColor().getRgb())
+                    elif isinstance(v, DropdownWidget):
+                        return ("DropdownWidget", [v.itemText(i) for i in range(v.count())])
+                    elif isinstance(v, LineEditorWidget):
+                        return ("LineEditorWidget", v.text())
+                    elif isinstance(v, TextEditorWidget):
+                        return ("TextEditorWidget", v.toPlainText())
+                    elif isinstance(v, CheckboxWidget):
+                        return ("CheckboxWidget", v.isChecked())
+
+                controls = {k: get_tup(v) for k, v in controls.items()}
+                with open(f"{file_[0]}.controls", "wb") as f:
+                    pickle.dump(controls, f)
+            else:
+                if Path(f"{file_[0]}.controls").exists():
+                    Path(f"{file_[0]}.controls").unlink()
 
     def end_scene_saving(self):
         codes = "\n".join(self.scene.codes)
-        file_ = QFileDialog.getSaveFileName(
-            self, "Save snippet", ".", "Manim Studio Snippet (*.mss)")
-        if file_[0]:
-            with open(file_[0], "w") as f:
-                f.write(codes)
+        self.communicate.save_snippet.emit(codes)
         self.end_scene()
 
     def save_snippet_and_run(self):
@@ -313,8 +384,32 @@ class EditorWidget(QWidget):
             self, "Open snippet", ".", "Manim Studio Snippet (*.mss)")
         if file_[0]:
             with open(file_[0], "r") as f:
-                self.text_edit.setText(
-                    f"{self.text_edit.toPlainText()}\n{f.read()}")
+                self.code_cell_edit.setText(
+                    f"{self.code_cell_edit.toPlainText()}\n{f.read()}")
+            if Path(f"{file_[0]}.controls").exists():
+                with open(f"{file_[0]}.controls", "rb") as f:
+                    controls = pickle.load(f)
+                for name, control in controls.items():
+                    if name in self.controls.keys():
+                        continue
+                    if control[0] == "Slider":
+                        self.add_slider_to_editor(
+                            name, control[1], control[2], control[3], control[4])
+                    elif control[0] == "ColorWidget":
+                        self.add_color_widget_to_editor(
+                            name, np.array(control[1]))
+                    elif control[0] == "DropdownWidget":
+                        self.add_dropdown_to_editor(
+                            name, control[1])
+                    elif control[0] == "LineEditorWidget":
+                        self.add_line_editor_widget_to_editor(
+                            name, control[1])
+                    elif control[0] == "TextEditorWidget":
+                        self.add_text_editor_to_editor(
+                            name, control[1])
+                    elif control[0] == "CheckboxWidget":
+                        self.add_checkbox_to_editor(
+                            name, control[1])
 
     def open_snippet_and_run(self):
         self.open_snippet()

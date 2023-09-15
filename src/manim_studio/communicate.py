@@ -14,3 +14,4 @@ class Communicate(QObject):
     add_dropdown_to_editor = pyqtSignal(str, list)
     add_line_edit_to_editor = pyqtSignal(str, str)
     add_text_editor_to_editor = pyqtSignal(str, str)
+    add_checkbox_to_editor = pyqtSignal(str, bool)

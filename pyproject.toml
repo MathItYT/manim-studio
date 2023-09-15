@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manim-studio"
-version = "0.1.10"
+version = "0.2.0"
 description = "A GUI to easier make Manim animations"
 authors = ["MathLike"]
 readme = "README.md"
@@ -13,6 +13,7 @@ PyQt6 = ">=6.5.2"
 
 [tool.poetry.scripts]
 manim-studio = "manim_studio.__main__:main"
+manim-studio-builtins = "manim_studio.builtins:main"
 
 [tool.poetry.plugins."manim.plugins"]
 "manim_studio" = "manim_studio"
