@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QFileDialog, \
-    QMenuBar, QMessageBox, QDialog, QLineEdit, QLabel, QCheckBox
+    QMenuBar, QMessageBox, QDialog, QLineEdit, QLabel, QCheckBox, QGridLayout, QScrollArea
 from PyQt6.QtGui import QAction, QIntValidator, QColor
 from PyQt6.QtCore import pyqtSlot, Qt
 import numpy as np
@@ -100,9 +100,14 @@ class EditorWidget(QWidget):
         self.layout_.addWidget(self.save_snip_and_run_button)
         self.layout_.addWidget(self.next_slide_button)
         self.controls_widget = QWidget()
-        self.controls_layout = QVBoxLayout()
+        self.controls_scroll = QScrollArea()
+        self.controls_scroll.setWidget(self.controls_widget)
+        self.controls_scroll.setWidgetResizable(True)
+        self.no_controls = QLabel(text="No controls defined")
+        self.controls_scroll.setWindowTitle("Manim Studio - Controls")
+        self.controls_layout = QGridLayout()
+        self.controls_layout.addWidget(self.no_controls)
         self.controls_widget.setLayout(self.controls_layout)
-        self.layout_.addWidget(self.controls_widget)
         self.communicate.add_slider_to_editor.connect(
             self.add_slider_to_editor)
         self.communicate.add_color_widget_to_editor.connect(
@@ -116,6 +121,10 @@ class EditorWidget(QWidget):
         self.communicate.add_checkbox_to_editor.connect(
             self.add_checkbox_to_editor)
         self.setLayout(self.layout_)
+
+    def show(self):
+        super().show()
+        self.controls_scroll.show()
 
     def add_text_editor_widget(self):
         dialog = QDialog(self)
@@ -144,6 +153,8 @@ class EditorWidget(QWidget):
         setattr(self.scene, name, checkbox.value_tracker)
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(checkbox)
+        if self.no_controls.isVisible():
+            self.no_controls.hide()
 
     @pyqtSlot(str, str)
     def add_text_editor_to_editor(self, name: str, default_value: str):
@@ -154,6 +165,8 @@ class EditorWidget(QWidget):
         setattr(self.scene, name, text_editor_widget.value_tracker)
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(text_editor_widget)
+        if self.no_controls.isVisible():
+            self.no_controls.hide()
 
     def add_checkbox_widget(self):
         dialog = QDialog(self)
@@ -218,6 +231,8 @@ class EditorWidget(QWidget):
         setattr(self.scene, name, line_editor_widget.value_tracker)
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(line_editor_widget)
+        if self.no_controls.isVisible():
+            self.no_controls.hide()
 
     def send_code(self):
         self.communicate.update_scene.emit(self.code_cell_edit.toPlainText())
@@ -304,6 +319,8 @@ class EditorWidget(QWidget):
         setattr(self.scene, name, color_widget.color_tracker)
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(color_widget)
+        if self.no_controls.isVisible():
+            self.no_controls.hide()
 
     @pyqtSlot(str, str, str, str, str)
     def add_slider_to_editor(self, name: str, default_value: str, min_value: str, max_value: str, step_value: str):
@@ -318,6 +335,8 @@ class EditorWidget(QWidget):
         setattr(self.scene, name, slider.value_tracker)
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(slider)
+        if self.no_controls.isVisible():
+            self.no_controls.hide()
 
     @pyqtSlot(str, list)
     def add_dropdown_to_editor(self, name: str, options: list[str]):
@@ -328,6 +347,8 @@ class EditorWidget(QWidget):
         setattr(self.scene, name, dropdown.value_tracker)
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(dropdown)
+        if self.no_controls.isVisible():
+            self.no_controls.hide()
 
     def save_snippet(self):
         self.communicate.save_snippet.emit(self.code_cell_edit.toPlainText())
