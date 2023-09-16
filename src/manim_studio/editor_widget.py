@@ -61,6 +61,7 @@ class EditorWidget(QWidget):
             "Open snippet and run", self)
         self.open_snip_and_run_action.triggered.connect(
             self.open_snippet_and_run)
+        self.file_menu.addAction(self.open_snip_and_run_action)
         self.edit_menu = self.menu_bar.addMenu("Edit")
         self.add_slider_action = QAction("Add slider", self)
         self.add_slider_action.triggered.connect(
@@ -195,11 +196,14 @@ class EditorWidget(QWidget):
         options_edit.setPlaceholderText("Dropdown options")
         ok_button = QPushButton("OK", dialog)
         ok_button.clicked.connect(dialog.close)
+        default_value_edit = QLineEdit(dialog)
+        default_value_edit.setPlaceholderText("Default value")
         ok_button.clicked.connect(lambda: self.scene.add_dropdown_command(
-            text_edit.text(), options_edit.text().split(",")))
+            text_edit.text(), options_edit.text().split(","), default_value_edit.text()))
         layout = QVBoxLayout()
         layout.addWidget(text_edit)
         layout.addWidget(options_edit)
+        layout.addWidget(default_value_edit)
         layout.addWidget(ok_button)
         dialog.setLayout(layout)
         dialog.exec()
@@ -338,11 +342,12 @@ class EditorWidget(QWidget):
         if self.no_controls.isVisible():
             self.no_controls.hide()
 
-    @pyqtSlot(str, list)
-    def add_dropdown_to_editor(self, name: str, options: list[str]):
+    @pyqtSlot(str, list, str)
+    def add_dropdown_to_editor(self, name: str, options: list[str], default_value: str):
         label = QLabel(text=name)
         dropdown = DropdownWidget()
         dropdown.addItems(options)
+        dropdown.setCurrentText(default_value)
         self.controls[name] = dropdown
         setattr(self.scene, name, dropdown.value_tracker)
         self.controls_layout.addWidget(label)
@@ -355,12 +360,7 @@ class EditorWidget(QWidget):
 
     def save_snippet_command(self, code: str):
         controls_dialog = ControlDialog(self.controls)
-        controls_dialog.exec()
-        add_controls = controls_dialog.add_controls
-        if add_controls is True:
-            controls_toggle = controls_dialog.controls_toggle
-            controls_toggle = {k: v for k,
-                               v in controls_toggle.items() if v is True}
+        add_controls, controls_toggle = controls_dialog.exec_and_return()
         file_ = QFileDialog.getSaveFileName(
             self, "Save snippet", ".", "Manim Studio Snippet (*.mss)")
         if file_[0]:
@@ -368,15 +368,15 @@ class EditorWidget(QWidget):
                 f.write(code)
             if add_controls is True:
                 controls = {k: v for k, v in self.controls.items()
-                            if k in controls_toggle.keys()}
+                            if k in controls_toggle.keys() and controls_toggle[k] is True}
 
                 def get_tup(v):
                     if isinstance(v, Slider):
                         return ("Slider", v.value(), v.minimum(), v.maximum(), v.singleStep())
                     elif isinstance(v, ColorWidget):
-                        return ("ColorWidget", v.currentColor().getRgb())
+                        return ("ColorWidget", list(v.currentColor().getRgb()))
                     elif isinstance(v, DropdownWidget):
-                        return ("DropdownWidget", [v.itemText(i) for i in range(v.count())])
+                        return ("DropdownWidget", [v.itemText(i) for i in range(v.count())], v.currentText())
                     elif isinstance(v, LineEditorWidget):
                         return ("LineEditorWidget", v.text())
                     elif isinstance(v, TextEditorWidget):
@@ -421,7 +421,7 @@ class EditorWidget(QWidget):
                             name, np.array(control[1]))
                     elif control[0] == "DropdownWidget":
                         self.add_dropdown_to_editor(
-                            name, control[1])
+                            name, control[1], control[2])
                     elif control[0] == "LineEditorWidget":
                         self.add_line_editor_widget_to_editor(
                             name, control[1])

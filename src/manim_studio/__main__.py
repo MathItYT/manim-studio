@@ -6,6 +6,8 @@ import argparse
 
 def get_live_scene_classes_from_file(file_name):
     from importlib import import_module
+    import sys
+    sys.path.append(".")
     module_name = file_name.replace(
         "/", ".").replace("\\", ".").replace(".py", "")
     module = import_module(module_name)

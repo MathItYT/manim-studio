@@ -17,6 +17,7 @@ def main():
             ],
             check=True,
         )
+        (Path("builtin_snippets") / ".git").unlink()
     else:
         logger.error(
             "If you want to initialize built-in snippets, please delete the builtins_snippets folder and try again!"

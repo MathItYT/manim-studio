@@ -11,7 +11,7 @@ class Communicate(QObject):
     next_slide = pyqtSignal()
     add_slider_to_editor = pyqtSignal(str, str, str, str, str)
     add_color_widget_to_editor = pyqtSignal(str, np.ndarray)
-    add_dropdown_to_editor = pyqtSignal(str, list)
+    add_dropdown_to_editor = pyqtSignal(str, list, str)
     add_line_edit_to_editor = pyqtSignal(str, str)
     add_text_editor_to_editor = pyqtSignal(str, str)
     add_checkbox_to_editor = pyqtSignal(str, bool)

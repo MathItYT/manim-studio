@@ -7,16 +7,21 @@ class ControlDialog(QDialog):
         super().__init__(*args, **kwargs)
         self.setWindowTitle("Add controls to snippet")
         self.layout_ = QVBoxLayout()
-        self.controls = controls
         self.addControlsCheckbox = QCheckBox("Add controls")
         self.addControlsCheckbox.setChecked(False)
         self.add_controls = False
-        self.controls_toggle = {k: False for k in self.controls.keys()}
-        self.addControlsCheckbox.stateChanged.connect(
-            lambda: self.toggle_add_controls(self.addControlsCheckbox.isChecked()))
+        self.controls_toggle = {k: False for k in controls.keys()}
+        self.addControlsCheckbox.stateChanged.connect(self.toggle_add_controls)
         self.controls_toggle_widget = QWidget()
         self.controls_toggle_layout = QVBoxLayout()
         self.controls_toggle_widget.setLayout(self.controls_toggle_layout)
+        for name in controls.keys():
+            checkbox = QCheckBox(name)
+            checkbox.setChecked(False)
+            checkbox.stateChanged.connect(
+                lambda state, name=name: self.toggle_control(name, state))
+            self.controls_toggle_layout.addWidget(checkbox)
+        self.controls_toggle_widget.hide()
         self.okButton = QPushButton("OK")
         self.okButton.clicked.connect(self.accept)
         self.layout_.addWidget(self.addControlsCheckbox)
@@ -25,18 +30,15 @@ class ControlDialog(QDialog):
         self.setLayout(self.layout_)
 
     def toggle_add_controls(self, state: bool):
-        self.add_controls = state
-        if state is True:
-            self.controls_toggle = {k: False for k in self.controls.keys()}
-            for name in self.controls.keys():
-                checkbox = QCheckBox(name)
-                checkbox.setChecked(False)
-                checkbox.stateChanged.connect(
-                    lambda: self.toggle_control(name, checkbox.isChecked()))
-                self.controls_toggle_layout.addWidget(checkbox)
+        self.add_controls = bool(state)
+        if self.add_controls:
+            self.controls_toggle_widget.show()
         else:
-            for _ in range(len(self.controls.keys())):
-                self.controls_toggle_layout.itemAt(0).widget().deleteLater()
+            self.controls_toggle_widget.hide()
+
+    def exec_and_return(self):
+        self.exec()
+        return self.add_controls, self.controls_toggle
 
     def toggle_control(self, name: str, state: bool):
-        self.controls_toggle[name] = state
+        self.controls_toggle[name] = bool(state)

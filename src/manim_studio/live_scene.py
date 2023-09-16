@@ -61,9 +61,9 @@ class LiveScene(QObject, Scene):
         self.communicate.add_line_edit_to_editor.emit(
             name, default_value)
 
-    def add_dropdown_command(self, name: str, options: list[str]):
+    def add_dropdown_command(self, name: str, options: list[str], default_value: str):
         self.communicate.add_dropdown_to_editor.emit(
-            name, options)
+            name, options, default_value)
 
     def add_color_widget_command(self, name: str, default_value: np.ndarray):
         self.communicate.add_color_widget_to_editor.emit(
