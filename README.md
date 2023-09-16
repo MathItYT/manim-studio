@@ -36,6 +36,12 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
    
    ```pip install manim-studio```
 
+   Additionally, you can install an extra to use AI-powered animations with
+   
+   ```pip install manim-studio[ai]```
+
+   It has direct integration with OpenAI API, so you must have an API key to use it.
+
 2. Use the program! We still don't have a documentation, but there will be one in the future!
 
 

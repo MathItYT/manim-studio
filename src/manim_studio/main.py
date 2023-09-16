@@ -6,6 +6,7 @@ from .editor_widget import EditorWidget
 from .preview_widget import PreviewWidget
 from .live_scene import LiveScene
 from .communicate import Communicate
+from .ai_widget import AIWidget
 
 
 def main(scene_type=LiveScene) -> None:
@@ -16,6 +17,9 @@ def main(scene_type=LiveScene) -> None:
     preview_window = PreviewWidget(communicate, scene)
     preview_window.showMaximized()
     editor_window.show()
+    if AIWidget is not None:
+        ai_window = AIWidget(communicate)
+        ai_window.show()
     sys.exit(app.exec())
 
 
