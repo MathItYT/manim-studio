@@ -1,5 +1,4 @@
 from manim import ValueTracker, Mobject
-import numpy as np
 
 
 class StringValueTracker(ValueTracker):

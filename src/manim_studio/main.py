@@ -1,5 +1,4 @@
 from PyQt6.QtWidgets import QApplication
-from typing import Union
 import sys
 
 from .editor_widget import EditorWidget
