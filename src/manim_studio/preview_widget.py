@@ -31,4 +31,3 @@ class PreviewWidget(QWidget):
     def update_image(self, image):
         self.label.setPixmap(QPixmap.fromImage(
             QImage(image, image.shape[1], image.shape[0], QImage.Format.Format_RGBA8888)))
-        self.label.adjustSize()
