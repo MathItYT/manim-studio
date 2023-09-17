@@ -15,7 +15,7 @@ def main(scene_type=LiveScene) -> None:
     scene = scene_type(communicate)
     editor_window = EditorWidget(communicate, scene)
     preview_window = PreviewWidget(communicate, scene)
-    preview_window.showMaximized()
+    preview_window.showFullScreen()
     editor_window.show()
     if AIWidget is not None:
         ai_window = AIWidget(communicate)
