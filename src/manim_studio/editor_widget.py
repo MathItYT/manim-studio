@@ -24,6 +24,7 @@ class EditorWidget(QWidget):
         self.setWindowTitle("Manim Studio - Editor")
         self.scene = scene
         self.controls = dict()
+        self.ready_to_save = True
 
         self.code_cell_edit = QTextEdit()
         self.code_cell_edit.setPlaceholderText("Enter your code here")
@@ -364,7 +365,8 @@ class EditorWidget(QWidget):
         file_ = QFileDialog.getSaveFileName(
             self, "Save snippet", ".", "Manim Studio Snippet (*.mss)")
         if file_[0]:
-            with open(file_[0], "w") as f:
+            self.ready_to_save = True
+            with open(file_[0], "w", encoding="utf-8") as f:
                 f.write(code)
             if add_controls is True:
                 controls = {k: v for k, v in self.controls.items()
@@ -393,8 +395,18 @@ class EditorWidget(QWidget):
 
     def end_scene_saving(self):
         codes = "\n".join(self.scene.codes)
-        self.communicate.save_snippet.emit(codes)
-        self.end_scene()
+        self.ready_to_save = False
+        self.save_snippet_command(codes)
+        if self.ready_to_save is True:
+            self.end_scene()
+        else:
+            self.ready_to_save = True
+            alert = QMessageBox(
+                text="You have not saved the snippet yet.")
+            alert.setWindowTitle("Snippet not saved")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
 
     def save_snippet_and_run(self):
         self.save_snippet()
@@ -404,7 +416,7 @@ class EditorWidget(QWidget):
         file_ = QFileDialog.getOpenFileName(
             self, "Open snippet", ".", "Manim Studio Snippet (*.mss)")
         if file_[0]:
-            with open(file_[0], "r") as f:
+            with open(file_[0], "r", encoding="utf-8") as f:
                 self.code_cell_edit.setText(
                     f"{self.code_cell_edit.toPlainText()}\n{f.read()}")
             if Path(f"{file_[0]}.controls").exists():
@@ -431,6 +443,13 @@ class EditorWidget(QWidget):
                     elif control[0] == "CheckboxWidget":
                         self.add_checkbox_to_editor(
                             name, control[1])
+        else:
+            alert = QMessageBox(
+                text="No file selected.")
+            alert.setWindowTitle("No file selected")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
 
     def open_snippet_and_run(self):
         self.open_snippet()
