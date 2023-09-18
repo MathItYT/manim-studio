@@ -1,7 +1,10 @@
 from manim import *
 from PyQt6.QtCore import QObject, pyqtSlot
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLineEdit, QLabel, QPushButton, QFileDialog
 from .communicate import Communicate
+import pickle
+
+from .load_mobject import load_mobject
 
 
 class CairoLiveRenderer(QObject, CairoRenderer):
@@ -27,6 +30,8 @@ class LiveScene(QObject, Scene):
         self.communicate.update_scene.connect(self.update_scene)
         self.communicate.end_scene.connect(self.end_scene)
         self.communicate.alert.connect(self.alert)
+        self.communicate.save_mobject.connect(self.save_mobject)
+        self.communicate.load_mobject.connect(self.load_mobject)
         self.current_code = None
         self.codes = []
         self.freeze = False
@@ -115,3 +120,107 @@ class LiveScene(QObject, Scene):
 
     def no_instruction(self):
         return self.current_code is None
+    
+    def save_mobject(self):
+        dialog = QDialog()
+        dialog.setWindowTitle("Save mobject")
+        dialog.layout_ = QVBoxLayout()
+        dialog.name_edit = QLineEdit()
+        dialog.name_edit.setPlaceholderText("Enter the name of the mobject")
+        dialog.info_label = QLabel(
+            text="The name of the mobject must be a valid attribute of the scene.\n" \
+                "For example, if you want to save the mobject 'self.circle',\n" \
+                "you must enter 'circle' in the text box below.")
+        dialog.layout_.addWidget(dialog.name_edit)
+        dialog.layout_.addWidget(dialog.info_label)
+        dialog.ok_button = QPushButton("OK")
+        dialog.ok_button.clicked.connect(dialog.accept)
+        dialog.layout_.addWidget(dialog.ok_button)
+        dialog.setLayout(dialog.layout_)
+        dialog.exec()
+
+        name = dialog.name_edit.text()
+        if name == "":
+            alert = QMessageBox(
+                text="You must enter a name for the mobject.")
+            alert.setWindowTitle("No name entered")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        mobject_to_save = getattr(self, name, None)
+        if mobject_to_save is None:
+            alert = QMessageBox(
+                text="The name you entered is not a valid attribute of the scene.")
+            alert.setWindowTitle("Invalid name")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        file_name = QFileDialog.getSaveFileName(
+            caption="Save mobject",
+            filter="Pickle file (*.pkl)"
+        )
+        if file_name[0]:
+            with open(file_name[0], "wb") as f:
+                pickle.dump(mobject_to_save, f)
+        else:
+            alert = QMessageBox(
+                text="You must enter a file name.")
+            alert.setWindowTitle("No file name entered")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        alert = QMessageBox(
+            text="The mobject has been saved.")
+        alert.setWindowTitle("Mobject saved")
+        alert.setIcon(QMessageBox.Icon.Information)
+        alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+        alert.exec()
+    
+    def load_mobject(self):
+        file_name = QFileDialog.getOpenFileName(
+            caption="Load mobject",
+            filter="Pickle file (*.pkl)"
+        )
+        if not file_name[0]:
+            alert = QMessageBox(
+                text="You must enter a file name.")
+            alert.setWindowTitle("No file name entered")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        dialog = QDialog()
+        dialog.setWindowTitle("Load mobject")
+        dialog.layout_ = QVBoxLayout()
+        dialog.name_edit = QLineEdit()
+        dialog.name_edit.setPlaceholderText("Enter the name of the mobject")
+        dialog.info_label = QLabel(
+            text="The name of the mobject will be an attribute of the scene.\n" \
+                "For example, if you want to load the mobject as 'self.circle',\n" \
+                "you must enter 'circle' in the text box below.")
+        dialog.layout_.addWidget(dialog.name_edit)
+        dialog.layout_.addWidget(dialog.info_label)
+        dialog.ok_button = QPushButton("OK")
+        dialog.ok_button.clicked.connect(dialog.accept)
+        dialog.layout_.addWidget(dialog.ok_button)
+        dialog.setLayout(dialog.layout_)
+        dialog.exec()
+        if dialog.name_edit.text() == "":
+            alert = QMessageBox(
+                text="You must enter a name for the mobject.")
+            alert.setWindowTitle("No name entered")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        code = f"self.{dialog.name_edit.text()} = load_mobject('{file_name[0]}')"
+        self.communicate.update_scene.emit(code)
+        alert = QMessageBox(
+            text="The mobject has been loaded.")
+        alert.setWindowTitle("Mobject loaded")
+        alert.setIcon(QMessageBox.Icon.Information)
+        alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+        alert.exec()

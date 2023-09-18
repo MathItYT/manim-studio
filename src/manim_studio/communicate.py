@@ -15,3 +15,5 @@ class Communicate(QObject):
     add_line_edit_to_editor = pyqtSignal(str, str)
     add_text_editor_to_editor = pyqtSignal(str, str)
     add_checkbox_to_editor = pyqtSignal(str, bool)
+    save_mobject = pyqtSignal()
+    load_mobject = pyqtSignal()

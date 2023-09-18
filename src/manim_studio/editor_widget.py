@@ -91,6 +91,12 @@ class EditorWidget(QWidget):
         self.add_checkbox_widget_action.triggered.connect(
             self.add_checkbox_widget)
         self.edit_menu.addAction(self.add_checkbox_widget_action)
+        self.save_mobject_action = QAction("Save mobject", self)
+        self.save_mobject_action.triggered.connect(self.save_mobject)
+        self.edit_menu.addAction(self.save_mobject_action)
+        self.load_mobject_action = QAction("Load mobject", self)
+        self.load_mobject_action.triggered.connect(self.load_mobject)
+        self.edit_menu.addAction(self.load_mobject_action)
 
         self.layout_ = QVBoxLayout()
         self.layout_.addWidget(self.menu_bar)
@@ -127,6 +133,12 @@ class EditorWidget(QWidget):
     def show(self):
         super().show()
         self.controls_scroll.show()
+    
+    def save_mobject(self):
+        self.communicate.save_mobject.emit()
+    
+    def load_mobject(self):
+        self.communicate.load_mobject.emit()
 
     def add_text_editor_widget(self):
         dialog = QDialog(self)
