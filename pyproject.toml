@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manim-studio"
-version = "0.2.7"
+version = "0.2.8"
 description = "A GUI to easier make Manim animations"
 authors = ["MathLike"]
 readme = "README.md"
@@ -10,6 +10,7 @@ repository = "https://github.com/MathItYT/manim-studio"
 python = ">=3.8,<3.12"
 manim = ">=0.17.3"
 PyQt6 = ">=6.5.2"
+dill = ">=0.3.7"
 openai = {version = ">=0.28.0", optional = true}
 
 [tool.poetry.scripts]

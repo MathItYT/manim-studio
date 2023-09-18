@@ -2,7 +2,7 @@ from manim import *
 from PyQt6.QtCore import QObject, pyqtSlot
 from PyQt6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLineEdit, QLabel, QPushButton, QFileDialog
 from .communicate import Communicate
-import pickle
+import dill as pickle
 
 from .load_mobject import load_mobject
 
@@ -120,7 +120,7 @@ class LiveScene(QObject, Scene):
 
     def no_instruction(self):
         return self.current_code is None
-    
+
     def save_mobject(self):
         dialog = QDialog()
         dialog.setWindowTitle("Save mobject")
@@ -128,9 +128,9 @@ class LiveScene(QObject, Scene):
         dialog.name_edit = QLineEdit()
         dialog.name_edit.setPlaceholderText("Enter the name of the mobject")
         dialog.info_label = QLabel(
-            text="The name of the mobject must be a valid attribute of the scene.\n" \
-                "For example, if you want to save the mobject 'self.circle',\n" \
-                "you must enter 'circle' in the text box below.")
+            text="The name of the mobject must be a valid attribute of the scene.\n"
+            "For example, if you want to save the mobject 'self.circle',\n"
+            "you must enter 'circle' in the text box below.")
         dialog.layout_.addWidget(dialog.name_edit)
         dialog.layout_.addWidget(dialog.info_label)
         dialog.ok_button = QPushButton("OK")
@@ -178,7 +178,7 @@ class LiveScene(QObject, Scene):
         alert.setIcon(QMessageBox.Icon.Information)
         alert.setStandardButtons(QMessageBox.StandardButton.Ok)
         alert.exec()
-    
+
     def load_mobject(self):
         file_name = QFileDialog.getOpenFileName(
             caption="Load mobject",
@@ -198,9 +198,9 @@ class LiveScene(QObject, Scene):
         dialog.name_edit = QLineEdit()
         dialog.name_edit.setPlaceholderText("Enter the name of the mobject")
         dialog.info_label = QLabel(
-            text="The name of the mobject will be an attribute of the scene.\n" \
-                "For example, if you want to load the mobject as 'self.circle',\n" \
-                "you must enter 'circle' in the text box below.")
+            text="The name of the mobject will be an attribute of the scene.\n"
+            "For example, if you want to load the mobject as 'self.circle',\n"
+            "you must enter 'circle' in the text box below.")
         dialog.layout_.addWidget(dialog.name_edit)
         dialog.layout_.addWidget(dialog.info_label)
         dialog.ok_button = QPushButton("OK")
