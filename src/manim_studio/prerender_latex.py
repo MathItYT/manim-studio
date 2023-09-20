@@ -1,1 +1,1 @@
-from manim.utils import tex_file_writing as prerender_latex
+from manim.utils.tex_file_writing import tex_to_svg_file as prerender_latex
