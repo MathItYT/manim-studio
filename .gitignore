@@ -3,3 +3,5 @@ __pycache__
 snippets
 repository-open-graph-template.png
 dist
+node_modules
+package-lock.json
