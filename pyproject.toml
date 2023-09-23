@@ -15,7 +15,7 @@ openai = {version = ">=0.28.0", optional = true}
 
 [tool.poetry.scripts]
 manim-studio = "manim_studio.__main__:main"
-manim-studio-builtins = {reference = "manim_studio.builtins:main", type = "gui"}
+manim-studio-builtins = "manim_studio.builtins:main"
 
 [tool.poetry.extras]
 ai = ["openai"]
