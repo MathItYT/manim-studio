@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manim-studio"
-version = "0.2.9.post1"
+version = "0.2.9.post2"
 description = "A GUI to easier make Manim animations"
 authors = ["MathLike"]
 readme = "README.md"
@@ -15,7 +15,7 @@ openai = {version = ">=0.28.0", optional = true}
 
 [tool.poetry.scripts]
 manim-studio = "manim_studio.__main__:main"
-manim-studio-builtins = "manim_studio.builtins:main"
+manim-studio-builtins = {reference = "manim_studio.builtins:main", type = "gui"}
 
 [tool.poetry.extras]
 ai = ["openai"]

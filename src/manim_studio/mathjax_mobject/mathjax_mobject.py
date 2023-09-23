@@ -1,4 +1,4 @@
-from manim import logger, config, SVGMobject, WHITE, color_to_int_rgb
+from manim import logger, config, SVGMobject, VMobject, color_to_rgb
 from colour import Color
 from manim.utils.tex_file_writing import tex_hash
 import inspect
@@ -6,9 +6,6 @@ import importlib
 from pathlib import Path
 import subprocess
 import re
-
-
-SCALE_FACTOR = 0.0000125
 
 
 def create_dir_if_not_exists(dir_path: Path):
@@ -94,35 +91,22 @@ def render_mathjax(mathjax_str: str, check_installation=True):
 class MathJax(SVGMobject):
     first_time = True
 
-    def __init__(self, expr: str, font_size: int = 48, main_color=WHITE, **kwargs):
+    def __init__(self, expr: str, font_size: int = 48, color=None, opacity=None, stroke_width=None, **kwargs):
         self.expr = expr
         self.font_size = font_size
-        self.expr = self.get_colored_string(expr, main_color)
-        self.main_color = main_color
-        super().__init__(render_mathjax(self.expr, self.first_time), height=None, **kwargs)
-        self.scale(SCALE_FACTOR * self.font_size)
+        if color is None:
+            color = VMobject().color
+        if opacity is None:
+            opacity = 1.0
+        if stroke_width is None:
+            stroke_width = 0.0
+        self.colored_expr = self.get_colored_expr(self.expr, color)
+        super().__init__(render_mathjax(self.colored_expr, self.__class__.first_time), **kwargs)
         self.__class__.first_time = False
+        self.set_color(color, family=False)
+        self.set_opacity(opacity)
+        self.set_stroke(width=stroke_width)
+        self.scale(0.2 * self.font_size / 48)
 
-    def get_colored_string(self, expr: str, color: Color):
-        color_str = "\\textcolor[RGB]{" + \
-            ",".join([str(c) for c in color_to_int_rgb(color)]) + "}"
-        return color_str + "{" + expr + "}"
-
-    def colored_string_to_single_expr(self, expr: str):
-        return expr[expr.find("{", expr.find("{") + 1) + 1:expr.find("}", expr.find("}") + 1)]
-
-    def set_expr(self, expr: str, main_color=None):
-        self.submobjects = []
-        if main_color is None:
-            main_color = self.main_color
-        self.expr = self.get_colored_string(expr, main_color)
-        self.file_name = render_mathjax(self.expr, self.__class__.first_time)
-        self.init_svg_mobject(True)
-        self.scale(SCALE_FACTOR * self.font_size)
-        self.move_into_position()
-        self.__class__.first_time = False
-        return self
-
-    def set_main_color(self, color: Color):
-        self.set_expr(self.colored_string_to_single_expr(self.expr), color)
-        return self
+    def get_colored_expr(self, expr: str, color: Color):
+        return f"\\textcolor[rgb]{{{','.join(map(str, color_to_rgb(color)))}}}{{{expr}}}"

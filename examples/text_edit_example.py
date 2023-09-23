@@ -8,12 +8,17 @@ class TextEditExample(LiveScene):
         self.add_text_editor_command("text_editor", "Hello, World!")
         sleep(1)  # wait for the text editor widget to be created
 
-        def updater(text):
-            text.become(Paragraph(*self.text_editor.get_value().split("\n")))
-            text.scale_to_fit_width(min(config.frame_width, text.width))
+        paragraph = Paragraph("Hello, World!")
+        content = self.text_editor.get_value()
 
-        text = VMobject().add_updater(updater)
-        self.add(text)
+        def update_paragraph(m):
+            nonlocal content
+            if content != self.text_editor.get_value():
+                content = self.text_editor.get_value()
+                m.become(Paragraph(*content.split("\n")))
+
+        self.add(paragraph)
+        paragraph.add_updater(update_paragraph)
 
         super().construct()
 
