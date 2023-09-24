@@ -39,20 +39,8 @@ class LiveScene(QObject, Scene):
     def construct(self):
         while True:
             while self.no_instruction():
-                self.wait()
-            try:
-                scope = globals()
-                scope.update(locals())
-                exec(self.current_code, scope)
-            except EndSceneEarlyException:
-                raise EndSceneEarlyException()
-            except Exception as e:
-                logger.info(
-                    f"Exception occured in live scene: {e}")
-                self.communicate.alert.emit(e)
-            else:
-                self.codes.append(self.current_code)
-            self.current_code = None
+                self.wait_until(lambda: not self.no_instruction(), 1)
+            self.run_instruction()
 
     def add_checkbox_command(self, name: str, default_value: bool):
         self.communicate.add_checkbox_to_editor.emit(
@@ -81,9 +69,24 @@ class LiveScene(QObject, Scene):
     def wait(self, *args, frozen_frame=False, **kwargs):
         super().wait(*args, frozen_frame=frozen_frame, **kwargs)
 
+    def run_instruction(self):
+        try:
+            scope = globals()
+            scope["self"] = self
+            exec(self.current_code, scope)
+        except EndSceneEarlyException:
+            raise EndSceneEarlyException()
+        except Exception as e:
+            logger.info(
+                f"Exception occured in live scene ({e.__class__.__name__}: {e})")
+            self.communicate.alert.emit(e)
+        else:
+            self.codes.append(self.current_code)
+        self.current_code = None
+
     @pyqtSlot(str)
     def update_scene(self, code: str):
-        if self.freeze:
+        if self.freeze and code != "raise EndSceneEarlyException()":
             alert = QMessageBox(
                 text="You cannot update the scene while it is paused.")
             alert.setWindowTitle("Scene paused")
@@ -115,8 +118,11 @@ class LiveScene(QObject, Scene):
 
     def pause_slide(self):
         self.freeze = True
-        while self.freeze:
-            self.wait()
+        while self.freeze and self.no_instruction():
+            self.wait_until(
+                lambda: not self.freeze or not self.no_instruction(), 1)
+        if not self.no_instruction():
+            self.run_instruction()
 
     def no_instruction(self):
         return self.current_code is None

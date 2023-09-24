@@ -1,6 +1,7 @@
 media
 __pycache__
 snippets
+mobjects_pkl
 repository-open-graph-template.png
 dist
 node_modules
