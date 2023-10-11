@@ -36,6 +36,9 @@ class LiveScene(QObject, Scene):
         self.codes = []
         self.freeze = False
 
+    def set_control_value(self, name: str, value: str):
+        self.communicate.set_control_value.emit(name, value)
+
     def construct(self):
         while True:
             while self.no_instruction():

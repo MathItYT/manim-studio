@@ -10,7 +10,7 @@ from .ai_widget import AIWidget
 from .get_icon_file import get_icon_file
 
 
-def main(scene_type=LiveScene) -> None:
+def main(scene_type=LiveScene, server=False) -> None:
     app = QApplication(sys.argv)
     icon = QIcon(get_icon_file())
     app.setWindowIcon(icon)
@@ -23,6 +23,10 @@ def main(scene_type=LiveScene) -> None:
     if AIWidget is not None:
         ai_window = AIWidget(communicate)
         ai_window.show()
+    if server:
+        from .server import ManimStudioServer
+        server = ManimStudioServer(communicate)
+        server.show()
     sys.exit(app.exec())
 
 

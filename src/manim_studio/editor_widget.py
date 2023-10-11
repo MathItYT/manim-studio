@@ -128,15 +128,39 @@ class EditorWidget(QWidget):
             self.add_text_editor_to_editor)
         self.communicate.add_checkbox_to_editor.connect(
             self.add_checkbox_to_editor)
+        self.communicate.set_control_value.connect(self.set_control_value)
         self.setLayout(self.layout_)
 
     def show(self):
         super().show()
         self.controls_scroll.show()
-    
+
+    @pyqtSlot(str, str)
+    def set_control_value(self, name: str, value: str):
+        control = self.controls.get(name)
+        if control is None:
+            alert = QMessageBox()
+            alert.setText(f"Control {name} not found")
+            alert.exec()
+            return
+        if isinstance(control, Slider):
+            control.setValue(int(value))
+        elif isinstance(control, ColorWidget):
+            value = value.split(",")
+            control.setCurrentColor(QColor(int(value[0]), int(
+                value[1]), int(value[2]), int(value[3])))
+        elif isinstance(control, DropdownWidget):
+            control.setCurrentText(value)
+        elif isinstance(control, LineEditorWidget):
+            control.setText(value)
+        elif isinstance(control, TextEditorWidget):
+            control.setText(value)
+        elif isinstance(control, CheckboxWidget):
+            control.setChecked(value == "True")
+
     def save_mobject(self):
         self.communicate.save_mobject.emit()
-    
+
     def load_mobject(self):
         self.communicate.load_mobject.emit()
 

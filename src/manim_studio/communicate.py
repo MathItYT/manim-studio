@@ -17,3 +17,4 @@ class Communicate(QObject):
     add_checkbox_to_editor = pyqtSignal(str, bool)
     save_mobject = pyqtSignal()
     load_mobject = pyqtSignal()
+    set_control_value = pyqtSignal(str, str)
