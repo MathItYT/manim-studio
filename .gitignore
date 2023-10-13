@@ -1,6 +1,7 @@
 media
 __pycache__
 snippets
+.venv
 mobjects_pkl
 repository-open-graph-template.png
 dist
