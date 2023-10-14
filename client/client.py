@@ -1,5 +1,5 @@
 import socket
-from PyQt6.QtWidgets import QWidget, QLabel, QVBoxLayout, QPushButton, QTextEdit, QMessageBox
+from PyQt6.QtWidgets import QWidget, QLabel, QVBoxLayout, QPushButton, QTextEdit, QMessageBox, QStatusBar
 
 
 class ManimStudioClient(QWidget):
@@ -14,21 +14,23 @@ class ManimStudioClient(QWidget):
         self.s.send(self.password.encode("utf-8"))
         msg = self.s.recv(1024)
         if msg.decode("utf-8") == "Correct password":
+            self.setLayout(QVBoxLayout())
             self.label = QLabel()
             self.label.setText(
                 f"Connected to {self.host}:{self.port}")
-            self.layout = QVBoxLayout()
-            self.layout.addWidget(self.label)
+            self.layout().addWidget(self.label)
             self.code_edit = QTextEdit()
             self.code_edit.setPlaceholderText("Enter the code")
-            self.layout.addWidget(self.code_edit)
-            self.send_button = QPushButton("Send")
+            self.layout().addWidget(self.code_edit)
+            self.send_button = QPushButton("Send (Ctrl+Return)")
+            self.send_button.setShortcut("Ctrl+Return")
             self.send_button.clicked.connect(self.send_code)
-            self.layout.addWidget(self.send_button)
-            self.setLayout(self.layout)
+            self.layout().addWidget(self.send_button)
+            self.status_bar = QStatusBar()
+            self.layout().addWidget(self.status_bar)
         else:
-            QMessageBox.information(
-                self, "Debug", msg.decode("utf-8"))
+            QMessageBox.critical(
+                self, "Error", msg.decode("utf-8"))
             self.close()
 
     def closeEvent(self, event):
@@ -39,10 +41,6 @@ class ManimStudioClient(QWidget):
     def send_code(self):
         code = self.code_edit.toPlainText()
         self.s.send(code.encode("utf-8"))
+        self.code_edit.clear()
         msg = self.s.recv(1024)
-        if msg.decode("utf-8") == "Code executed":
-            QMessageBox.information(
-                self, "Code executed", "The code has been executed.")
-        else:
-            QMessageBox.critical(
-                self, "Error", "The code could not be executed. Please try again.")
+        self.status_bar.showMessage(msg.decode("utf-8"), msecs=5000)
