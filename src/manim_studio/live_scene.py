@@ -120,6 +120,7 @@ class LiveScene(QObject, Scene):
         alert.exec()
 
     def pause_slide(self):
+        self.current_code = None
         self.freeze = True
         while self.freeze and self.no_instruction():
             self.wait_until(

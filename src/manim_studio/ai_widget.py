@@ -3,7 +3,7 @@ try:
 except ImportError:
     AIWidget = None
 else:
-    from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QTextEdit, QDialog, QLabel, QLineEdit
+    from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QTextEdit, QDialog, QLabel, QLineEdit, QComboBox
     from PyQt6.QtGui import QIntValidator
     from .communicate import Communicate
 
@@ -35,13 +35,29 @@ else:
             self.layout_.addWidget(self.prompt_edit)
             self.tokens_edit = QLineEdit()
             self.tokens_edit.setValidator(QIntValidator())
-            self.tokens_edit.setPlaceholderText("Enter the max tokens")
+            self.tokens_edit.setPlaceholderText(
+                "Enter the max tokens (default: 100)")
             self.layout_.addWidget(self.tokens_edit)
             self.send_prompt_button = QPushButton("Send prompt")
             self.send_prompt_button.clicked.connect(self.send_prompt)
+            self.select_gpt_version_dropdown = QComboBox()
+            self.gpt_version = None
+            self.select_gpt_version_dropdown.setPlaceholderText(
+                "Select GPT version")
+            gpt_dict = {
+                "GPT 3.5 Turbo": "gpt-3.5-turbo",
+                "GPT 4": "gpt-4"
+            }
+            self.select_gpt_version_dropdown.addItems(
+                ["GPT 3.5 Turbo", "GPT 4"])
+            self.select_gpt_version_dropdown.currentIndexChanged.connect(
+                lambda: setattr(self, "gpt_version", gpt_dict[self.select_gpt_version_dropdown.currentText()]))
             self.layout_.addWidget(self.send_prompt_button)
+            self.layout_.addWidget(self.select_gpt_version_dropdown)
             self.layout_.addWidget(self.send_code_button)
             self.setLayout(self.layout_)
+            self.messages = [{"role": "system",
+                              "content": SYSTEM_INSTRUCTIONS}]
 
         def send_prompt(self):
             if self.openai_api_key_is_set is False:
@@ -63,16 +79,27 @@ else:
                 dialog.setLayout(dialog.layout_)
                 dialog.exec()
                 return
+            if self.gpt_version is None:
+                dialog = QDialog()
+                dialog.setWindowTitle("Select GPT version")
+                dialog.layout_ = QVBoxLayout()
+                dialog.warn_label = QLabel(
+                    text="Please select a GPT version. Once done, send the prompt again.")
+                dialog.layout_.addWidget(dialog.warn_label)
+                dialog.ok_button = QPushButton("OK")
+                dialog.ok_button.clicked.connect(
+                    lambda: dialog.close())
+                dialog.layout_.addWidget(dialog.ok_button)
+                dialog.setLayout(dialog.layout_)
+                dialog.exec()
+                return
             try:
+                self.messages.append({"role": "user",
+                                      "content": self.prompt_edit.toPlainText()})
                 code_completion = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system",
-                         "content": SYSTEM_INSTRUCTIONS},
-                        {"role": "user",
-                         "content": self.prompt_edit.toPlainText()}
-                    ],
-                    max_tokens=int(self.tokens_edit.text()),
+                    model=self.gpt_version,
+                    messages=self.messages,
+                    max_tokens=int(self.tokens_edit.text() or 100),
                 )
             except openai.OpenAIError as e:
                 self.openai_api_key_is_set = False

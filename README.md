@@ -80,3 +80,7 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
 
 ## Manim Studio Client
    Go to [latest release page](https://github.com/MathItYT/manim-studio/releases/latest) and download `Manim.Studio.Client.exe` to collaborate with someone that opened a Manim Studio Server. The client doesn't need to have Manim or Manim Studio installed!
+
+
+## License
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for more details.
