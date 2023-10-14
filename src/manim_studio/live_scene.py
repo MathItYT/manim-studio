@@ -35,6 +35,20 @@ class LiveScene(QObject, Scene):
         self.current_code = None
         self.codes = []
         self.freeze = False
+        self.playing = False
+
+    def play(self, *args, **kwargs):
+        if self.playing is True:
+            alert = QMessageBox(
+                text="You cannot play the scene while it is playing.")
+            alert.setWindowTitle("Scene playing")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        self.playing = True
+        super().play(*args, **kwargs)
+        self.playing = False
 
     def set_control_value(self, name: str, value: str):
         self.communicate.set_control_value.emit(name, value)
@@ -69,6 +83,10 @@ class LiveScene(QObject, Scene):
         self.communicate.add_slider_to_editor.emit(
             name, default_value, min_value, max_value, step_value)
 
+    def add_button_command(self, name: str, callback: str):
+        self.communicate.add_button_to_editor.emit(
+            name, callback)
+
     def wait(self, *args, frozen_frame=False, **kwargs):
         super().wait(*args, frozen_frame=frozen_frame, **kwargs)
 
@@ -76,7 +94,9 @@ class LiveScene(QObject, Scene):
         try:
             scope = globals()
             scope["self"] = self
-            exec(self.current_code, scope)
+            current_code = self.current_code
+            self.current_code = None
+            exec(current_code, scope)
         except EndSceneEarlyException:
             raise EndSceneEarlyException()
         except Exception as e:
@@ -85,7 +105,6 @@ class LiveScene(QObject, Scene):
             self.communicate.alert.emit(e)
         else:
             self.codes.append(self.current_code)
-        self.current_code = None
 
     @pyqtSlot(str)
     def update_scene(self, code: str):
@@ -120,7 +139,6 @@ class LiveScene(QObject, Scene):
         alert.exec()
 
     def pause_slide(self):
-        self.current_code = None
         self.freeze = True
         while self.freeze and self.no_instruction():
             self.wait_until(

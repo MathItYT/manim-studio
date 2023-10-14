@@ -15,6 +15,7 @@ from .line_editor_widget import LineEditorWidget
 from .text_editor_widget import TextEditorWidget
 from .checkbox_widget import CheckboxWidget
 from .control_dialog import ControlDialog
+from .button import Button
 
 
 class EditorWidget(QWidget):
@@ -106,12 +107,18 @@ class EditorWidget(QWidget):
         self.add_checkbox_widget_action.triggered.connect(
             self.add_checkbox_widget)
         self.edit_menu.addAction(self.add_checkbox_widget_action)
+        self.add_button_widget_action = QAction(
+            "Add button widget", self)
+        self.add_button_widget_action.setShortcut("Ctrl+Shift+7")
+        self.add_button_widget_action.triggered.connect(
+            self.add_button_widget)
+        self.edit_menu.addAction(self.add_button_widget_action)
         self.save_mobject_action = QAction("Save mobject", self)
-        self.save_mobject_action.setShortcut("Ctrl+Shift+7")
+        self.save_mobject_action.setShortcut("Ctrl+Shift+8")
         self.save_mobject_action.triggered.connect(self.save_mobject)
         self.edit_menu.addAction(self.save_mobject_action)
         self.load_mobject_action = QAction("Load mobject", self)
-        self.load_mobject_action.setShortcut("Ctrl+Shift+8")
+        self.load_mobject_action.setShortcut("Ctrl+Shift+9")
         self.load_mobject_action.triggered.connect(self.load_mobject)
         self.edit_menu.addAction(self.load_mobject_action)
 
@@ -146,11 +153,39 @@ class EditorWidget(QWidget):
         self.communicate.add_checkbox_to_editor.connect(
             self.add_checkbox_to_editor)
         self.communicate.set_control_value.connect(self.set_control_value)
+        self.communicate.add_button_to_editor.connect(
+            self.add_button_to_editor)
         self.setLayout(self.layout_)
 
     def show(self):
         super().show()
         self.controls_scroll.show()
+
+    def add_button_widget(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add button widget")
+        text_edit = QLineEdit(dialog)
+        text_edit.setPlaceholderText("Button widget name")
+        callback_edit = QTextEdit(dialog)
+        callback_edit.setPlaceholderText("Callback")
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.close)
+        ok_button.clicked.connect(lambda: self.scene.add_button_command(
+            text_edit.text(), callback_edit.toPlainText()))
+
+        layout = QVBoxLayout()
+        layout.addWidget(text_edit)
+        layout.addWidget(callback_edit)
+        layout.addWidget(ok_button)
+        dialog.setLayout(layout)
+        dialog.exec()
+
+    def add_button_to_editor(self, name: str, callback: str):
+        button = Button(callback, self.communicate, text=name)
+        self.controls[name] = button
+        self.controls_layout.addWidget(button)
+        if self.no_controls.isVisible():
+            self.no_controls.hide()
 
     @pyqtSlot(str, str)
     def set_control_value(self, name: str, value: str):
@@ -174,6 +209,10 @@ class EditorWidget(QWidget):
             control.setText(value)
         elif isinstance(control, CheckboxWidget):
             control.setChecked(value == "True")
+        elif isinstance(control, Button):
+            control.clicked.disconnect()
+            control.clicked.connect(
+                lambda: self.communicate.update_scene.emit(value))
 
     def save_mobject(self):
         self.communicate.save_mobject.emit()
