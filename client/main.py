@@ -11,6 +11,7 @@ def main():
     host, port, password = client_dialog.get_server_info()
     client = ManimStudioClient(host, port, password)
     client.show()
+    client.controls_dialog.show()
     sys.exit(app.exec())
 
 

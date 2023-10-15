@@ -1,5 +1,6 @@
 import socket
 from PyQt6.QtWidgets import QWidget, QLabel, QVBoxLayout, QPushButton, QTextEdit, QMessageBox, QStatusBar
+from .control_dialog import ClientControls
 
 
 class ManimStudioClient(QWidget):
@@ -11,7 +12,7 @@ class ManimStudioClient(QWidget):
         self.password = password
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((self.host, self.port))
-        self.s.send(self.password.encode("utf-8"))
+        self.s.sendall(self.password.encode("utf-8"))
         msg = self.s.recv(1024)
         if msg.decode("utf-8") == "Correct password":
             self.setLayout(QVBoxLayout())
@@ -28,19 +29,19 @@ class ManimStudioClient(QWidget):
             self.layout().addWidget(self.send_button)
             self.status_bar = QStatusBar()
             self.layout().addWidget(self.status_bar)
+            self.controls_dialog = ClientControls(self.s)
         else:
             QMessageBox.critical(
                 self, "Error", msg.decode("utf-8"))
             self.close()
 
     def closeEvent(self, event):
-        self.s.send(b"exit")
+        self.s.sendall(b"exit")
         self.s.close()
         super().closeEvent(event)
 
     def send_code(self):
         code = self.code_edit.toPlainText()
-        self.s.send(code.encode("utf-8"))
+        self.s.sendall(code.encode("utf-8"))
         self.code_edit.clear()
-        msg = self.s.recv(1024)
-        self.status_bar.showMessage(msg.decode("utf-8"), msecs=5000)
+        self.status_bar.showMessage("Code sent")

@@ -1,5 +1,6 @@
 from PyQt6.QtCore import pyqtSignal, QObject
 import numpy as np
+import socket
 
 
 class Communicate(QObject):
@@ -19,3 +20,6 @@ class Communicate(QObject):
     save_mobject = pyqtSignal()
     load_mobject = pyqtSignal()
     set_control_value = pyqtSignal(str, str)
+    add_controls_to_client = pyqtSignal(socket.socket, dict)
+    add_controls_to_clients = pyqtSignal(list, dict)
+    press_button = pyqtSignal(str)

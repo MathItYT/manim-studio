@@ -16,7 +16,7 @@ def main(scene_type=LiveScene, server=False) -> None:
     app.setWindowIcon(icon)
     communicate = Communicate()
     scene = scene_type(communicate)
-    editor_window = EditorWidget(communicate, scene)
+    editor_window = EditorWidget(communicate, scene, server)
     preview_window = PreviewWidget(communicate, scene)
     preview_window.showFullScreen()
     editor_window.show()
@@ -25,8 +25,8 @@ def main(scene_type=LiveScene, server=False) -> None:
         ai_window.show()
     if server:
         from .server import ManimStudioServer
-        server = ManimStudioServer(communicate)
-        server.show()
+        server_window = ManimStudioServer(communicate, editor_window)
+        server_window.show()
     sys.exit(app.exec())
 
 

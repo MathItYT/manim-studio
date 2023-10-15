@@ -5,6 +5,7 @@ from PyQt6.QtCore import pyqtSlot, Qt
 import numpy as np
 from pathlib import Path
 import pickle
+import socket
 
 from .communicate import Communicate
 from .live_scene import LiveScene
@@ -19,9 +20,11 @@ from .button import Button
 
 
 class EditorWidget(QWidget):
-    def __init__(self, communicate: Communicate, scene: LiveScene, *args, **kwargs):
+    def __init__(self, communicate: Communicate, scene: LiveScene, server: bool, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.communicate = communicate
+        self.manim_studio_server = None
+        self.server = server
         self.setWindowTitle("Manim Studio - Editor")
         self.scene = scene
         self.controls = dict()
@@ -155,11 +158,50 @@ class EditorWidget(QWidget):
         self.communicate.set_control_value.connect(self.set_control_value)
         self.communicate.add_button_to_editor.connect(
             self.add_button_to_editor)
+        self.communicate.add_controls_to_client.connect(
+            self.add_controls_to_client)
+        self.communicate.press_button.connect(self.press_button)
+        self.communicate.add_controls_to_clients.connect(
+            self.add_controls_to_clients)
         self.setLayout(self.layout_)
 
     def show(self):
         super().show()
         self.controls_scroll.show()
+
+    def add_controls_to_client(self, s: socket.socket, controls: dict):
+        if len(controls) == 0:
+            s.sendall(b"no_controls")
+            return
+        for name, control in controls.items():
+            if isinstance(control, Slider):
+                s.sendall(f"add_slider {name} {control.value()} {control.minimum()} {control.maximum()} {control.singleStep()}".encode(
+                    "utf-8"))
+            elif isinstance(control, ColorWidget):
+                s.sendall(f"add_color_widget {name} {control.getColor().red()} {control.getColor().green()} {control.getColor().blue()} {control.getColor().alpha()}".encode(
+                    "utf-8"))
+            elif isinstance(control, DropdownWidget):
+                s.sendall(f"add_dropdown {name} {','.join([control.itemText(i) for i in range(control.count())])} {control.currentText()}".encode(
+                    "utf-8"))
+            elif isinstance(control, LineEditorWidget):
+                s.sendall(f"add_line_editor_widget {name} {control.text()}".encode(
+                    "utf-8"))
+            elif isinstance(control, TextEditorWidget):
+                s.sendall(f"add_text_editor_widget {name} {control.toPlainText()}".encode(
+                    "utf-8"))
+            elif isinstance(control, CheckboxWidget):
+                s.sendall(f"add_checkbox {name} {control.isChecked()}".encode(
+                    "utf-8"))
+            elif isinstance(control, Button):
+                s.sendall(f"add_button {name}".encode(
+                    "utf-8"))
+
+    def add_controls_to_clients(self, clients: list[socket.socket], controls: dict):
+        for client in clients:
+            self.add_controls_to_client(client, controls)
+
+    def press_button(self, name: str):
+        self.communicate.update_scene.emit(self.controls[name].callback)
 
     def add_button_widget(self):
         dialog = QDialog(self)
@@ -186,6 +228,9 @@ class EditorWidget(QWidget):
         self.controls_layout.addWidget(button)
         if self.no_controls.isVisible():
             self.no_controls.hide()
+        if self.manim_studio_server is not None:
+            self.add_controls_to_clients(
+                self.manim_studio_server.clients, {name: button})
 
     @pyqtSlot(str, str)
     def set_control_value(self, name: str, value: str):
@@ -249,6 +294,9 @@ class EditorWidget(QWidget):
         self.controls_layout.addWidget(checkbox)
         if self.no_controls.isVisible():
             self.no_controls.hide()
+        if self.manim_studio_server is not None:
+            self.add_controls_to_clients(
+                self.manim_studio_server.clients, {name: checkbox})
 
     @pyqtSlot(str, str)
     def add_text_editor_to_editor(self, name: str, default_value: str):
@@ -261,6 +309,9 @@ class EditorWidget(QWidget):
         self.controls_layout.addWidget(text_editor_widget)
         if self.no_controls.isVisible():
             self.no_controls.hide()
+        if self.manim_studio_server is not None:
+            self.add_controls_to_clients(
+                self.manim_studio_server.clients, {name: text_editor_widget})
 
     def add_checkbox_widget(self):
         dialog = QDialog(self)
@@ -330,6 +381,9 @@ class EditorWidget(QWidget):
         self.controls_layout.addWidget(line_editor_widget)
         if self.no_controls.isVisible():
             self.no_controls.hide()
+        if self.manim_studio_server is not None:
+            self.add_controls_to_clients(
+                self.manim_studio_server.clients, {name: line_editor_widget})
 
     def send_code(self):
         self.communicate.update_scene.emit(self.code_cell_edit.toPlainText())
@@ -418,6 +472,9 @@ class EditorWidget(QWidget):
         self.controls_layout.addWidget(color_widget)
         if self.no_controls.isVisible():
             self.no_controls.hide()
+        if self.manim_studio_server is not None:
+            self.add_controls_to_clients(
+                self.manim_studio_server.clients, {name: color_widget})
 
     @pyqtSlot(str, str, str, str, str)
     def add_slider_to_editor(self, name: str, default_value: str, min_value: str, max_value: str, step_value: str):
@@ -434,6 +491,9 @@ class EditorWidget(QWidget):
         self.controls_layout.addWidget(slider)
         if self.no_controls.isVisible():
             self.no_controls.hide()
+        if self.manim_studio_server is not None:
+            self.add_controls_to_clients(
+                self.manim_studio_server.clients, {name: slider})
 
     @pyqtSlot(str, list, str)
     def add_dropdown_to_editor(self, name: str, options: list[str], default_value: str):
@@ -447,6 +507,9 @@ class EditorWidget(QWidget):
         self.controls_layout.addWidget(dropdown)
         if self.no_controls.isVisible():
             self.no_controls.hide()
+        if self.manim_studio_server is not None:
+            self.add_controls_to_clients(
+                self.manim_studio_server.clients, {name: dropdown})
 
     def save_snippet(self):
         self.communicate.save_snippet.emit(self.code_cell_edit.toPlainText())
