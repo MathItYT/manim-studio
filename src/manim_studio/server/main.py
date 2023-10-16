@@ -58,9 +58,9 @@ class ManimStudioServer(QWidget):
             disconnect_user_button.clicked.connect(
                 lambda: self.server.disconnect_user(username))
             disconnect_user_button.clicked.connect(
-                lambda: layout.removeWidget(label))
+                lambda: label.hide())
             disconnect_user_button.clicked.connect(
-                lambda: layout.removeWidget(disconnect_user_button))
+                lambda: disconnect_user_button.hide())
             dialog.layout().addWidget(label)
             dialog.layout().addWidget(disconnect_user_button)
         update_button = QPushButton("Update")
