@@ -10,6 +10,7 @@ class Server(QThread):
         self.host = host
         self.port = port
         self.password = password
+        self.users: dict[str, socket.socket] = {}
         self.communicate = communicate
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind((self.host, self.port))
@@ -28,6 +29,10 @@ class Server(QThread):
             thread = ClientThread(
                 client, address, self.password, self.communicate, self.editor, self)
             thread.start()
+
+    def disconnect_user(self, username: str):
+        self.users[username].sendall(b"exit")
+        del self.users[username]
 
     def close(self):
         self.running = False
@@ -63,7 +68,18 @@ class ClientThread(QThread):
             self.client.sendall(b"Correct password")
             while True:
                 msg = self.guaranteed_recv()
-                if msg.decode("utf-8") == "get_controls":
+                if msg.decode("utf-8").startswith("username="):
+                    user = msg.decode("utf-8").split("=")[1]
+                    if user not in self.main_thread.users:
+                        self.main_thread.users[user] = self.client
+                        self.client.sendall(b"Username accepted")
+                    else:
+                        self.client.sendall(b"Username already taken")
+                        continue
+                    self.communicate.show_in_status_bar.emit(
+                        f"{user} connected")
+                    continue
+                elif msg.decode("utf-8") == "get_controls":
                     self.communicate.add_controls_to_client.emit(
                         self.client, self.editor.controls)
                     continue
@@ -103,6 +119,26 @@ class ClientThread(QThread):
                 elif msg.decode("utf-8").startswith("button_clicked"):
                     _, name = msg.decode("utf-8").split(" ")
                     self.communicate.press_button.emit(name)
+                    continue
+                elif msg.decode("utf-8").startswith("set_position_control_value_x"):
+                    _, name, value = msg.decode("utf-8").split(" ")
+                    self.communicate.set_position_control_x.emit(
+                        name, value)
+                    continue
+                elif msg.decode("utf-8").startswith("set_position_control_value_y"):
+                    _, name, value = msg.decode("utf-8").split(" ")
+                    self.communicate.set_position_control_y.emit(
+                        name, value)
+                    continue
+                elif msg.decode("utf-8").startswith("set_position_control_value_z"):
+                    _, name, value = msg.decode("utf-8").split(" ")
+                    self.communicate.set_position_control_z.emit(
+                        name, value)
+                    continue
+                elif msg.decode("utf-8").startswith("set_position_control_display_dot"):
+                    _, name, value = msg.decode("utf-8").split(" ")
+                    self.communicate.set_position_control_display_dot.emit(
+                        name, value)
                     continue
                 else:
                     self.communicate.update_scene.emit(msg.decode("utf-8"))

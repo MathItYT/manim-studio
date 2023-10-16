@@ -106,6 +106,10 @@ class LiveScene(QObject, Scene):
         else:
             self.codes.append(self.current_code)
 
+    def add_position_control_command(self, name: str, default_value: np.ndarray):
+        self.communicate.add_position_control_to_editor.emit(
+            name, default_value)
+
     @pyqtSlot(str)
     def update_scene(self, code: str):
         if self.freeze and code != "raise EndSceneEarlyException()":

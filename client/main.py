@@ -8,11 +8,12 @@ def main():
     app = QApplication([])
     client_dialog = ClientDialog()
     client_dialog.exec()
-    host, port, password = client_dialog.get_server_info()
-    client = ManimStudioClient(host, port, password)
+    host, port, username, password = client_dialog.get_server_info()
+    client = ManimStudioClient(host, port, username, password)
     client.show()
-    client.controls_dialog.show()
-    sys.exit(app.exec())
+    if client.success:
+        client.controls_dialog.show()
+        sys.exit(app.exec())
 
 
 if __name__ == "__main__":

@@ -4,17 +4,28 @@ from .control_dialog import ClientControls
 
 
 class ManimStudioClient(QWidget):
-    def __init__(self, host: str, port: int, password: str):
+    def __init__(self, host: str, port: int, username: str, password: str):
         super().__init__()
         self.setWindowTitle("Manim Studio Client")
         self.host = host
         self.port = port
+        self.username = username
         self.password = password
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((self.host, self.port))
         self.s.sendall(self.password.encode("utf-8"))
         msg = self.s.recv(1024)
         if msg.decode("utf-8") == "Correct password":
+            self.s.sendall(f"username={self.username}".encode("utf-8"))
+            answer = self.s.recv(1024)
+            if answer.decode("utf-8") == "Username already taken":
+                QMessageBox.critical(
+                    self, "Error", "Username already taken")
+                self.close()
+                self.success = False
+                return
+            else:
+                self.success = True
             self.setLayout(QVBoxLayout())
             self.label = QLabel()
             self.label.setText(
@@ -29,7 +40,7 @@ class ManimStudioClient(QWidget):
             self.layout().addWidget(self.send_button)
             self.status_bar = QStatusBar()
             self.layout().addWidget(self.status_bar)
-            self.controls_dialog = ClientControls(self.s)
+            self.controls_dialog = ClientControls(self, self.s)
         else:
             QMessageBox.critical(
                 self, "Error", msg.decode("utf-8"))

@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QFileDialog, \
-    QMenuBar, QMessageBox, QDialog, QLineEdit, QLabel, QCheckBox, QGridLayout, QScrollArea
+    QMenuBar, QMessageBox, QDialog, QLineEdit, QLabel, QCheckBox, QGridLayout, QScrollArea, \
+    QDoubleSpinBox, QStatusBar
 from PyQt6.QtGui import QAction, QIntValidator, QColor
 from PyQt6.QtCore import pyqtSlot, Qt
 import numpy as np
@@ -17,6 +18,7 @@ from .text_editor_widget import TextEditorWidget
 from .checkbox_widget import CheckboxWidget
 from .control_dialog import ControlDialog
 from .button import Button
+from .position_control import PositionControl
 
 
 class EditorWidget(QWidget):
@@ -116,12 +118,18 @@ class EditorWidget(QWidget):
         self.add_button_widget_action.triggered.connect(
             self.add_button_widget)
         self.edit_menu.addAction(self.add_button_widget_action)
+        self.add_position_control_action = QAction(
+            "Add position control", self)
+        self.add_position_control_action.setShortcut("Ctrl+Shift+8")
+        self.add_position_control_action.triggered.connect(
+            self.add_position_control)
+        self.edit_menu.addAction(self.add_position_control_action)
         self.save_mobject_action = QAction("Save mobject", self)
-        self.save_mobject_action.setShortcut("Ctrl+Shift+8")
+        self.save_mobject_action.setShortcut("Ctrl+Shift+9")
         self.save_mobject_action.triggered.connect(self.save_mobject)
         self.edit_menu.addAction(self.save_mobject_action)
         self.load_mobject_action = QAction("Load mobject", self)
-        self.load_mobject_action.setShortcut("Ctrl+Shift+9")
+        self.load_mobject_action.setShortcut("Ctrl+Shift+0")
         self.load_mobject_action.triggered.connect(self.load_mobject)
         self.edit_menu.addAction(self.load_mobject_action)
 
@@ -143,6 +151,8 @@ class EditorWidget(QWidget):
         self.controls_layout = QGridLayout()
         self.controls_layout.addWidget(self.no_controls)
         self.controls_widget.setLayout(self.controls_layout)
+        self.status_bar = QStatusBar()
+        self.layout_.addWidget(self.status_bar)
         self.communicate.add_slider_to_editor.connect(
             self.add_slider_to_editor)
         self.communicate.add_color_widget_to_editor.connect(
@@ -163,11 +173,63 @@ class EditorWidget(QWidget):
         self.communicate.press_button.connect(self.press_button)
         self.communicate.add_controls_to_clients.connect(
             self.add_controls_to_clients)
+        self.communicate.add_position_control_to_editor.connect(
+            self.add_position_control_to_editor)
+        self.communicate.set_position_control_x.connect(
+            lambda name, value: self.controls[name].x_.setValue(float(value)))
+        self.communicate.set_position_control_y.connect(
+            lambda name, value: self.controls[name].y_.setValue(float(value)))
+        self.communicate.set_position_control_z.connect(
+            lambda name, value: self.controls[name].z_.setValue(float(value)))
+        self.communicate.set_position_control_display_dot.connect(
+            lambda name, value: self.controls[name].display_dot_checkbox.setChecked(value == "True"))
+        self.communicate.show_in_status_bar.connect(
+            self.status_bar.showMessage)
         self.setLayout(self.layout_)
 
     def show(self):
         super().show()
         self.controls_scroll.show()
+
+    def add_position_control(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add position control")
+        text_edit = QLineEdit(dialog)
+        text_edit.setPlaceholderText("Position control name")
+        x_label = QLabel("X", dialog)
+        x_edit = QDoubleSpinBox(dialog)
+        x_edit.setValue(0)
+        y_label = QLabel("Y", dialog)
+        y_edit = QDoubleSpinBox(dialog)
+        y_edit.setValue(0)
+        z_label = QLabel("Z", dialog)
+        z_edit = QDoubleSpinBox(dialog)
+        z_edit.setValue(0)
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.close)
+        ok_button.clicked.connect(lambda: self.scene.add_position_control_command(
+            text_edit.text(), np.array([x_edit.value(), y_edit.value(), z_edit.value()])))
+        layout = QVBoxLayout()
+        layout.addWidget(text_edit)
+        layout.addWidget(x_label)
+        layout.addWidget(x_edit)
+        layout.addWidget(y_label)
+        layout.addWidget(y_edit)
+        layout.addWidget(z_label)
+        layout.addWidget(z_edit)
+        layout.addWidget(ok_button)
+        dialog.setLayout(layout)
+        dialog.exec()
+
+    def add_position_control_to_editor(self, name: str, default_value: np.ndarray):
+        position_control = PositionControl(name, self.scene, default_value)
+        self.controls[name] = position_control
+        self.controls_layout.addWidget(position_control)
+        if self.no_controls.isVisible():
+            self.no_controls.hide()
+        if self.manim_studio_server is not None:
+            self.add_controls_to_clients(
+                self.manim_studio_server.clients, {name: position_control})
 
     def add_controls_to_client(self, s: socket.socket, controls: dict):
         if len(controls) == 0:
@@ -194,6 +256,9 @@ class EditorWidget(QWidget):
                     "utf-8"))
             elif isinstance(control, Button):
                 s.sendall(f"add_button {name}".encode(
+                    "utf-8"))
+            elif isinstance(control, PositionControl):
+                s.sendall(f"add_position_control {name} {control.x_.value()} {control.y_.value()} {control.z_.value()}".encode(
                     "utf-8"))
 
     def add_controls_to_clients(self, clients: list[socket.socket], controls: dict):
@@ -258,6 +323,11 @@ class EditorWidget(QWidget):
             control.clicked.disconnect()
             control.clicked.connect(
                 lambda: self.communicate.update_scene.emit(value))
+        elif isinstance(control, PositionControl):
+            value = value.split(",")
+            control.x_.setValue(float(value[0]))
+            control.y_.setValue(float(value[1]))
+            control.z_.setValue(float(value[2]))
 
     def save_mobject(self):
         self.communicate.save_mobject.emit()

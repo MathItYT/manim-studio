@@ -45,6 +45,7 @@
   ('contextvars',
    'C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\contextvars.py',
    'PYMODULE'),
+  ('control_dialog', 'E:\\manim-studio\\client\\control_dialog.py', 'PYMODULE'),
   ('copy',
    'C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\copy.py',
    'PYMODULE'),

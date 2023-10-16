@@ -9,11 +9,14 @@ class ClientDialog(QDialog):
         self.host_edit.setPlaceholderText("Enter the host")
         self.port_edit = QLineEdit()
         self.port_edit.setPlaceholderText("Enter the port")
+        self.username_edit = QLineEdit()
+        self.username_edit.setPlaceholderText("Enter your username")
         self.password_edit = QLineEdit()
         self.password_edit.setPlaceholderText("Enter the password")
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.host_edit)
         self.layout.addWidget(self.port_edit)
+        self.layout.addWidget(self.username_edit)
         self.layout.addWidget(self.password_edit)
         self.ok_button = QPushButton("OK")
         self.ok_button.clicked.connect(self.accept)
@@ -23,5 +26,6 @@ class ClientDialog(QDialog):
     def get_server_info(self):
         host = self.host_edit.text()
         port = int(self.port_edit.text())
+        username = self.username_edit.text()
         password = self.password_edit.text()
-        return host, port, password
+        return host, port, username, password

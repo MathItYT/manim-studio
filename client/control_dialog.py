@@ -1,8 +1,9 @@
 from PyQt6.QtWidgets import QVBoxLayout, QLabel, QSlider, QColorDialog, QComboBox, QLineEdit, QTextEdit, QCheckBox,\
-    QPushButton, QScrollArea
+    QPushButton, QScrollArea, QGroupBox, QDoubleSpinBox, QHBoxLayout
 from PyQt6.QtGui import QColor
 from PyQt6.QtCore import QThread, pyqtSignal, Qt
 import socket
+import numpy as np
 
 
 class ClientControls(QScrollArea):
@@ -13,10 +14,13 @@ class ClientControls(QScrollArea):
     add_text_editor_to_client = pyqtSignal(str, str)
     add_checkbox_to_client = pyqtSignal(str, bool)
     add_button_to_client = pyqtSignal(str)
+    add_position_control_to_client = pyqtSignal(str, np.ndarray)
     set_control_value = pyqtSignal(str, str)
+    close_signal = pyqtSignal()
 
-    def __init__(self, s: socket.socket, *args, **kwargs):
+    def __init__(self, main, s: socket.socket, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.main = main
         self.setWindowTitle("Manim Studio Client - Controls")
         self.layout_ = QVBoxLayout()
         self.controls = {}
@@ -40,6 +44,9 @@ class ClientControls(QScrollArea):
             self.add_button_to_client_command)
         self.set_control_value.connect(
             self.set_control_value_command)
+        self.add_position_control_to_client.connect(
+            self.add_position_control_to_client_command)
+        self.close_signal.connect(self.close)
         self.update_controls_thread = UpdateControlsThread(
             self.s,
             add_slider_to_client=self.add_slider_to_client,
@@ -49,6 +56,8 @@ class ClientControls(QScrollArea):
             add_text_editor_to_client=self.add_text_editor_to_client,
             add_checkbox_to_client=self.add_checkbox_to_client,
             add_button_to_client=self.add_button_to_client,
+            add_position_control_to_client=self.add_position_control_to_client,
+            close_signal=self.close_signal,
             set_control_value=self.set_control_value)
         self.update_controls_thread.start()
 
@@ -69,6 +78,11 @@ class ClientControls(QScrollArea):
                 control.setText(value)
             elif isinstance(control, QCheckBox):
                 control.setChecked(value == "True")
+            elif isinstance(control, QGroupBox):
+                x, y, z = value.split(",")
+                control.x_.setValue(float(x))
+                control.y_.setValue(float(y))
+                control.z_.setValue(float(z))
             else:
                 return
         else:
@@ -163,6 +177,39 @@ class ClientControls(QScrollArea):
         self.layout().addWidget(button)
         self.controls[name] = button
 
+    def close(self):
+        super().close()
+        self.main.close()
+        self.s.close()
+
+    def add_position_control_to_client_command(self, name, default):
+        if self.label.isVisible():
+            self.label.hide()
+        widget = QGroupBox(name)
+        widget.setLayout(QHBoxLayout())
+        widget.x_ = QDoubleSpinBox()
+        widget.x_.setValue(default[0])
+        widget.y_ = QDoubleSpinBox()
+        widget.y_.setValue(default[1])
+        widget.z_ = QDoubleSpinBox()
+        widget.z_.setValue(default[2])
+        widget.x_.valueChanged.connect(
+            lambda value: self.s.sendall(f"set_position_control_value_x {name} {value}".encode("utf-8")))
+        widget.y_.valueChanged.connect(
+            lambda value: self.s.sendall(f"set_position_control_value_y {name} {value}".encode("utf-8")))
+        widget.z_.valueChanged.connect(
+            lambda value: self.s.sendall(f"set_position_control_value_z {name} {value}".encode("utf-8")))
+        widget.display_dot_checkbox = QCheckBox("Display Dot")
+        widget.display_dot_checkbox.setChecked(False)
+        widget.display_dot_checkbox.stateChanged.connect(
+            lambda: self.s.sendall(f"set_position_control_display_dot {name} {widget.display_dot_checkbox.isChecked()}".encode("utf-8")))
+        widget.layout().addWidget(widget.x_)
+        widget.layout().addWidget(widget.y_)
+        widget.layout().addWidget(widget.z_)
+        widget.layout().addWidget(widget.display_dot_checkbox)
+        self.layout().addWidget(widget)
+        self.controls[name] = widget
+
 
 class UpdateControlsThread(QThread):
     def __init__(self,
@@ -174,6 +221,8 @@ class UpdateControlsThread(QThread):
                  add_text_editor_to_client: pyqtSignal,
                  add_checkbox_to_client: pyqtSignal,
                  add_button_to_client: pyqtSignal,
+                 add_position_control_to_client: pyqtSignal,
+                 close_signal: pyqtSignal,
                  set_control_value: pyqtSignal):
         super().__init__()
         self.s = s
@@ -184,6 +233,8 @@ class UpdateControlsThread(QThread):
         self.add_text_editor_to_client = add_text_editor_to_client
         self.add_checkbox_to_client = add_checkbox_to_client
         self.add_button_to_client = add_button_to_client
+        self.add_position_control_to_client = add_position_control_to_client
+        self.close_signal = close_signal
         self.set_control_value = set_control_value
 
     def run(self):
@@ -224,5 +275,16 @@ class UpdateControlsThread(QThread):
             elif command.startswith("add_button"):
                 _, name = command.split(" ")
                 self.add_button_to_client.emit(name)
+            elif command.startswith("add_position_control"):
+                _, name, *default = command.split(" ")
+                x, y, z = default
+                x = float(x)
+                y = float(y)
+                z = float(z)
+                self.add_position_control_to_client.emit(
+                    name, np.array([x, y, z]))
+            elif command == "exit":
+                self.close_signal.emit()
+                break
             else:
                 continue

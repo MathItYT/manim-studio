@@ -1,5 +1,5 @@
 from manim_studio.server.server import Server
-from PyQt6.QtWidgets import QWidget, QInputDialog, QLabel, QVBoxLayout, QPushButton, QLineEdit
+from PyQt6.QtWidgets import QWidget, QInputDialog, QLabel, QVBoxLayout, QPushButton, QLineEdit, QDialog
 from pyngrok import ngrok
 
 
@@ -27,12 +27,15 @@ class ManimStudioServer(QWidget):
         self.ask_label.setIndent(10)
         self.public_url = None
         self.ask_label.setStyleSheet("background-color: #f0f0f0;")
-        self.button = QPushButton("Start ngrok")
-        self.button.clicked.connect(self.start_ngrok)
+        self.ngrok_button = QPushButton("Start ngrok")
+        self.ngrok_button.clicked.connect(self.start_ngrok)
+        self.users_button = QPushButton("Users")
+        self.users_button.clicked.connect(self.show_users)
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.ask_label)
-        self.layout.addWidget(self.button)
+        self.layout.addWidget(self.ngrok_button)
+        self.layout.addWidget(self.users_button)
         self.setLayout(self.layout)
         editor.manim_studio_server = self.server
 
@@ -42,10 +45,39 @@ class ManimStudioServer(QWidget):
             self.stop_ngrok()
         super().closeEvent(event)
 
+    def show_users(self):
+        dialog = QDialog()
+        layout = QVBoxLayout()
+        dialog.setLayout(layout)
+        users_dict = self.server.users
+        for username in users_dict.keys():
+            label = QLabel()
+            label.setText(
+                f"{username}")
+            disconnect_user_button = QPushButton(f"Disconnect {username}")
+            disconnect_user_button.clicked.connect(
+                lambda: self.server.disconnect_user(username))
+            disconnect_user_button.clicked.connect(
+                lambda: layout.removeWidget(label))
+            disconnect_user_button.clicked.connect(
+                lambda: layout.removeWidget(disconnect_user_button))
+            dialog.layout().addWidget(label)
+            dialog.layout().addWidget(disconnect_user_button)
+        update_button = QPushButton("Update")
+        dialog.layout().addWidget(update_button)
+
+        def update_button_callback():
+            dialog.accept()
+            self.show_users()
+
+        update_button.clicked.connect(update_button_callback)
+        dialog.setWindowTitle("Users")
+        dialog.exec()
+
     def start_ngrok(self):
         tunnel = ngrok.connect(5555, "tcp")
-        self.button.setText("ngrok started")
-        self.button.setEnabled(False)
+        self.ngrok_button.setText("ngrok started")
+        self.ngrok_button.setEnabled(False)
         self.link_label = QLabel()
         self.link_label.setText(
             "ngrok started. You can share the host and port below with your mates.")
