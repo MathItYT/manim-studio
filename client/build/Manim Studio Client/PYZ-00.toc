@@ -147,6 +147,7 @@
   ('code',
    'C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\code.py',
    'PYMODULE'),
+  ('code_edit', 'E:\\manim-studio\\client\\code_edit.py', 'PYMODULE'),
   ('codeop',
    'C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\codeop.py',
    'PYMODULE'),

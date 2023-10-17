@@ -19,6 +19,7 @@ from .checkbox_widget import CheckboxWidget
 from .control_dialog import ControlDialog
 from .button import Button
 from .position_control import PositionControl
+from .code_edit import CodeEdit
 
 
 class EditorWidget(QWidget):
@@ -32,9 +33,8 @@ class EditorWidget(QWidget):
         self.controls = dict()
         self.ready_to_save = True
 
-        self.code_cell_edit = QTextEdit()
-        self.code_cell_edit.setPlaceholderText("Enter your code here")
-        self.code_cell_edit.setGeometry(0, 0, 1920, 250)
+        self.enter_your_code_label = QLabel(text="Enter your code below:")
+        self.code_cell_edit = CodeEdit()
 
         self.send_button = QPushButton("Send code (Ctrl+Return)")
         self.send_button.setGeometry(0, 0, 100, 50)
@@ -135,6 +135,7 @@ class EditorWidget(QWidget):
 
         self.layout_ = QVBoxLayout()
         self.layout_.addWidget(self.menu_bar)
+        self.layout_.addWidget(self.enter_your_code_label)
         self.layout_.addWidget(self.code_cell_edit)
         self.layout_.addWidget(self.send_button)
         self.layout_.addWidget(self.end_button)
@@ -273,15 +274,16 @@ class EditorWidget(QWidget):
         dialog.setWindowTitle("Add button widget")
         text_edit = QLineEdit(dialog)
         text_edit.setPlaceholderText("Button widget name")
-        callback_edit = QTextEdit(dialog)
-        callback_edit.setPlaceholderText("Callback")
+        callback_label = QLabel("Enter the button's callback below:", dialog)
+        callback_edit = CodeEdit(dialog)
         ok_button = QPushButton("OK", dialog)
         ok_button.clicked.connect(dialog.close)
         ok_button.clicked.connect(lambda: self.scene.add_button_command(
-            text_edit.text(), callback_edit.toPlainText()))
+            text_edit.text(), callback_edit.text()))
 
         layout = QVBoxLayout()
         layout.addWidget(text_edit)
+        layout.addWidget(callback_label)
         layout.addWidget(callback_edit)
         layout.addWidget(ok_button)
         dialog.setLayout(layout)
@@ -456,7 +458,7 @@ class EditorWidget(QWidget):
                 self.manim_studio_server.clients, {name: line_editor_widget})
 
     def send_code(self):
-        self.communicate.update_scene.emit(self.code_cell_edit.toPlainText())
+        self.communicate.update_scene.emit(self.code_cell_edit.text())
         self.code_cell_edit.clear()
 
     def add_slider(self):

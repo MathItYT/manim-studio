@@ -84,7 +84,7 @@ class ClientThread(QThread):
                         self.client, self.editor.controls)
                     continue
                 elif msg.decode("utf-8") == "exit":
-                    self.main_thread.clients.remove(self.client)
+                    self.main_thread.disconnect_user(user)
                     break
                 elif msg.decode("utf-8").startswith("set_slider_value"):
                     _, name, value = msg.decode("utf-8").split(" ")

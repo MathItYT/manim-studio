@@ -1,6 +1,7 @@
 import socket
 from PyQt6.QtWidgets import QWidget, QLabel, QVBoxLayout, QPushButton, QTextEdit, QMessageBox, QStatusBar
 from control_dialog import ClientControls
+from code_edit import CodeEdit
 
 
 class ManimStudioClient(QWidget):
@@ -31,8 +32,9 @@ class ManimStudioClient(QWidget):
             self.label.setText(
                 f"Connected to {self.host}:{self.port}")
             self.layout().addWidget(self.label)
-            self.code_edit = QTextEdit()
-            self.code_edit.setPlaceholderText("Enter the code")
+            self.code_edit_label = QLabel("Code:")
+            self.code_edit = CodeEdit()
+            self.layout().addWidget(self.code_edit_label)
             self.layout().addWidget(self.code_edit)
             self.send_button = QPushButton("Send (Ctrl+Return)")
             self.send_button.setShortcut("Ctrl+Return")
@@ -52,7 +54,7 @@ class ManimStudioClient(QWidget):
         super().closeEvent(event)
 
     def send_code(self):
-        code = self.code_edit.toPlainText()
+        code = self.code_edit.text()
         self.s.sendall(code.encode("utf-8"))
         self.code_edit.clear()
         self.status_bar.showMessage("Code sent")
