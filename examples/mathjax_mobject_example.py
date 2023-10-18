@@ -5,8 +5,6 @@ from time import sleep
 
 class MathJaxExample(LiveScene):
     def construct(self):
-        self.current_code = "from manim_studio import *"
-        self.run_instruction()
         self.current_code = "self.x_times_1000 = IntValueTracker(0)"
         self.run_instruction()
 

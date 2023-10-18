@@ -8,13 +8,16 @@ import argparse
 import sys
 
 
-def get_live_scene_classes_from_file(file_name):
+def import_module_from_file(file_name):
     from importlib import import_module
     import sys
     sys.path.append(".")
     module_name = file_name.replace(
         "/", ".").replace("\\", ".").replace(".py", "")
-    module = import_module(module_name)
+    return import_module(module_name)
+
+
+def get_live_scene_classes_from_module(module):
     return [getattr(module, name)
             for name in dir(module)
             if name != "LiveScene"
@@ -46,13 +49,14 @@ def main():
     if args.file is None:
         run_manim_studio(LiveScene, args.server)
     else:
-        live_scenes = get_live_scene_classes_from_file(args.file)
+        module = import_module_from_file(args.file)
+        live_scenes = get_live_scene_classes_from_module(module)
         if args.scene is None:
             if len(live_scenes) == 0:
                 logger.error(
                     f"No live scene found in file {args.file}")
             elif len(live_scenes) == 1:
-                run_manim_studio(live_scenes[0], args.server)
+                run_manim_studio(live_scenes[0], args.server, module)
             else:
                 logger.info(
                     "More than one live scene found in file. Select one:")
@@ -66,11 +70,11 @@ def main():
                         break
                     except ValueError:
                         logger.info("Invalid input")
-                run_manim_studio(live_scenes[i-1], args.server)
+                run_manim_studio(live_scenes[i-1], args.server, module)
         else:
             for live_scene in live_scenes:
                 if live_scene.__name__ == args.scene:
-                    run_manim_studio(live_scene, args.server)
+                    run_manim_studio(live_scene, args.server, module)
                     break
             else:
                 logger.error(

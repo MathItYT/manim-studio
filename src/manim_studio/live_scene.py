@@ -8,9 +8,10 @@ from .load_mobject import load_mobject
 
 
 class CairoLiveRenderer(QObject, CairoRenderer):
-    def __init__(self, communicate: Communicate, *args, **kwargs):
+    def __init__(self, communicate: Communicate, camera_class=None, *args, **kwargs):
         QObject.__init__(self)
-        CairoRenderer.__init__(self, *args, **kwargs)
+        CairoRenderer.__init__(
+            self, camera_class=camera_class, *args, **kwargs)
         self.communicate = communicate
 
     def render(self, scene, time, moving_mobjects):
@@ -19,20 +20,20 @@ class CairoLiveRenderer(QObject, CairoRenderer):
 
 
 class LiveScene(QObject, Scene):
-    def __init__(self, communicate: Communicate, renderer=None, *args, **kwargs):
+    def __init__(self, communicate: Communicate, namespace=None, *args, **kwargs):
         config.disable_caching = True
-        QObject.__init__(self)
-        Scene.__init__(self, *args, **kwargs)
         self.communicate = communicate
-        renderer = CairoLiveRenderer(communicate)
-        QObject.__init__(self)
-        Scene.__init__(self, renderer=renderer, *args, **kwargs)
+        super().__init__(*args, **kwargs)
+        self.renderer = CairoLiveRenderer(
+            communicate, camera_class=self.camera_class)
+        self.renderer.init_scene(self)
         self.communicate.update_scene.connect(self.update_scene)
         self.communicate.end_scene.connect(self.end_scene)
         self.communicate.alert.connect(self.alert)
         self.communicate.save_mobject.connect(self.save_mobject)
         self.communicate.load_mobject.connect(self.load_mobject)
         self.current_code = None
+        self.namespace = namespace.__dict__ if namespace is not None else {}
         self.codes = []
         self.freeze = False
         self.playing = False
@@ -94,6 +95,8 @@ class LiveScene(QObject, Scene):
         try:
             scope = globals()
             scope["self"] = self
+            for name, value in self.namespace.items():
+                scope[name] = value
             current_code = self.current_code
             self.current_code = None
             exec(current_code, scope)

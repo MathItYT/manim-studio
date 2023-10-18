@@ -8,14 +8,18 @@ from .live_scene import LiveScene
 from .communicate import Communicate
 from .ai_widget import AIWidget
 from .get_icon_file import get_icon_file
+from .inherits_dialog import InheritsDialog
 
 
-def main(scene_type=LiveScene, server=False) -> None:
+def main(scene_type=LiveScene, server=False, namespace=None) -> None:
     app = QApplication(sys.argv)
     icon = QIcon(get_icon_file())
     app.setWindowIcon(icon)
+    inherits_dialog = InheritsDialog(scene_type, namespace)
+    inherits_dialog.exec()
+    scene_type = inherits_dialog.set_scene_type_base_classes()
     communicate = Communicate()
-    scene = scene_type(communicate)
+    scene = scene_type(communicate, namespace)
     editor_window = EditorWidget(communicate, scene, server)
     preview_window = PreviewWidget(communicate, scene)
     preview_window.showFullScreen()
