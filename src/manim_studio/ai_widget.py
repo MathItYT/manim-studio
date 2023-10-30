@@ -3,9 +3,10 @@ try:
 except ImportError:
     AIWidget = None
 else:
-    from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QTextEdit, QDialog, QLabel, QLineEdit, QComboBox
+    from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QDialog, QTextEdit, QLabel, QLineEdit, QComboBox
     from PyQt6.QtGui import QIntValidator
     from .communicate import Communicate
+    from .code_edit import CodeEdit
 
     SYSTEM_INSTRUCTIONS = "Generate a Python code snippet to generate a Manim animation according to the prompt. " \
         + "The response must contain only one snippet. " \
@@ -26,9 +27,10 @@ else:
             self.layout_ = QVBoxLayout()
             self.send_code_button = QPushButton("Send code")
             self.send_code_button.clicked.connect(self.send_code)
-            self.response_edit = QTextEdit()
-            self.response_edit.setPlaceholderText("Response")
+            response_label = QLabel(text="Response")
+            self.response_edit = CodeEdit()
             self.response_edit.setReadOnly(True)
+            self.layout_.addWidget(response_label)
             self.layout_.addWidget(self.response_edit)
             self.prompt_edit = QTextEdit()
             self.prompt_edit.setPlaceholderText("Enter the prompt")
