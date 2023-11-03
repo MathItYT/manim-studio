@@ -1,8 +1,10 @@
 from manim import *
-from PyQt6.QtCore import QObject, pyqtSlot
+from PyQt6.QtCore import QObject, pyqtSlot, Qt
 from PyQt6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLineEdit, QLabel, QPushButton, QFileDialog
 from .communicate import Communicate
 import dill as pickle
+import time
+import ctypes
 
 from .load_mobject import load_mobject
 
@@ -32,33 +34,68 @@ class LiveScene(QObject, Scene):
         self.communicate.alert.connect(self.alert)
         self.communicate.save_mobject.connect(self.save_mobject)
         self.communicate.load_mobject.connect(self.load_mobject)
+        self.communicate.pause_scene.connect(self.pause_scene)
+        self.communicate.resume_scene.connect(self.resume_scene)
         self.current_code = None
         self.namespace = namespace.__dict__ if namespace is not None else {}
-        self.codes = []
+        self.lines = []
         self.freeze = False
+        self.paused = False
         self.playing = False
+        self.scope = globals()
+        self.scope.update(self.namespace)
+        self.scope["self"] = self
+        if isinstance(self, MovingCameraScene):
+            self.add(self.camera.frame)
+        self.states = {}
 
-    def play(self, *args, **kwargs):
-        if self.playing is True:
-            alert = QMessageBox(
-                text="You cannot play the scene while it is playing.")
-            alert.setWindowTitle("Scene playing")
-            alert.setIcon(QMessageBox.Icon.Information)
-            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
-            alert.exec()
-            return
-        self.playing = True
-        super().play(*args, **kwargs)
-        self.playing = False
+    def save_state(self, name: str | None = None):
+        if name is None or name.strip() == "":
+            name = "Untitled"
+        name = str(name).strip()
+        if name in self.states.keys():
+            self.print_gui(f"State '{name}' already exists.")
+            return False
+        self.states[name] = [[m.__dict__.copy() for m in self.mobjects], [
+            id(m) for m in self.mobjects]]
+        self.print_gui(f"State '{name}' saved.")
+        return True
+
+    def restore_state(self, name: str):
+        name = str(name).strip()
+        copy_dicts, ids = self.states.get(name, (None, None))
+        if copy_dicts is None:
+            self.print_gui(f"State '{name}' does not exist.")
+            return False
+        mobjects = [ctypes.cast(i, ctypes.py_object).value for i in ids]
+        for mobject, copy_dict in zip(mobjects, copy_dicts):
+            mobject.__dict__ = copy_dict
+        self.mobjects = mobjects
+        self.print_gui(f"State '{name}' restored.")
+        return True
+
+    def print_gui(self, text: str):
+        self.communicate.print_gui.emit(str(text))
+
+    def pause_scene(self):
+        self.paused = True
+
+    def resume_scene(self):
+        self.paused = False
 
     def set_control_value(self, name: str, value: str):
         self.communicate.set_control_value.emit(name, value)
 
     def construct(self):
         while True:
-            while self.no_instruction():
-                self.wait_until(lambda: not self.no_instruction(), 1)
-            self.run_instruction()
+            while self.no_instruction() and not self.paused:
+                self.wait_until(
+                    lambda: not self.no_instruction() or self.paused, 1)
+            if self.paused:
+                while self.paused:
+                    time.sleep(0)
+            if not self.no_instruction():
+                self.run_instruction()
 
     def add_checkbox_command(self, name: str, default_value: bool):
         self.communicate.add_checkbox_to_editor.emit(
@@ -93,21 +130,15 @@ class LiveScene(QObject, Scene):
 
     def run_instruction(self):
         try:
-            scope = globals()
-            scope["self"] = self
-            for name, value in self.namespace.items():
-                scope[name] = value
             current_code = self.current_code
             self.current_code = None
-            exec(current_code, scope)
+            exec(current_code, self.scope)
         except EndSceneEarlyException:
             raise EndSceneEarlyException()
         except Exception as e:
             logger.info(
                 f"Exception occured in live scene ({e.__class__.__name__}: {e})")
             self.communicate.alert.emit(e)
-        else:
-            self.codes.append(self.current_code)
 
     def add_position_control_command(self, name: str, default_value: np.ndarray):
         self.communicate.add_position_control_to_editor.emit(
@@ -121,6 +152,7 @@ class LiveScene(QObject, Scene):
             alert.setWindowTitle("Scene paused")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
         self.current_code = code
@@ -133,6 +165,7 @@ class LiveScene(QObject, Scene):
         alert.setWindowTitle("Scene ended")
         alert.setIcon(QMessageBox.Icon.Information)
         alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+        alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         alert.exec()
 
     @pyqtSlot(Exception)
@@ -143,6 +176,7 @@ class LiveScene(QObject, Scene):
         alert.setIcon(QMessageBox.Icon.Warning)
         alert.setStandardButtons(QMessageBox.StandardButton.Ok)
         alert.setInformativeText(f"{e.__class__.__name__}: {e}")
+        alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         alert.exec()
 
     def pause_slide(self):
@@ -152,6 +186,7 @@ class LiveScene(QObject, Scene):
                 lambda: not self.freeze or not self.no_instruction(), 1)
         if not self.no_instruction():
             self.run_instruction()
+        self.freeze = False
 
     def no_instruction(self):
         return self.current_code is None
@@ -172,6 +207,7 @@ class LiveScene(QObject, Scene):
         dialog.ok_button.clicked.connect(dialog.accept)
         dialog.layout_.addWidget(dialog.ok_button)
         dialog.setLayout(dialog.layout_)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         dialog.exec()
 
         name = dialog.name_edit.text()
@@ -181,6 +217,7 @@ class LiveScene(QObject, Scene):
             alert.setWindowTitle("No name entered")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
         mobject_to_save = getattr(self, name, None)
@@ -190,6 +227,7 @@ class LiveScene(QObject, Scene):
             alert.setWindowTitle("Invalid name")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
         file_name = QFileDialog.getSaveFileName(
@@ -205,6 +243,7 @@ class LiveScene(QObject, Scene):
             alert.setWindowTitle("No file name entered")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
         alert = QMessageBox(
@@ -212,6 +251,7 @@ class LiveScene(QObject, Scene):
         alert.setWindowTitle("Mobject saved")
         alert.setIcon(QMessageBox.Icon.Information)
         alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+        alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         alert.exec()
 
     def load_mobject(self):
@@ -225,6 +265,7 @@ class LiveScene(QObject, Scene):
             alert.setWindowTitle("No file name entered")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
         dialog = QDialog()
@@ -242,6 +283,7 @@ class LiveScene(QObject, Scene):
         dialog.ok_button.clicked.connect(dialog.accept)
         dialog.layout_.addWidget(dialog.ok_button)
         dialog.setLayout(dialog.layout_)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         dialog.exec()
         if dialog.name_edit.text() == "":
             alert = QMessageBox(
@@ -249,6 +291,7 @@ class LiveScene(QObject, Scene):
             alert.setWindowTitle("No name entered")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
         code = f"self.{dialog.name_edit.text()} = load_mobject('{file_name[0]}')"
@@ -258,4 +301,5 @@ class LiveScene(QObject, Scene):
         alert.setWindowTitle("Mobject loaded")
         alert.setIcon(QMessageBox.Icon.Information)
         alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+        alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         alert.exec()

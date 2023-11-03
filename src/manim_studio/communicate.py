@@ -29,3 +29,6 @@ class Communicate(QObject):
     set_position_control_z = pyqtSignal(str, str)
     set_position_control_display_dot = pyqtSignal(str, str)
     show_in_status_bar = pyqtSignal(str)
+    pause_scene = pyqtSignal()
+    resume_scene = pyqtSignal()
+    print_gui = pyqtSignal(str)

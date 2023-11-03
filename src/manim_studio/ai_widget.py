@@ -5,6 +5,7 @@ except ImportError:
 else:
     from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QDialog, QTextEdit, QLabel, QLineEdit, QComboBox
     from PyQt6.QtGui import QIntValidator
+    from PyQt6.QtCore import Qt
     from .communicate import Communicate
     from .code_edit import CodeEdit
 
@@ -22,6 +23,7 @@ else:
         def __init__(self, communicate: Communicate, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.setWindowTitle("Manim Studio - AI Power")
+            self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             self.openai_api_key_is_set = False
             self.communicate = communicate
             self.layout_ = QVBoxLayout()

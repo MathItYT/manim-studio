@@ -3,7 +3,7 @@ from .live_scene import LiveScene
 from .client.dialog import ClientDialog
 from .client.client import ManimStudioClient
 from PyQt6.QtWidgets import QApplication
-from manim import logger
+from manim import logger, config
 import argparse
 import sys
 
@@ -33,9 +33,19 @@ def main():
                         default=None, required=False)
     parser.add_argument("--server", "-S", help="run server",
                         action="store_true", required=False)
-    parser.add_argument("--connect", "-c", help="connect to server",
+    parser.add_argument("--connect", "-C", help="connect to server",
+                        action="store_true", required=False)
+    parser.add_argument("--resolution", "-r", help="resolution",
+                        default=None, required=False)
+    parser.add_argument("--background", "-b", help="background color",
+                        default=None, required=False)
+    parser.add_argument("--preview", "-p", help="preview the final result",
+                        action="store_true", required=False)
+    parser.add_argument("--transparent", "-t", help="transparent background",
                         action="store_true", required=False)
     args = parser.parse_args()
+    preview = args.preview
+    config.transparent = args.transparent
     if args.connect:
         app = QApplication([])
         client_dialog = ClientDialog()
@@ -46,8 +56,27 @@ def main():
         if client.success:
             client.controls_dialog.show()
             sys.exit(app.exec())
+    if args.resolution is not None:
+        try:
+            factor = config.frame_height / config.pixel_height
+            width, height = args.resolution.split("x")
+            config.pixel_width = int(width)
+            config.pixel_height = int(height)
+            config.frame_width = config.pixel_width * factor
+            config.frame_height = config.pixel_height * factor
+        except Exception:
+            logger.error(
+                "Invalid resolution format: It must be in the form WIDTHxHEIGHT")
+            sys.exit(1)
+    if args.background is not None:
+        try:
+            config.background_color = args.background
+        except Exception:
+            logger.error(
+                "Invalid background color format: It must be in the form #RRGGBB")
+            sys.exit(1)
     if args.file is None:
-        run_manim_studio(LiveScene, args.server)
+        run_manim_studio(LiveScene, args.server, preview=preview)
     else:
         module = import_module_from_file(args.file)
         live_scenes = get_live_scene_classes_from_module(module)
@@ -56,7 +85,8 @@ def main():
                 logger.error(
                     f"No live scene found in file {args.file}")
             elif len(live_scenes) == 1:
-                run_manim_studio(live_scenes[0], args.server, module)
+                run_manim_studio(
+                    live_scenes[0], args.server, module, preview=preview)
             else:
                 logger.info(
                     "More than one live scene found in file. Select one:")
@@ -70,11 +100,13 @@ def main():
                         break
                     except ValueError:
                         logger.info("Invalid input")
-                run_manim_studio(live_scenes[i-1], args.server, module)
+                run_manim_studio(
+                    live_scenes[i-1], args.server, module, preview=preview)
         else:
             for live_scene in live_scenes:
                 if live_scene.__name__ == args.scene:
-                    run_manim_studio(live_scene, args.server, module)
+                    run_manim_studio(live_scene, args.server,
+                                     module, preview=preview)
                     break
             else:
                 logger.error(

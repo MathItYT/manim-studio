@@ -22,6 +22,7 @@ class ClientControls(QScrollArea):
         super().__init__(*args, **kwargs)
         self.main = main
         self.setWindowTitle("Manim Studio Client - Controls")
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self.layout_ = QVBoxLayout()
         self.controls = {}
         self.setLayout(self.layout_)

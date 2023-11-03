@@ -1,5 +1,6 @@
 import socket
-from PyQt6.QtWidgets import QWidget, QLabel, QVBoxLayout, QPushButton, QTextEdit, QMessageBox, QStatusBar
+from PyQt6.QtWidgets import QWidget, QLabel, QVBoxLayout, QPushButton, QMessageBox, QStatusBar
+from PyQt6.QtCore import Qt
 from .control_dialog import ClientControls
 from manim_studio.code_edit import CodeEdit
 
@@ -8,6 +9,7 @@ class ManimStudioClient(QWidget):
     def __init__(self, host: str, port: int, username: str, password: str):
         super().__init__()
         self.setWindowTitle("Manim Studio Client")
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self.host = host
         self.port = port
         self.username = username

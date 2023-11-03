@@ -11,8 +11,10 @@ from .get_icon_file import get_icon_file
 from .inherits_dialog import InheritsDialog
 
 
-def main(scene_type=LiveScene, server=False, namespace=None) -> None:
+def main(scene_type=LiveScene, server=False, namespace=None, preview=False) -> None:
     app = QApplication(sys.argv)
+    screen_size = app.primaryScreen().size()
+    w, h = screen_size.width(), screen_size.height()
     icon = QIcon(get_icon_file())
     app.setWindowIcon(icon)
     inherits_dialog = InheritsDialog(scene_type, namespace)
@@ -21,8 +23,8 @@ def main(scene_type=LiveScene, server=False, namespace=None) -> None:
     communicate = Communicate()
     scene = scene_type(communicate, namespace)
     editor_window = EditorWidget(communicate, scene, server)
-    preview_window = PreviewWidget(communicate, scene)
-    preview_window.showFullScreen()
+    preview_window = PreviewWidget(communicate, scene, (w, h), preview)
+    preview_window.show()
     editor_window.show()
     if AIWidget is not None:
         ai_window = AIWidget(communicate)

@@ -82,6 +82,6 @@ class CodeEdit(QsciScintilla):
         self.setMarginsForegroundColor(QColor("#F8F8F2"))
         self.setCaretForegroundColor(QColor("#F8F8F2"))
         self.setGeometry(0, 0, 100, 50)
-    
+
     def toPlainText(self):
         return self.text()

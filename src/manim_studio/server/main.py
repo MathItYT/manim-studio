@@ -1,5 +1,6 @@
 from manim_studio.server.server import Server
 from PyQt6.QtWidgets import QWidget, QInputDialog, QLabel, QVBoxLayout, QPushButton, QLineEdit, QDialog
+from PyQt6.QtCore import Qt
 from pyngrok import ngrok
 
 
@@ -7,6 +8,7 @@ class ManimStudioServer(QWidget):
     def __init__(self, communicate, editor):
         super().__init__()
         self.setWindowTitle("Manim Studio Server")
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self.communicate = communicate
         password_dialog = QInputDialog()
         password_dialog.setLabelText("Create a password for the server: ")

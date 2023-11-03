@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QFileDialog, \
     QMenuBar, QMessageBox, QDialog, QLineEdit, QLabel, QCheckBox, QGridLayout, QScrollArea, \
-    QDoubleSpinBox, QStatusBar
+    QDoubleSpinBox, QStatusBar, QComboBox
 from PyQt6.QtGui import QAction, QIntValidator, QColor
 from PyQt6.QtCore import pyqtSlot, Qt
 import numpy as np
@@ -32,11 +32,13 @@ class EditorWidget(QWidget):
         self.scene = scene
         self.controls = dict()
         self.ready_to_save = True
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
 
         self.enter_your_code_label = QLabel(text="Enter your code below:")
         self.code_cell_edit = CodeEdit()
 
-        self.send_button = QPushButton("Send code (Ctrl+Return)")
+        self.send_button = QPushButton(
+            "Send code (Ctrl+Return)")
         self.send_button.setGeometry(0, 0, 100, 50)
         self.send_button.setShortcut("Ctrl+Return")
         self.send_button.clicked.connect(self.send_code)
@@ -44,10 +46,6 @@ class EditorWidget(QWidget):
         self.end_button.setGeometry(0, 0, 100, 50)
         self.end_button.setShortcut("Ctrl+Q")
         self.end_button.clicked.connect(self.end_scene)
-        self.end_and_save_button = QPushButton("End scene and save (Ctrl+S)")
-        self.end_and_save_button.setShortcut("Ctrl+S")
-        self.end_and_save_button.setGeometry(0, 0, 100, 50)
-        self.end_and_save_button.clicked.connect(self.end_scene_saving)
         self.save_snip_button = QPushButton("Save snippet (Ctrl+Shift+S)")
         self.save_snip_button.setShortcut("Ctrl+Shift+S")
         self.save_snip_button.setGeometry(0, 0, 100, 50)
@@ -65,6 +63,16 @@ class EditorWidget(QWidget):
         self.communicate.next_slide.connect(self.next_slide)
         self.next_slide_button.clicked.connect(
             self.communicate.next_slide.emit)
+        self.pause_scene_button = QPushButton("Pause scene (Ctrl+P)")
+        self.pause_scene_button.setShortcut("Ctrl+P")
+        self.pause_scene_button.setGeometry(0, 0, 100, 50)
+        self.pause_scene_button.clicked.connect(
+            self.communicate.pause_scene.emit)
+        self.resume_scene_button = QPushButton("Resume scene (Ctrl+R)")
+        self.resume_scene_button.setShortcut("Ctrl+R")
+        self.resume_scene_button.setGeometry(0, 0, 100, 50)
+        self.resume_scene_button.clicked.connect(
+            self.communicate.resume_scene.emit)
 
         self.menu_bar = QMenuBar()
         self.file_menu = self.menu_bar.addMenu("File")
@@ -132,6 +140,15 @@ class EditorWidget(QWidget):
         self.load_mobject_action.setShortcut("Ctrl+Shift+0")
         self.load_mobject_action.triggered.connect(self.load_mobject)
         self.edit_menu.addAction(self.load_mobject_action)
+        self.states_menu = self.menu_bar.addMenu("States")
+        self.save_state_action = QAction("Save state", self)
+        self.save_state_action.setShortcut("Ctrl+Alt+S")
+        self.save_state_action.triggered.connect(self.save_state)
+        self.states_menu.addAction(self.save_state_action)
+        self.restore_state_action = QAction("Restore state", self)
+        self.restore_state_action.setShortcut("Ctrl+Alt+R")
+        self.restore_state_action.triggered.connect(self.restore_state)
+        self.states_menu.addAction(self.restore_state_action)
 
         self.layout_ = QVBoxLayout()
         self.layout_.addWidget(self.menu_bar)
@@ -139,12 +156,14 @@ class EditorWidget(QWidget):
         self.layout_.addWidget(self.code_cell_edit)
         self.layout_.addWidget(self.send_button)
         self.layout_.addWidget(self.end_button)
-        self.layout_.addWidget(self.end_and_save_button)
         self.layout_.addWidget(self.save_snip_button)
         self.layout_.addWidget(self.save_snip_and_run_button)
         self.layout_.addWidget(self.next_slide_button)
+        self.layout_.addWidget(self.pause_scene_button)
+        self.layout_.addWidget(self.resume_scene_button)
         self.controls_widget = QWidget()
         self.controls_scroll = QScrollArea()
+        self.controls_scroll.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self.controls_scroll.setWidget(self.controls_widget)
         self.controls_scroll.setWidgetResizable(True)
         self.no_controls = QLabel(text="No controls defined")
@@ -186,11 +205,63 @@ class EditorWidget(QWidget):
             lambda name, value: self.controls[name].display_dot_checkbox.setChecked(value == "True"))
         self.communicate.show_in_status_bar.connect(
             self.status_bar.showMessage)
+        self.communicate.print_gui.connect(self.print_gui)
         self.setLayout(self.layout_)
 
     def show(self):
         super().show()
         self.controls_scroll.show()
+
+    def restore_state(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Restore state")
+        dialog.layout_ = QVBoxLayout()
+        dialog.label = QLabel("Select the state to restore:")
+        dialog.layout_.addWidget(dialog.label)
+        dialog.states = QComboBox()
+        dialog.states.addItems([state for state in self.scene.states.keys()])
+        dialog.layout_.addWidget(dialog.states)
+        dialog.ok_button = QPushButton("OK")
+        dialog.ok_button.clicked.connect(dialog.close)
+        dialog.ok_button.clicked.connect(
+            lambda: self.scene.restore_state(dialog.states.currentText()))
+        dialog.layout_.addWidget(dialog.ok_button)
+        dialog.setLayout(dialog.layout_)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
+        dialog.exec()
+
+    def save_state(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Save state")
+        dialog.layout_ = QVBoxLayout()
+        dialog.label = QLabel("Enter the name of the state:")
+        dialog.layout_.addWidget(dialog.label)
+        dialog.name_edit = QLineEdit()
+        dialog.name_edit.setPlaceholderText("State name")
+        dialog.layout_.addWidget(dialog.name_edit)
+        dialog.ok_button = QPushButton("OK")
+        dialog.ok_button.clicked.connect(dialog.close)
+        dialog.ok_button.clicked.connect(
+            lambda: self.scene.save_state(dialog.name_edit.text()))
+        dialog.layout_.addWidget(dialog.ok_button)
+        dialog.setLayout(dialog.layout_)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
+        dialog.exec()
+
+    def print_gui(self, text: str):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Print")
+        dialog.layout_ = QVBoxLayout()
+        dialog.text_edit = QTextEdit()
+        dialog.text_edit.setReadOnly(True)
+        dialog.text_edit.setText(text)
+        dialog.layout_.addWidget(dialog.text_edit)
+        dialog.ok_button = QPushButton("OK")
+        dialog.ok_button.clicked.connect(dialog.close)
+        dialog.layout_.addWidget(dialog.ok_button)
+        dialog.setLayout(dialog.layout_)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
+        dialog.exec()
 
     def add_position_control(self):
         dialog = QDialog(self)
@@ -220,6 +291,7 @@ class EditorWidget(QWidget):
         layout.addWidget(z_edit)
         layout.addWidget(ok_button)
         dialog.setLayout(layout)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         dialog.exec()
 
     def add_position_control_to_editor(self, name: str, default_value: np.ndarray):
@@ -287,6 +359,7 @@ class EditorWidget(QWidget):
         layout.addWidget(callback_edit)
         layout.addWidget(ok_button)
         dialog.setLayout(layout)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         dialog.exec()
 
     def add_button_to_editor(self, name: str, callback: str):
@@ -305,6 +378,7 @@ class EditorWidget(QWidget):
         if control is None:
             alert = QMessageBox()
             alert.setText(f"Control {name} not found")
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
         if isinstance(control, Slider):
@@ -354,6 +428,7 @@ class EditorWidget(QWidget):
         layout.addWidget(default_value_edit)
         layout.addWidget(ok_button)
         dialog.setLayout(layout)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         dialog.exec()
 
     @pyqtSlot(str, bool)
@@ -402,6 +477,7 @@ class EditorWidget(QWidget):
         layout.addWidget(default_value_edit)
         layout.addWidget(ok_button)
         dialog.setLayout(layout)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         dialog.exec()
 
     def add_dropdown(self):
@@ -423,6 +499,7 @@ class EditorWidget(QWidget):
         layout.addWidget(default_value_edit)
         layout.addWidget(ok_button)
         dialog.setLayout(layout)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         dialog.exec()
 
     def add_line_editor_widget(self):
@@ -441,6 +518,7 @@ class EditorWidget(QWidget):
         layout.addWidget(default_value_edit)
         layout.addWidget(ok_button)
         dialog.setLayout(layout)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         dialog.exec()
 
     @pyqtSlot(str, str)
@@ -495,6 +573,7 @@ class EditorWidget(QWidget):
         layout.addWidget(step_value_edit)
         layout.addWidget(ok_button)
         dialog.setLayout(layout)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         dialog.exec()
 
     def add_color_widget(self):
@@ -530,6 +609,7 @@ class EditorWidget(QWidget):
         layout.addWidget(default_a_edit)
         layout.addWidget(ok_button)
         dialog.setLayout(layout)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         dialog.exec()
 
     @pyqtSlot(str, np.ndarray)
@@ -621,21 +701,6 @@ class EditorWidget(QWidget):
                 if Path(f"{file_[0]}.controls").exists():
                     Path(f"{file_[0]}.controls").unlink()
 
-    def end_scene_saving(self):
-        codes = "\n".join(self.scene.codes)
-        self.ready_to_save = False
-        self.save_snippet_command(codes)
-        if self.ready_to_save is True:
-            self.end_scene()
-        else:
-            self.ready_to_save = True
-            alert = QMessageBox(
-                text="You have not saved the snippet yet.")
-            alert.setWindowTitle("Snippet not saved")
-            alert.setIcon(QMessageBox.Icon.Information)
-            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
-            alert.exec()
-
     def save_snippet_and_run(self):
         self.save_snippet()
         self.send_code()
@@ -677,6 +742,7 @@ class EditorWidget(QWidget):
             alert.setWindowTitle("No file selected")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
 
     def open_snippet_and_run(self):
@@ -690,6 +756,7 @@ class EditorWidget(QWidget):
             alert.setWindowTitle("Scene not paused")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
         self.scene.freeze = False
