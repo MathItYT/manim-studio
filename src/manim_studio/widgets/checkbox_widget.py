@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QCheckBox
 
-from .boolean_value_tracker import BooleanValueTracker
+from manim_studio.value_trackers.boolean_value_tracker import BooleanValueTracker
 
 
 class CheckboxWidget(QCheckBox):

@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QSlider
 
-from .int_value_tracker import IntValueTracker
+from manim_studio.value_trackers.int_value_tracker import IntValueTracker
 
 
 class Slider(QSlider):

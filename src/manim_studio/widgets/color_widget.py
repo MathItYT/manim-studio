@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QColorDialog
 import numpy as np
 
-from .color_value_tracker import ColorValueTracker
+from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 
 
 class ColorWidget(QColorDialog):

@@ -10,15 +10,15 @@ import socket
 
 from .communicate import Communicate
 from .live_scene import LiveScene
-from .slider import Slider
-from .color_widget import ColorWidget
-from .dropdown_widget import DropdownWidget
-from .line_editor_widget import LineEditorWidget
-from .text_editor_widget import TextEditorWidget
-from .checkbox_widget import CheckboxWidget
+from manim_studio.widgets.slider import Slider
+from manim_studio.widgets.color_widget import ColorWidget
+from manim_studio.widgets.dropdown_widget import DropdownWidget
+from manim_studio.widgets.line_editor_widget import LineEditorWidget
+from manim_studio.widgets.text_editor_widget import TextEditorWidget
+from manim_studio.widgets.checkbox_widget import CheckboxWidget
 from .control_dialog import ControlDialog
-from .button import Button
-from .position_control import PositionControl
+from manim_studio.widgets.button import Button
+from manim_studio.widgets.position_control import PositionControl
 from .code_edit import CodeEdit
 
 

@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QLineEdit
 
-from .string_value_tracker import StringValueTracker
+from manim_studio.value_trackers.string_value_tracker import StringValueTracker
 
 
 class LineEditorWidget(QLineEdit):

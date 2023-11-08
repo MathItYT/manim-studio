@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QPushButton
-from .communicate import Communicate
+from manim_studio.communicate import Communicate
 
 
 class Button(QPushButton):

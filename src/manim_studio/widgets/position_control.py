@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QDoubleSpinBox, QGroupBox, QHBoxLayout, QCheckBox
 from manim import Dot
-from .live_scene import LiveScene
+from manim_studio.live_scene import LiveScene
 import numpy as np
 
 

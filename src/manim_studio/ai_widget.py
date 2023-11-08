@@ -80,6 +80,7 @@ else:
                 dialog.ok_button.clicked.connect(
                     lambda: self.set_api_key(dialog.api_key_edit.toPlainText()))
                 dialog.layout_.addWidget(dialog.ok_button)
+                dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
                 dialog.setLayout(dialog.layout_)
                 dialog.exec()
                 return
