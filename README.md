@@ -1,5 +1,7 @@
 # Manim Studio
 
+[![Deploy static content to Pages](https://github.com/MathItYT/manim-studio/actions/workflows/static.yml/badge.svg)](https://github.com/MathItYT/manim-studio/actions/workflows/static.yml)
+
 ![Manim Studio](https://raw.githubusercontent.com/MathItYT/manim-studio/main/logo.png)
 
 Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, and also it's useful for many other things!
