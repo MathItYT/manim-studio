@@ -495,13 +495,13 @@ files = [
 
 [[package]]
 name = "httpcore"
-version = "1.0.1"
+version = "1.0.2"
 description = "A minimal low-level HTTP client."
 optional = true
 python-versions = ">=3.8"
 files = [
-    {file = "httpcore-1.0.1-py3-none-any.whl", hash = "sha256:c5e97ef177dca2023d0b9aad98e49507ef5423e9f1d94ffe2cfe250aa28e63b0"},
-    {file = "httpcore-1.0.1.tar.gz", hash = "sha256:fce1ddf9b606cfb98132ab58865c3728c52c8e4c3c46e2aabb3674464a186e92"},
+    {file = "httpcore-1.0.2-py3-none-any.whl", hash = "sha256:096cc05bca73b8e459a1fc3dcf585148f63e534eae4339559c9b8a8d6399acc7"},
+    {file = "httpcore-1.0.2.tar.gz", hash = "sha256:9fc092e4799b26174648e54b74ed5f683132a464e95643b226e00c2ed2fa6535"},
 ]
 
 [package.dependencies]
@@ -1013,13 +1013,13 @@ files = [
 
 [[package]]
 name = "openai"
-version = "1.2.2"
-description = "Client library for the openai API"
+version = "1.2.3"
+description = "The official Python library for the openai API"
 optional = true
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-1.2.2-py3-none-any.whl", hash = "sha256:e9238e506b8ee8fc00af5b656de7907986317d7cfcf581964ff6e54a449be727"},
-    {file = "openai-1.2.2.tar.gz", hash = "sha256:cbeff4eaf6cdcdccb24c9190d9880a827c034b221ed996201c10d578850b3db8"},
+    {file = "openai-1.2.3-py3-none-any.whl", hash = "sha256:d8d1221d777c3b2d12468f17410bf929ca0cb06e9556586e61f5a4255f0cf2b4"},
+    {file = "openai-1.2.3.tar.gz", hash = "sha256:800d206ec02c8310400f07b3bb52e158751f3a419e75d080117d913f358bf0d5"},
 ]
 
 [package.dependencies]
@@ -1853,6 +1853,25 @@ lint = ["docutils-stubs", "flake8", "mypy"]
 test = ["pytest"]
 
 [[package]]
+name = "sphinxcontrib-video"
+version = "0.2.0"
+description = "Allows embedding of HTML5 videos in sphinx"
+optional = false
+python-versions = ">=3.6.9"
+files = [
+    {file = "sphinxcontrib-video-0.2.0.tar.gz", hash = "sha256:c98afef50a5452d5a6960fd57c6b57b71da9b825cadaa56c1b6c77338bfd0284"},
+    {file = "sphinxcontrib_video-0.2.0-py3-none-any.whl", hash = "sha256:8973278316c02547efd0910bfd69205385462c423885cf03edc28b1c66f3b23c"},
+]
+
+[package.dependencies]
+sphinx = "*"
+
+[package.extras]
+dev = ["mypy", "nox", "pre-commit"]
+doc = ["pydata-sphinx-theme (==0.13.0rc3)", "sphinx-design"]
+test = ["beautifulsoup4", "pytest", "pytest-cov", "pytest-regressions"]
+
+[[package]]
 name = "srt"
 version = "3.5.3"
 description = "A tiny library for parsing, modifying, and composing SRT files."
@@ -1982,4 +2001,4 @@ ai = ["openai"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "917e398d973224ab0274734f52762835ac762eb870cc9890cefab077fccde4a0"
+content-hash = "aa9aa07604d0df107981ad554424eac703b2e2bc59098bb16e82cf7a0928c639"

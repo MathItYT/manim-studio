@@ -20,6 +20,7 @@ enabling users to preview the animations in real-time while coding, interact wit
 
    installation
    getting-started
+   contributing
 
 
 Indices and tables

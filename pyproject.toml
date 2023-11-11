@@ -23,6 +23,7 @@ openai = {version = ">=0.28.0", optional = true}
 
 [tool.poetry.dev-dependencies]
 furo = ">=2023.9.10"
+sphinxcontrib-video = ">=0.2.0"
 
 [tool.poetry.scripts]
 manim-studio = "manim_studio.__main__:main"

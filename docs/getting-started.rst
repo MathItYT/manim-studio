@@ -78,14 +78,15 @@ Now, let's write our first scene. In the editor, write the following code:
     self.play(Create(circ))
 
 
-Now, press `Send Code button` or press ``Ctrl + Enter``. You should see a circle being drawn in the preview window.
+Now, press `Send Code` button or press ``Ctrl + Enter``. You should see a circle being drawn in the preview window.
 
-.. figure:: _static/images/first_circle.png
-    :align: center
+.. video:: _static/images/first_animation.mp4
+    :height: 400
+    :loop:
 
-    This is the first Mobject animation you have done with Manim Studio. Congratulations!
-
-    |
+Now you must press the `End Scene without saving` button or press ``Ctrl + Q`` to end the scene and generate the video output.
+After you close all Manim Studio windows, you should see in the terminal a message with your video output path.
+In that video, you should see the circle being drawn at some moment. If that's the case, you have done your first animation with Manim Studio!	
 
 You can do much more interactively with Manim Studio! You can learn Manim through its `official documentation`_ or by many excellent tutorials at YouTube.
 

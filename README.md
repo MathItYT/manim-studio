@@ -43,7 +43,8 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
 
    It has direct integration with OpenAI API, so you must have an API key to use it.
 
-2. Use the program! We still don't have a documentation, but there will be one in the future!
+2. Use the program! The documentation is available [here](https://mathityt.github.io/manim-studio/).
+   **Warning:** The documentation is a work in progress, so it may not be complete. ⚠️
 
 
 ## Examples
@@ -81,6 +82,8 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
 ## Manim Studio Client
 We removed the Manim Studio Client as an standalone application because anti-virus programs detected it as a virus. You can still use it by installing Manim Studio with `pip` and running `manim-studio -C` in the command line.
 
+## Contributing
+If you want to contribute to Manim Studio, you can do it by forking the repository and making a pull request. You can also contribute by reporting bugs or suggesting new features.
 
 ## License
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for more details.
