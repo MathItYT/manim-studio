@@ -43,9 +43,13 @@ def main():
                         action="store_true", required=False)
     parser.add_argument("--transparent", "-t", help="transparent background",
                         action="store_true", required=False)
+    parser.add_argument("--save_last_frame", "-l", help="save last frame",
+                        action="store_true", required=False)
     args = parser.parse_args()
     preview = args.preview
     config.transparent = args.transparent
+    config.save_last_frame = args.save_last_frame
+    config.write_to_movie = not args.save_last_frame
     if args.connect:
         app = QApplication([])
         client_dialog = ClientDialog()

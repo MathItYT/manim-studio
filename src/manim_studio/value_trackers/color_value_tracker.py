@@ -1,5 +1,4 @@
-from manim import ValueTracker, Mobject
-from colour import Color
+from manim import ValueTracker, Mobject, ManimColor
 import numpy as np
 
 
@@ -9,8 +8,8 @@ class ColorValueTracker(ValueTracker):
         self.set_points(np.zeros((1, 4)))
         self.set_value(value)
 
-    def get_value(self) -> Color:
-        return Color(rgb=np.array(self.points[0, :3])).hex, self.points[0, 3]
+    def get_value(self) -> ManimColor:
+        return ManimColor.from_rgba(self.points[0, :4]).to_hex(), self.points[0, 3]
 
     def set_value(self, value: np.ndarray):
         self.points[0, :4] = np.array(value)

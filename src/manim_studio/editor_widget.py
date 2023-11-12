@@ -5,7 +5,7 @@ from PyQt6.QtGui import QAction, QIntValidator, QColor
 from PyQt6.QtCore import pyqtSlot, Qt
 import numpy as np
 from pathlib import Path
-import pickle
+import dill as pickle
 import socket
 
 from .communicate import Communicate
@@ -73,6 +73,10 @@ class EditorWidget(QWidget):
         self.resume_scene_button.setGeometry(0, 0, 100, 50)
         self.resume_scene_button.clicked.connect(
             self.communicate.resume_scene.emit)
+        self.screenshot_button = QPushButton("Screenshot (Ctrl+Shift+P)")
+        self.screenshot_button.setShortcut("Ctrl+Shift+P")
+        self.screenshot_button.setGeometry(0, 0, 100, 50)
+        self.screenshot_button.clicked.connect(self.screenshot)
 
         self.menu_bar = QMenuBar()
         self.file_menu = self.menu_bar.addMenu("File")
@@ -161,6 +165,7 @@ class EditorWidget(QWidget):
         self.layout_.addWidget(self.next_slide_button)
         self.layout_.addWidget(self.pause_scene_button)
         self.layout_.addWidget(self.resume_scene_button)
+        self.layout_.addWidget(self.screenshot_button)
         self.controls_widget = QWidget()
         self.controls_scroll = QScrollArea()
         self.controls_scroll.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
@@ -211,6 +216,31 @@ class EditorWidget(QWidget):
     def show(self):
         super().show()
         self.controls_scroll.show()
+
+    def screenshot(self):
+        file_name = QFileDialog.getSaveFileName(
+            self, "Save screenshot", ".", "PNG (*.png)")
+        if file_name[0]:
+            self.communicate.screenshot.emit(file_name[0])
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Screenshot")
+            dialog.layout_ = QVBoxLayout()
+            dialog.label = QLabel("Screenshot saved successfully.")
+            dialog.layout_.addWidget(dialog.label)
+            dialog.ok_button = QPushButton("OK")
+            dialog.ok_button.clicked.connect(dialog.close)
+            dialog.layout_.addWidget(dialog.ok_button)
+            dialog.setLayout(dialog.layout_)
+            dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
+            dialog.exec()
+            return
+        alert = QMessageBox(
+            text="No file selected.")
+        alert.setWindowTitle("No file selected")
+        alert.setIcon(QMessageBox.Icon.Information)
+        alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+        alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
+        alert.exec()
 
     def restore_state(self):
         dialog = QDialog(self)

@@ -2,6 +2,7 @@ from manim import *
 from PyQt6.QtCore import QObject, pyqtSlot, Qt
 from PyQt6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLineEdit, QLabel, QPushButton, QFileDialog
 from .communicate import Communicate
+from PIL import Image
 import dill as pickle
 import time
 import ctypes
@@ -36,18 +37,23 @@ class LiveScene(QObject, Scene):
         self.communicate.load_mobject.connect(self.load_mobject)
         self.communicate.pause_scene.connect(self.pause_scene)
         self.communicate.resume_scene.connect(self.resume_scene)
+        self.communicate.screenshot.connect(self.screenshot)
         self.current_code = None
         self.namespace = namespace.__dict__ if namespace is not None else {}
-        self.lines = []
         self.freeze = False
         self.paused = False
         self.playing = False
+        self.append_line = True
         self.scope = globals()
         self.scope.update(self.namespace)
         self.scope["self"] = self
         if isinstance(self, MovingCameraScene):
             self.add(self.camera.frame)
         self.states = {}
+
+    def screenshot(self, name: str):
+        arr = self.renderer.get_frame()
+        Image.fromarray(arr).save(name)
 
     def save_state(self, name: str | None = None):
         if name is None or name.strip() == "":
@@ -98,6 +104,7 @@ class LiveScene(QObject, Scene):
                 self.run_instruction()
 
     def add_checkbox_command(self, name: str, default_value: bool):
+        caller_function = inspect.stack()[1].function
         self.communicate.add_checkbox_to_editor.emit(
             name, default_value)
 
@@ -132,6 +139,7 @@ class LiveScene(QObject, Scene):
         try:
             current_code = self.current_code
             self.current_code = None
+            self.scope["self"] = self
             exec(current_code, self.scope)
         except EndSceneEarlyException:
             raise EndSceneEarlyException()

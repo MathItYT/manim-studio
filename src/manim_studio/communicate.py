@@ -32,3 +32,4 @@ class Communicate(QObject):
     pause_scene = pyqtSignal()
     resume_scene = pyqtSignal()
     print_gui = pyqtSignal(str)
+    screenshot = pyqtSignal(str)
