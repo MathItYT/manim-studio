@@ -1,5 +1,5 @@
 from manim import logger, config, SVGMobject, VMobject, color_to_rgb
-from colour import Color
+from manim.utils.color import ManimColor
 from manim.utils.tex_file_writing import tex_hash
 import inspect
 import importlib
@@ -108,5 +108,5 @@ class MathJax(SVGMobject):
         self.set_stroke(width=stroke_width)
         self.scale(0.2 * self.font_size / 48)
 
-    def get_colored_expr(self, expr: str, color: Color):
+    def get_colored_expr(self, expr: str, color: ManimColor):
         return f"\\textcolor[rgb]{{{','.join(map(str, color_to_rgb(color)))}}}{{{expr}}}"
