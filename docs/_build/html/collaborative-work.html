@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Installation" href="installation.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Contributing" href="contributing.html" /><link rel="prev" title="Getting started" href="getting-started.html" />
 
     <link rel="shortcut icon" href="_static/favicon.ico"/><!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
-        <title>Manim Studio 0.4.5</title>
+        <title>Collaborative work - Manim Studio 0.4.5</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
@@ -123,7 +123,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="#"><div class="brand">Manim Studio 0.4.5</div></a>
+      <a href="index.html"><div class="brand">Manim Studio 0.4.5</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -134,7 +134,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -143,7 +143,7 @@
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="_static/transparent-light.png" alt="Logo"/>
@@ -158,10 +158,10 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="collaborative-work.html">Collaborative work</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Collaborative work</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 
@@ -191,46 +191,59 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <section id="welcome-to-manim-studio-s-documentation">
-<h1>Welcome to Manim Studio’s documentation!<a class="headerlink" href="#welcome-to-manim-studio-s-documentation" title="Permalink to this heading">#</a></h1>
-<p>Manim Studio is a graphical user interface for Manim (Community Edition).
-It is designed to make the process of creating animations easier and more accessible for everyone,
-enabling users to preview the animations in real-time while coding, interact with them, among other features.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This is a work in progress. The documentation is not complete yet.</p>
+          <section id="collaborative-work">
+<h1>Collaborative work<a class="headerlink" href="#collaborative-work" title="Permalink to this heading">#</a></h1>
+<p>Manim Studio has a feature that allows to collaborate on a project with other people.
+The owner creates a server and other people can connect to it and work on the same projects thanks to Manim Studio Client.</p>
+<section id="initialize-a-server">
+<h2>Initialize a server<a class="headerlink" href="#initialize-a-server" title="Permalink to this heading">#</a></h2>
+<p>To initialize a server, you need to run the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>manim-studio<span class="w"> </span>-S
+</pre></div>
 </div>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="getting-started.html#first-tutorial">First tutorial</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting-started.html#other-tutorials">Other tutorials</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="collaborative-work.html">Collaborative work</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="collaborative-work.html#initialize-a-server">Initialize a server</a></li>
-<li class="toctree-l2"><a class="reference internal" href="collaborative-work.html#connect-to-a-server">Connect to a server</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
-</ul>
+<p>This will open Manim Studio and show the following prompt:</p>
+<img alt="_images/password-server.png" class="align-center" src="_images/password-server.png" />
+<p>It’s asking you to enter a password. This password will be used by the clients to connect to the server.</p>
+<p>When you click on “OK”, the server will start and you will see the following window:</p>
+<img alt="_images/server.png" class="align-center" src="_images/server.png" />
+<p>The server is now running and waiting for clients to connect. You can share it globally or locally. To share it globally,
+you must create an account on <a class="reference external" href="https://ngrok.com/">ngrok</a> and follow the instructions to get it.
+If you didn’t do it yet, end the scene in the editor and close all windows.
+Once you did it, you must go to “Your Authtoken” and copy the token.</p>
+<img alt="_images/ngrok.png" class="align-center" src="_images/ngrok.png" />
+<p>Then, you must run the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ngrok<span class="w"> </span>config<span class="w"> </span>add-authtoken<span class="w"> </span>&lt;your-token&gt;
+</pre></div>
 </div>
+<p>Now, you can click on the server window the button “Start ngrok” and it will start the server and ngrok.</p>
+<img alt="_images/ngrok-start.png" class="align-center" src="_images/ngrok-start.png" />
+<p>You can now share the link to the server to other people and they will be able to connect to it through Manim Studio Client.</p>
+<p>You can see who connected to the server clicking “Users” button.</p>
+<img alt="_images/users.png" class="align-center" src="_images/users.png" />
 </section>
-<section id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">#</a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
+<section id="connect-to-a-server">
+<h2>Connect to a server<a class="headerlink" href="#connect-to-a-server" title="Permalink to this heading">#</a></h2>
+<p>To connect to a server, you need to run the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>manim-studio<span class="w"> </span>-C
+</pre></div>
+</div>
+<p>This will open Manim Studio Client and show the following prompt:</p>
+<img alt="_images/client-login.png" class="align-center" src="_images/client-login.png" />
+<p>You must enter the link, port, an username and the pasword to connect to the server. The username cannot be already used
+by another user. Once you entered all the information, click on “OK” andif the password is correct, you will be connected
+and see the following window:</p>
+<img alt="_images/client.png" class="align-center" src="_images/client.png" />
+<p>And also, you will see another window, which is the controls window. This window allows you to control the scene
+through the controls the owner of the server has created.</p>
+<img alt="_images/client-controls.png" class="align-center" src="_images/client-controls.png" />
+<p>Now you can send code to the server and see the result in the owner’s scene window!</p>
+</section>
 </section>
 
         </article>
@@ -238,16 +251,26 @@ enabling users to preview the animations in real-time while coding, interact wit
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="installation.html">
+          <a class="next-page" href="contributing.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Installation</div>
+                <div class="title">Contributing</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          
+          <a class="prev-page" href="getting-started.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Getting started</div>
+                
+              </div>
+            </a>
         </div>
         <div class="bottom-of-page">
           <div class="left-details">
@@ -266,8 +289,28 @@ enabling users to preview the animations in real-time while coding, interact wit
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Collaborative work</a><ul>
+<li><a class="reference internal" href="#initialize-a-server">Initialize a server</a></li>
+<li><a class="reference internal" href="#connect-to-a-server">Connect to a server</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

@@ -14,6 +14,8 @@ class ManimStudioServer(QWidget):
         password_dialog.setLabelText("Create a password for the server: ")
         password_dialog.setWindowTitle("Manim Studio Server")
         password_dialog.setModal(True)
+        password_dialog.setTextEchoMode(QLineEdit.EchoMode.Password)
+        password_dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         password_dialog.exec()
         self.password = password_dialog.textValue()
         self.server = Server("", 5555, self.password, self.communicate, editor)
@@ -38,6 +40,7 @@ class ManimStudioServer(QWidget):
         self.layout.addWidget(self.ask_label)
         self.layout.addWidget(self.ngrok_button)
         self.layout.addWidget(self.users_button)
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self.setLayout(self.layout)
         editor.manim_studio_server = self.server
 
@@ -51,6 +54,7 @@ class ManimStudioServer(QWidget):
         dialog = QDialog()
         layout = QVBoxLayout()
         dialog.setLayout(layout)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         users_dict = self.server.users
         for username in users_dict.keys():
             label = QLabel()
@@ -77,7 +81,22 @@ class ManimStudioServer(QWidget):
         dialog.exec()
 
     def start_ngrok(self):
-        tunnel = ngrok.connect(5555, "tcp")
+        try:
+            tunnel = ngrok.connect(5555, "tcp")
+        except ngrok.PyngrokNgrokHTTPError as e:
+            error_dialog = QDialog()
+            error_dialog.setWindowTitle("Error")
+            error_dialog.setModal(True)
+            error_dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
+            layout = QVBoxLayout()
+            error_dialog.setLayout(layout)
+            error_label = QLabel()
+            error_label.setText(
+                f"An error occurred while starting ngrok: {e}")
+            error_label.setWordWrap(True)
+            layout.addWidget(error_label)
+            error_dialog.exec()
+            return
         self.ngrok_button.setText("ngrok started")
         self.ngrok_button.setEnabled(False)
         self.link_label = QLabel()

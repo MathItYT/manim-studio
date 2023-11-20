@@ -14,6 +14,7 @@ class ClientDialog(QDialog):
         self.username_edit = QLineEdit()
         self.username_edit.setPlaceholderText("Enter your username")
         self.password_edit = QLineEdit()
+        self.password_edit.setEchoMode(QLineEdit.EchoMode.Password)
         self.password_edit.setPlaceholderText("Enter the password")
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.host_edit)

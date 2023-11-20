@@ -91,3 +91,9 @@ In that video, you should see the circle being drawn at some moment. If that's t
 You can do much more interactively with Manim Studio! You can learn Manim through its `official documentation`_ or by many excellent tutorials at YouTube.
 
 .. _official documentation: https://docs.manim.community/en/stable/index.html
+
+Now you can start learning Manim Studio with other tutorials available in this documentation.
+
+Other tutorials
+---------------
+- :doc:`collaborative-work`
