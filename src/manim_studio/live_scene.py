@@ -6,8 +6,16 @@ from PIL import Image
 import dill as pickle
 import time
 import ctypes
+from manim_studio.value_trackers.boolean_value_tracker import BooleanValueTracker
+from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
+from manim_studio.value_trackers.int_value_tracker import IntValueTracker
+from manim_studio.value_trackers.string_value_tracker import StringValueTracker
 
 from .load_mobject import load_mobject
+
+
+class CalledFromEditorException(Exception):
+    pass
 
 
 class CairoLiveRenderer(QObject, CairoRenderer):
@@ -39,17 +47,21 @@ class LiveScene(QObject, Scene):
         self.communicate.resume_scene.connect(self.resume_scene)
         self.communicate.screenshot.connect(self.screenshot)
         self.current_code = None
+        self.value_trackers = {}
+        self.codes = {}
+        self.append_code = True
         self.namespace = namespace.__dict__ if namespace is not None else {}
         self.freeze = False
         self.paused = False
-        self.playing = False
-        self.append_line = True
+        self.called_from_editor = True
+        self.python_file_to_write = None
         self.scope = globals()
         self.scope.update(self.namespace)
         self.scope["self"] = self
         if isinstance(self, MovingCameraScene):
             self.add(self.camera.frame)
         self.states = {}
+        self.save_state("first")
 
     def screenshot(self, name: str):
         arr = self.renderer.get_frame()
@@ -62,13 +74,44 @@ class LiveScene(QObject, Scene):
         if name in self.states.keys():
             self.print_gui(f"State '{name}' already exists.")
             return False
+        if name == "temp" and not self.called_from_editor:
+            self.print_gui("Cannot save to 'temp'. It's reserved for internal use.")
+            return False
         self.states[name] = [[m.__dict__.copy() for m in self.mobjects], [
             id(m) for m in self.mobjects]]
-        self.print_gui(f"State '{name}' saved.")
+        if name != "temp":
+            self.current_state = name
+            self.codes[name] = []
+        if not self.called_from_editor:
+            self.print_gui(f"State '{name}' saved.")
+        return True
+
+    def remove_state(self, name: str):
+        name = str(name).strip()
+        if name == "":
+            self.print_gui("You must enter a name.")
+            return False
+        if name not in self.states.keys():
+            self.print_gui(f"State '{name}' does not exist.")
+            return False
+        del self.states[name]
+        if name == "temp" and not self.called_from_editor:
+            self.print_gui("Cannot remove 'temp'. It's reserved for internal use.")
+            return False
+        if name == "first":
+            self.print_gui("Cannot remove 'first'. It's reserved for internal use.")
+            return False
+        if not self.called_from_editor:
+            self.print_gui(f"State '{name}' removed.")
+        if name != "temp":
+            del self.codes[name]
         return True
 
     def restore_state(self, name: str):
         name = str(name).strip()
+        if name == "":
+            self.print_gui("You must enter a name.")
+            return False
         copy_dicts, ids = self.states.get(name, (None, None))
         if copy_dicts is None:
             self.print_gui(f"State '{name}' does not exist.")
@@ -77,7 +120,10 @@ class LiveScene(QObject, Scene):
         for mobject, copy_dict in zip(mobjects, copy_dicts):
             mobject.__dict__ = copy_dict
         self.mobjects = mobjects
-        self.print_gui(f"State '{name}' restored.")
+        if name != "temp":
+            self.current_state = name
+        if not self.called_from_editor:
+            self.print_gui(f"State '{name}' restored.")
         return True
 
     def print_gui(self, text: str):
@@ -93,6 +139,7 @@ class LiveScene(QObject, Scene):
         self.communicate.set_control_value.emit(name, value)
 
     def construct(self):
+        self.called_from_editor = False
         while True:
             while self.no_instruction() and not self.paused:
                 self.wait_until(
@@ -104,39 +151,101 @@ class LiveScene(QObject, Scene):
                 self.run_instruction()
 
     def add_checkbox_command(self, name: str, default_value: bool):
-        caller_function = inspect.stack()[1].function
+        if self.called_from_editor:
+            raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_checkbox_to_editor.emit(
             name, default_value)
 
     def add_text_editor_command(self, name: str, default_value: str):
+        if self.called_from_editor:
+            raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_text_editor_to_editor.emit(
             name, default_value)
 
     def add_line_edit_command(self, name: str, default_value: str):
+        if self.called_from_editor:
+            raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_line_edit_to_editor.emit(
             name, default_value)
 
     def add_dropdown_command(self, name: str, options: list[str], default_value: str):
+        if self.called_from_editor:
+            raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_dropdown_to_editor.emit(
             name, options, default_value)
 
     def add_color_widget_command(self, name: str, default_value: np.ndarray):
+        if self.called_from_editor:
+            raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_color_widget_to_editor.emit(
             name, default_value)
 
     def add_slider_command(self, name: str, default_value: str, min_value: str, max_value: str, step_value: str):
+        if self.called_from_editor:
+            raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_slider_to_editor.emit(
             name, default_value, min_value, max_value, step_value)
 
     def add_button_command(self, name: str, callback: str):
+        if self.called_from_editor:
+            raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_button_to_editor.emit(
             name, callback)
 
     def wait(self, *args, frozen_frame=False, **kwargs):
         super().wait(*args, frozen_frame=frozen_frame, **kwargs)
+    
+    def replay_from_state(self, name: str):
+        if name == "" and self.python_file_to_write is not None:
+            self.print_gui("You must enter a name. Anyways, you can go to 'States' tab "
+                           "and click on 'Replay from state' button to export to Python file.")
+            return
+        self.called_from_editor = True
+        self.restore_state(name)
+        self.current_code = "\n".join(self.codes[name])
+        if self.python_file_to_write is not None:
+            CODE = """from manim import *
+from manim_studio.value_trackers.boolean_value_tracker import BooleanValueTracker
+from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
+from manim_studio.value_trackers.int_value_tracker import IntValueTracker
+from manim_studio.value_trackers.string_value_tracker import StringValueTracker
+
+            
+class Result(%s):
+    def construct(self):
+        %s
+        %s
+    
+    def print_gui(self, text: str):
+        print(text)""" % (",".join([i.__name__ for i in self.__class__.__bases__ if i.__name__ not in ("LiveScene", "QObject")]),
+                          self.get_value_trackers_code(),
+                          "\n        ".join(self.codes[name]))
+            with open(self.python_file_to_write, "w") as f:
+                f.write(CODE)
+            self.print_gui("Python file has been exported.")
+            self.python_file_to_write = None
+    
+    def get_value_trackers_code(self):
+        code = ""
+        for name, value_tracker in self.value_trackers.items():
+            if isinstance(value_tracker, BooleanValueTracker):
+                code += f"\n        self.{name} = BooleanValueTracker({value_tracker.get_value()})"
+            elif isinstance(value_tracker, ColorValueTracker):
+                value = value_tracker.get_value()
+                hex_ = value[0]
+                alpha = value[1]
+                r, g, b = color_to_rgb(hex_)
+                code += f"\n        self.{name} = ColorValueTracker(np.array([{r}, {g}, {b}, {alpha}]))"
+            elif isinstance(value_tracker, IntValueTracker):
+                code += f"\n        self.{name} = IntValueTracker({value_tracker.get_value()})"
+            elif isinstance(value_tracker, StringValueTracker):
+                code += f"\n        self.{name} = StringValueTracker({value_tracker.get_value()})"
+        return code
 
     def run_instruction(self):
         try:
+            self.called_from_editor = True
+            self.save_state("temp")
             current_code = self.current_code
             self.current_code = None
             self.scope["self"] = self
@@ -147,8 +256,17 @@ class LiveScene(QObject, Scene):
             logger.info(
                 f"Exception occured in live scene ({e.__class__.__name__}: {e})")
             self.communicate.alert.emit(e)
+            self.restore_state("temp")
+        else:
+            if self.append_code:
+                self.codes[self.current_state].append(current_code)
+        finally:
+            self.remove_state("temp")
+            self.called_from_editor = False
 
     def add_position_control_command(self, name: str, default_value: np.ndarray):
+        if self.called_from_editor:
+            raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_position_control_to_editor.emit(
             name, default_value)
 

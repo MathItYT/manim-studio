@@ -77,6 +77,12 @@ class EditorWidget(QWidget):
         self.screenshot_button.setShortcut("Ctrl+Shift+P")
         self.screenshot_button.setGeometry(0, 0, 100, 50)
         self.screenshot_button.clicked.connect(self.screenshot)
+        self.write_to_python_file_button = QPushButton(
+            "Write to Python file (Ctrl+Shift+W)")
+        self.write_to_python_file_button.setShortcut("Ctrl+Shift+W")
+        self.write_to_python_file_button.setGeometry(0, 0, 100, 50)
+        self.write_to_python_file_button.clicked.connect(
+            self.write_to_python_file)
 
         self.menu_bar = QMenuBar()
         self.file_menu = self.menu_bar.addMenu("File")
@@ -153,6 +159,16 @@ class EditorWidget(QWidget):
         self.restore_state_action.setShortcut("Ctrl+Alt+R")
         self.restore_state_action.triggered.connect(self.restore_state)
         self.states_menu.addAction(self.restore_state_action)
+        self.remove_state_action = QAction("Remove state", self)
+        self.remove_state_action.setShortcut("Ctrl+Alt+D")
+        self.remove_state_action.triggered.connect(
+            self.remove_state)
+        self.states_menu.addAction(self.remove_state_action)
+        self.replay_from_state_action = QAction("Replay from state", self)
+        self.replay_from_state_action.setShortcut("Ctrl+Alt+P")
+        self.replay_from_state_action.triggered.connect(
+            self.replay_from_state)
+        self.states_menu.addAction(self.replay_from_state_action)
 
         self.layout_ = QVBoxLayout()
         self.layout_.addWidget(self.menu_bar)
@@ -166,6 +182,7 @@ class EditorWidget(QWidget):
         self.layout_.addWidget(self.pause_scene_button)
         self.layout_.addWidget(self.resume_scene_button)
         self.layout_.addWidget(self.screenshot_button)
+        self.layout_.addWidget(self.write_to_python_file_button)
         self.controls_widget = QWidget()
         self.controls_scroll = QScrollArea()
         self.controls_scroll.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
@@ -216,6 +233,57 @@ class EditorWidget(QWidget):
     def show(self):
         super().show()
         self.controls_scroll.show()
+    
+    def write_to_python_file(self):
+        file_name = QFileDialog.getSaveFileName(
+            self, "Save Python file", ".", "Python (*.py)")
+        if file_name[0]:
+            self.scene.python_file_to_write = file_name[0]
+            self.replay_from_state()
+            return
+        alert = QMessageBox(
+            text="No file selected.")
+        alert.setWindowTitle("No file selected")
+        alert.setIcon(QMessageBox.Icon.Information)
+        alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+        alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
+        alert.exec()
+    
+    def replay_from_state(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Replay from state")
+        dialog.layout_ = QVBoxLayout()
+        dialog.label = QLabel("Select the state to replay from:")
+        dialog.layout_.addWidget(dialog.label)
+        dialog.states = QComboBox()
+        dialog.states.addItems([state for state in self.scene.states.keys()])
+        dialog.layout_.addWidget(dialog.states)
+        dialog.ok_button = QPushButton("OK")
+        dialog.ok_button.clicked.connect(dialog.close)
+        dialog.ok_button.clicked.connect(
+            lambda: self.scene.replay_from_state(dialog.states.currentText()))
+        dialog.layout_.addWidget(dialog.ok_button)
+        dialog.setLayout(dialog.layout_)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
+        dialog.exec()
+    
+    def remove_state(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Remove state")
+        dialog.layout_ = QVBoxLayout()
+        dialog.label = QLabel("Select the state to remove:")
+        dialog.layout_.addWidget(dialog.label)
+        dialog.states = QComboBox()
+        dialog.states.addItems([state for state in self.scene.states.keys()])
+        dialog.layout_.addWidget(dialog.states)
+        dialog.ok_button = QPushButton("OK")
+        dialog.ok_button.clicked.connect(dialog.close)
+        dialog.ok_button.clicked.connect(
+            lambda: self.scene.remove_state(dialog.states.currentText()))
+        dialog.layout_.addWidget(dialog.ok_button)
+        dialog.setLayout(dialog.layout_)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
+        dialog.exec()
 
     def screenshot(self):
         file_name = QFileDialog.getSaveFileName(
@@ -482,6 +550,7 @@ class EditorWidget(QWidget):
         text_editor_widget = TextEditorWidget(name)
         text_editor_widget.setText(default_value)
         self.controls[name] = text_editor_widget
+        self.scene.value_trackers[name] = text_editor_widget.value_tracker
         setattr(self.scene, name, text_editor_widget.value_tracker)
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(text_editor_widget)
@@ -557,6 +626,7 @@ class EditorWidget(QWidget):
         line_editor_widget = LineEditorWidget(name)
         line_editor_widget.setText(default_value)
         self.controls[name] = line_editor_widget
+        self.scene.value_trackers[name] = line_editor_widget.value_tracker
         setattr(self.scene, name, line_editor_widget.value_tracker)
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(line_editor_widget)
@@ -650,6 +720,7 @@ class EditorWidget(QWidget):
         color_widget.setCurrentColor(QColor(
             default_value[0], default_value[1], default_value[2], default_value[3]))
         self.controls[name] = color_widget
+        self.scene.value_trackers[name] = color_widget.color_tracker
         setattr(self.scene, name, color_widget.color_tracker)
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(color_widget)
@@ -669,6 +740,7 @@ class EditorWidget(QWidget):
         slider.setValue(int(default_value))
         slider.setSingleStep(int(step_value))
         self.controls[name] = slider
+        self.scene.value_trackers[name] = slider.value_tracker
         setattr(self.scene, name, slider.value_tracker)
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(slider)
@@ -685,6 +757,7 @@ class EditorWidget(QWidget):
         dropdown.addItems(options)
         dropdown.setCurrentText(default_value)
         self.controls[name] = dropdown
+        self.scene.value_trackers[name] = dropdown.value_tracker
         setattr(self.scene, name, dropdown.value_tracker)
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(dropdown)
