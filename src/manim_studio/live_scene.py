@@ -212,14 +212,13 @@ from manim_studio.value_trackers.string_value_tracker import StringValueTracker
 
             
 class Result(%s):
-    def construct(self):
-        %s
+    def construct(self):%s
         %s
     
     def print_gui(self, text: str):
         print(text)""" % (",".join([i.__name__ for i in self.__class__.__bases__ if i.__name__ not in ("LiveScene", "QObject")]),
                           self.get_value_trackers_code(),
-                          "\n        ".join(self.codes[name]))
+                          "\n        ".join([line for code in self.codes[name] for line in code.split("\n") if line.strip() != ""]))
             with open(self.python_file_to_write, "w") as f:
                 f.write(CODE)
             self.print_gui("Python file has been exported.")
