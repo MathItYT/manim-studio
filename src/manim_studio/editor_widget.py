@@ -233,7 +233,7 @@ class EditorWidget(QWidget):
     def show(self):
         super().show()
         self.controls_scroll.show()
-    
+
     def write_to_python_file(self):
         file_name = QFileDialog.getSaveFileName(
             self, "Save Python file", ".", "Python (*.py)")
@@ -248,7 +248,7 @@ class EditorWidget(QWidget):
         alert.setStandardButtons(QMessageBox.StandardButton.Ok)
         alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         alert.exec()
-    
+
     def replay_from_state(self):
         dialog = QDialog(self)
         dialog.setWindowTitle("Replay from state")
@@ -266,7 +266,7 @@ class EditorWidget(QWidget):
         dialog.setLayout(dialog.layout_)
         dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         dialog.exec()
-    
+
     def remove_state(self):
         dialog = QDialog(self)
         dialog.setWindowTitle("Remove state")
@@ -796,6 +796,8 @@ class EditorWidget(QWidget):
                         return ("TextEditorWidget", v.toPlainText())
                     elif isinstance(v, CheckboxWidget):
                         return ("CheckboxWidget", v.isChecked())
+                    elif isinstance(v, Button):
+                        return ("Button", v.callback)
 
                 controls = {k: get_tup(v) for k, v in controls.items()}
                 with open(f"{file_[0]}.controls", "wb") as f:
@@ -838,6 +840,9 @@ class EditorWidget(QWidget):
                             name, control[1])
                     elif control[0] == "CheckboxWidget":
                         self.add_checkbox_to_editor(
+                            name, control[1])
+                    elif control[0] == "Button":
+                        self.add_button_to_editor(
                             name, control[1])
         else:
             alert = QMessageBox(
