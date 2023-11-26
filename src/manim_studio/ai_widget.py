@@ -23,7 +23,6 @@ else:
         def __init__(self, communicate: Communicate, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.setWindowTitle("Manim Studio - AI Power")
-            self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             self.openai_api_key_is_set = False
             self.communicate = communicate
             self.layout_ = QVBoxLayout()
@@ -80,7 +79,6 @@ else:
                 dialog.ok_button.clicked.connect(
                     lambda: self.set_api_key(dialog.api_key_edit.toPlainText()))
                 dialog.layout_.addWidget(dialog.ok_button)
-                dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
                 dialog.setLayout(dialog.layout_)
                 dialog.exec()
                 return

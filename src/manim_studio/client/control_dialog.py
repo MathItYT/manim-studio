@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QVBoxLayout, QLabel, QSlider, QColorDialog, QComboBox, QLineEdit, QTextEdit, QCheckBox,\
+from PyQt6.QtWidgets import QVBoxLayout, QLabel, QSlider, QColorDialog, QComboBox, QLineEdit, QTextEdit, QCheckBox, \
     QPushButton, QScrollArea, QGroupBox, QDoubleSpinBox, QHBoxLayout
 from PyQt6.QtGui import QColor
 from PyQt6.QtCore import QThread, pyqtSignal, Qt
@@ -22,7 +22,6 @@ class ClientControls(QScrollArea):
         super().__init__(*args, **kwargs)
         self.main = main
         self.setWindowTitle("Manim Studio Client - Controls")
-        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self.layout_ = QVBoxLayout()
         self.controls = {}
         self.setLayout(self.layout_)

@@ -23,7 +23,6 @@ class PreviewWidget(QWidget):
             self.height_ = self.width_ * config.pixel_height // config.pixel_width
         self.setGeometry(0, 0, self.width_, self.height_)
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
-        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self.label = QLabel()
         self.label.setScaledContents(True)
         self.layout_ = QVBoxLayout()

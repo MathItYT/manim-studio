@@ -9,7 +9,6 @@ class ManimStudioClient(QWidget):
     def __init__(self, host: str, port: int, username: str, password: str):
         super().__init__()
         self.setWindowTitle("Manim Studio Client")
-        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self.host = host
         self.port = port
         self.username = username

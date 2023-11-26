@@ -45,11 +45,17 @@ def main():
                         action="store_true", required=False)
     parser.add_argument("--save_last_frame", "-l", help="save last frame",
                         action="store_true", required=False)
+    parser.add_argument("--not_write", "-n", help="not write to any file",
+                        action="store_true", required=False)
     args = parser.parse_args()
     preview = args.preview
     config.transparent = args.transparent
-    config.save_last_frame = args.save_last_frame
-    config.write_to_movie = not args.save_last_frame
+    if not args.not_write:
+        config.save_last_frame = args.save_last_frame
+        config.write_to_movie = not args.save_last_frame
+    else:
+        config.write_to_movie = False
+        config.save_last_frame = False
     if args.connect:
         app = QApplication([])
         client_dialog = ClientDialog()

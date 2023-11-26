@@ -27,7 +27,6 @@ class ControlDialog(QDialog):
         self.layout_.addWidget(self.addControlsCheckbox)
         self.layout_.addWidget(self.okButton)
         self.layout_.addWidget(self.controls_toggle_widget)
-        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self.setLayout(self.layout_)
 
     def toggle_add_controls(self, state: bool):
