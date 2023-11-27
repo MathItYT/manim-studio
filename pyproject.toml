@@ -1,10 +1,6 @@
 [tool.poetry]
 name = "manim-studio"
-<<<<<<< HEAD
 version = "0.4.9"
-=======
-version = "0.4.6"
->>>>>>> parent of db70bca (Added a feature to don't save any movie or picture output)
 description = "A GUI to easier make Manim animations"
 authors = ["MathLike"]
 readme = "README.md"
