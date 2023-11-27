@@ -5,7 +5,7 @@ from PyQt6.QtGui import QAction, QIntValidator, QColor
 from PyQt6.QtCore import pyqtSlot, Qt
 import numpy as np
 from pathlib import Path
-import dill as pickle
+import json
 import socket
 
 from .communicate import Communicate
@@ -780,8 +780,8 @@ class EditorWidget(QWidget):
                         return ("Button", v.callback)
 
                 controls = {k: get_tup(v) for k, v in controls.items()}
-                with open(f"{file_[0]}.controls", "wb") as f:
-                    pickle.dump(controls, f)
+                with open(f"{file_[0]}.controls", "w") as f:
+                    json.dump(controls, f)
             else:
                 if Path(f"{file_[0]}.controls").exists():
                     Path(f"{file_[0]}.controls").unlink()
@@ -798,8 +798,8 @@ class EditorWidget(QWidget):
                 self.code_cell_edit.setText(
                     f"{self.code_cell_edit.toPlainText()}\n{f.read()}")
             if Path(f"{file_[0]}.controls").exists():
-                with open(f"{file_[0]}.controls", "rb") as f:
-                    controls = pickle.load(f)
+                with open(f"{file_[0]}.controls", "r") as f:
+                    controls = json.load(f)
                 for name, control in controls.items():
                     if name in self.controls.keys():
                         continue

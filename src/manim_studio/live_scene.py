@@ -3,7 +3,7 @@ from PyQt6.QtCore import QObject, pyqtSlot, Qt
 from PyQt6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLineEdit, QLabel, QPushButton, QFileDialog
 from .communicate import Communicate
 from PIL import Image
-import dill as pickle
+import json
 import time
 import ctypes
 from manim_studio.value_trackers.boolean_value_tracker import BooleanValueTracker
@@ -360,11 +360,11 @@ class Result(%s):
             return
         file_name = QFileDialog.getSaveFileName(
             caption="Save mobject",
-            filter="Pickle file (*.pkl)"
+            filter="JSON (*.json)"
         )
         if file_name[0]:
-            with open(file_name[0], "wb") as f:
-                pickle.dump(mobject_to_save, f)
+            with open(file_name[0], "w") as f:
+                json.dump(mobject_to_save.__dict__(), f)
         else:
             alert = QMessageBox(
                 text="You must enter a file name.")
