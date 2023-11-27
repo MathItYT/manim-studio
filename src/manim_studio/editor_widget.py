@@ -778,6 +778,8 @@ class EditorWidget(QWidget):
                         return ("CheckboxWidget", v.isChecked())
                     elif isinstance(v, Button):
                         return ("Button", v.callback)
+                    elif isinstance(v, PositionControl):
+                        return ("PositionControl", v.x_.value(), v.y_.value(), v.z_.value(), v.display_dot_checkbox.isChecked())
 
                 controls = {k: get_tup(v) for k, v in controls.items()}
                 with open(f"{file_[0]}.controls", "wb") as f:
@@ -824,6 +826,9 @@ class EditorWidget(QWidget):
                     elif control[0] == "Button":
                         self.add_button_to_editor(
                             name, control[1])
+                    elif control[0] == "PositionControl":
+                        self.add_position_control_to_editor(
+                            name, np.array([control[1], control[2], control[3]]))
         else:
             alert = QMessageBox(
                 text="No file selected.")
