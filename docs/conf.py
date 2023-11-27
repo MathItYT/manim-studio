@@ -9,7 +9,7 @@
 project = 'Manim Studio'
 copyright = '2023, MathLike'
 author = 'MathLike'
-release = '0.4.6'
+release = '0.4.9'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

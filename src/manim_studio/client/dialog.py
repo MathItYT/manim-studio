@@ -6,6 +6,7 @@ class ClientDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Manim Studio Client Dialog")
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self.host_edit = QLineEdit()
         self.host_edit.setPlaceholderText("Enter the host")
         self.port_edit = QLineEdit()

@@ -13,6 +13,7 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
 - [x] Create slides with Manim Studio.
 - [x] Collaborate with other people. 
 - [ ] Basic editing for Manim videos.
+- [ ] Direct livestreaming with OBS.
 - [ ] Snippet gallery.
 
 ## Requirements to install
