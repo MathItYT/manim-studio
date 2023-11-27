@@ -1,6 +1,7 @@
-import dill as pickle
+import json
 
 
 def load_mobject(file_name):
-    with open(file_name, "rb") as f:
-        return pickle.load(f)
+    with open(file_name, 'r') as f:
+        data = json.load(f)
+    return data
