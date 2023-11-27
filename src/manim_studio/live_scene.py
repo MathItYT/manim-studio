@@ -75,8 +75,7 @@ class LiveScene(QObject, Scene):
             self.print_gui(f"State '{name}' already exists.")
             return False
         if name == "temp" and not self.called_from_editor:
-            self.print_gui(
-                "Cannot save to 'temp'. It's reserved for internal use.")
+            self.print_gui("Cannot save to 'temp'. It's reserved for internal use.")
             return False
         self.states[name] = [[m.__dict__.copy() for m in self.mobjects], [
             id(m) for m in self.mobjects]]
@@ -97,12 +96,10 @@ class LiveScene(QObject, Scene):
             return False
         del self.states[name]
         if name == "temp" and not self.called_from_editor:
-            self.print_gui(
-                "Cannot remove 'temp'. It's reserved for internal use.")
+            self.print_gui("Cannot remove 'temp'. It's reserved for internal use.")
             return False
         if name == "first":
-            self.print_gui(
-                "Cannot remove 'first'. It's reserved for internal use.")
+            self.print_gui("Cannot remove 'first'. It's reserved for internal use.")
             return False
         if not self.called_from_editor:
             self.print_gui(f"State '{name}' removed.")
@@ -197,7 +194,7 @@ class LiveScene(QObject, Scene):
 
     def wait(self, *args, frozen_frame=False, **kwargs):
         super().wait(*args, frozen_frame=frozen_frame, **kwargs)
-
+    
     def replay_from_state(self, name: str):
         if name == "" and self.python_file_to_write is not None:
             self.print_gui("You must enter a name. Anyways, you can go to 'States' tab "
@@ -226,26 +223,22 @@ class Result(%s):
                 f.write(CODE)
             self.print_gui("Python file has been exported.")
             self.python_file_to_write = None
-
+    
     def get_value_trackers_code(self):
         code = ""
         for name, value_tracker in self.value_trackers.items():
             if isinstance(value_tracker, BooleanValueTracker):
-                code += f"\n        self.{
-                    name} = BooleanValueTracker({value_tracker.get_value()})"
+                code += f"\n        self.{name} = BooleanValueTracker({value_tracker.get_value()})"
             elif isinstance(value_tracker, ColorValueTracker):
                 value = value_tracker.get_value()
                 hex_ = value[0]
                 alpha = value[1]
                 r, g, b = color_to_rgb(hex_)
-                code += f"\n        self.{
-                    name} = ColorValueTracker(np.array([{r}, {g}, {b}, {alpha}]))"
+                code += f"\n        self.{name} = ColorValueTracker(np.array([{r}, {g}, {b}, {alpha}]))"
             elif isinstance(value_tracker, IntValueTracker):
-                code += f"\n        self.{
-                    name} = IntValueTracker({value_tracker.get_value()})"
+                code += f"\n        self.{name} = IntValueTracker({value_tracker.get_value()})"
             elif isinstance(value_tracker, StringValueTracker):
-                code += f"\n        self.{
-                    name} = StringValueTracker({value_tracker.get_value()})"
+                code += f"\n        self.{name} = StringValueTracker({value_tracker.get_value()})"
         return code
 
     def run_instruction(self):
@@ -284,10 +277,9 @@ class Result(%s):
             alert.setWindowTitle("Scene paused")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
-        if self.paused:
-            self.resume_scene()
         self.current_code = code
 
     @pyqtSlot()
@@ -298,6 +290,7 @@ class Result(%s):
         alert.setWindowTitle("Scene ended")
         alert.setIcon(QMessageBox.Icon.Information)
         alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+        alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         alert.exec()
 
     @pyqtSlot(Exception)
@@ -308,6 +301,7 @@ class Result(%s):
         alert.setIcon(QMessageBox.Icon.Warning)
         alert.setStandardButtons(QMessageBox.StandardButton.Ok)
         alert.setInformativeText(f"{e.__class__.__name__}: {e}")
+        alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         alert.exec()
 
     def pause_slide(self):
@@ -338,6 +332,7 @@ class Result(%s):
         dialog.ok_button.clicked.connect(dialog.accept)
         dialog.layout_.addWidget(dialog.ok_button)
         dialog.setLayout(dialog.layout_)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         dialog.exec()
 
         name = dialog.name_edit.text()
@@ -347,6 +342,7 @@ class Result(%s):
             alert.setWindowTitle("No name entered")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
         mobject_to_save = getattr(self, name, None)
@@ -356,6 +352,7 @@ class Result(%s):
             alert.setWindowTitle("Invalid name")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
         file_name = QFileDialog.getSaveFileName(
@@ -371,6 +368,7 @@ class Result(%s):
             alert.setWindowTitle("No file name entered")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
         alert = QMessageBox(
@@ -378,6 +376,7 @@ class Result(%s):
         alert.setWindowTitle("Mobject saved")
         alert.setIcon(QMessageBox.Icon.Information)
         alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+        alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         alert.exec()
 
     def load_mobject(self):
@@ -391,6 +390,7 @@ class Result(%s):
             alert.setWindowTitle("No file name entered")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
         dialog = QDialog()
@@ -408,6 +408,7 @@ class Result(%s):
         dialog.ok_button.clicked.connect(dialog.accept)
         dialog.layout_.addWidget(dialog.ok_button)
         dialog.setLayout(dialog.layout_)
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         dialog.exec()
         if dialog.name_edit.text() == "":
             alert = QMessageBox(
@@ -415,14 +416,15 @@ class Result(%s):
             alert.setWindowTitle("No name entered")
             alert.setIcon(QMessageBox.Icon.Information)
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             alert.exec()
             return
-        code = f"self.{dialog.name_edit.text()} = load_mobject('{
-            file_name[0]}')"
+        code = f"self.{dialog.name_edit.text()} = load_mobject('{file_name[0]}')"
         self.communicate.update_scene.emit(code)
         alert = QMessageBox(
             text="The mobject has been loaded.")
         alert.setWindowTitle("Mobject loaded")
         alert.setIcon(QMessageBox.Icon.Information)
         alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+        alert.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         alert.exec()
