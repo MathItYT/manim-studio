@@ -364,7 +364,7 @@ class Result(%s):
         )
         if file_name[0]:
             with open(file_name[0], "w") as f:
-                json.dump(mobject_to_save.__dict__(), f)
+                json.dump(mobject_to_save.__dict__, f)
         else:
             alert = QMessageBox(
                 text="You must enter a file name.")
@@ -383,7 +383,7 @@ class Result(%s):
     def load_mobject(self):
         file_name = QFileDialog.getOpenFileName(
             caption="Load mobject",
-            filter="Pickle file (*.pkl)"
+            filter="JSON (*.json)"
         )
         if not file_name[0]:
             alert = QMessageBox(
