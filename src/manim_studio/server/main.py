@@ -8,14 +8,12 @@ class ManimStudioServer(QWidget):
     def __init__(self, communicate, editor):
         super().__init__()
         self.setWindowTitle("Manim Studio Server")
-        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self.communicate = communicate
         password_dialog = QInputDialog()
         password_dialog.setLabelText("Create a password for the server: ")
         password_dialog.setWindowTitle("Manim Studio Server")
         password_dialog.setModal(True)
         password_dialog.setTextEchoMode(QLineEdit.EchoMode.Password)
-        password_dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         password_dialog.exec()
         self.password = password_dialog.textValue()
         self.server = Server("", 5555, self.password, self.communicate, editor)
@@ -40,7 +38,6 @@ class ManimStudioServer(QWidget):
         self.layout.addWidget(self.ask_label)
         self.layout.addWidget(self.ngrok_button)
         self.layout.addWidget(self.users_button)
-        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self.setLayout(self.layout)
         editor.manim_studio_server = self.server
 
@@ -54,7 +51,6 @@ class ManimStudioServer(QWidget):
         dialog = QDialog()
         layout = QVBoxLayout()
         dialog.setLayout(layout)
-        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         users_dict = self.server.users
         for username in users_dict.keys():
             label = QLabel()
@@ -87,7 +83,6 @@ class ManimStudioServer(QWidget):
             error_dialog = QDialog()
             error_dialog.setWindowTitle("Error")
             error_dialog.setModal(True)
-            error_dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
             layout = QVBoxLayout()
             error_dialog.setLayout(layout)
             error_label = QLabel()
