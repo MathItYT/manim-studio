@@ -23,6 +23,8 @@ from .code_edit import CodeEdit
 
 
 class EditorWidget(QWidget):
+    """A widget where you can run code and control the scene."""
+
     def __init__(self, communicate: Communicate, scene: LiveScene, server: bool, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.communicate = communicate

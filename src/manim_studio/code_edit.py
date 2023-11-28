@@ -3,6 +3,8 @@ from PyQt6.QtGui import QColor, QFont
 
 
 class CodeEdit(QsciScintilla):
+    """A code editor widget."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setUtf8(True)

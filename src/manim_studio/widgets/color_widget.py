@@ -5,6 +5,8 @@ from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 
 
 class ColorWidget(QColorDialog):
+    """A color picker to edit a color property."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setOption(QColorDialog.ColorDialogOption.ShowAlphaChannel, True)

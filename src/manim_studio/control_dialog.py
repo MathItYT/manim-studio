@@ -3,6 +3,8 @@ from PyQt6.QtCore import Qt
 
 
 class ControlDialog(QDialog):
+    """A dialog to add controls to the scene."""
+
     def __init__(self, controls: dict, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWindowTitle("Add controls to snippet")

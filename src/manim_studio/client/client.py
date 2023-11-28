@@ -6,6 +6,8 @@ from manim_studio.code_edit import CodeEdit
 
 
 class ManimStudioClient(QWidget):
+    """A widget to control the scene hosted by a Manim Studio Server."""
+
     def __init__(self, host: str, port: int, username: str, password: str):
         super().__init__()
         self.setWindowTitle("Manim Studio Client")

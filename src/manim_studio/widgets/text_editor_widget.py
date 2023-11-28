@@ -3,6 +3,8 @@ from manim_studio.value_trackers.string_value_tracker import StringValueTracker
 
 
 class TextEditorWidget(CodeEdit):
+    """A text editor widget to edit a string property using multiple lines."""
+
     def __init__(self, name: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.value_tracker = StringValueTracker("")

@@ -3,7 +3,7 @@ from PyQt6.QtCore import QObject, pyqtSlot, Qt
 from PyQt6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLineEdit, QLabel, QPushButton, QFileDialog
 from .communicate import Communicate
 from PIL import Image
-import dill as pickle
+from manim_studio.save_mobject import save_mobject
 import time
 import ctypes
 from manim_studio.value_trackers.boolean_value_tracker import BooleanValueTracker
@@ -363,8 +363,7 @@ class Result(%s):
             filter="Pickle file (*.pkl)"
         )
         if file_name[0]:
-            with open(file_name[0], "wb") as f:
-                pickle.dump(mobject_to_save, f)
+            save_mobject(mobject_to_save, file_name[0])
         else:
             alert = QMessageBox(
                 text="You must enter a file name.")

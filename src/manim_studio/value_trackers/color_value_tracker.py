@@ -3,6 +3,8 @@ import numpy as np
 
 
 class ColorValueTracker(ValueTracker):
+    """A value tracker for color. It contains an array of 3 values and an alpha value."""
+
     def __init__(self, value=np.array([0, 0, 0, 1]), **kwargs):
         Mobject.__init__(self, **kwargs)
         self.set_points(np.zeros((1, 4)))

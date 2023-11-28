@@ -1,4 +1,6 @@
 def get_icon_file():
+    """Get the icon file of Manim Studio."""
+
     import importlib
     from pathlib import Path
 

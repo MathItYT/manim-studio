@@ -5,6 +5,8 @@ from pyngrok import ngrok
 
 
 class ManimStudioServer(QWidget):
+    """A widget to start the Manim Studio Server."""
+
     def __init__(self, communicate, editor):
         super().__init__()
         self.setWindowTitle("Manim Studio Server")

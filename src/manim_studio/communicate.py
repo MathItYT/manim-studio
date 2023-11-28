@@ -4,6 +4,7 @@ import socket
 
 
 class Communicate(QObject):
+    """A class to communicate using signals and slots."""
     update_scene = pyqtSignal(str)
     update_image = pyqtSignal(np.ndarray)
     end_scene = pyqtSignal()

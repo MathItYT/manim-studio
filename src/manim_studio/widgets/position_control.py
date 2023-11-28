@@ -5,6 +5,8 @@ import numpy as np
 
 
 class PositionControl(QGroupBox):
+    """A widget to edit a position property, using three spinboxes for x, y and z."""
+
     def __init__(self, name: str, live_scene: LiveScene, default: np.ndarray = np.array([0, 0, 0])):
         self.name = name
         self.default = default

@@ -5,6 +5,8 @@ from manim_studio.communicate import Communicate
 
 
 class Server(QThread):
+    """A logical class to handle the Manim Studio Server."""
+
     def __init__(self, host: str, port: int, password: str, communicate: Communicate, editor):
         super().__init__()
         self.host = host

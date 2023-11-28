@@ -5,6 +5,8 @@ from .live_scene import LiveScene
 
 class InheritsDialog(QDialog):
     def __init__(self, scene_type=LiveScene, namespace=None):
+        """A dialog to choose base classes of the scene to be rendered."""
+
         super().__init__()
         self.layout_ = QVBoxLayout()
         self.setLayout(self.layout_)

@@ -2,6 +2,8 @@ from .int_value_tracker import IntValueTracker
 
 
 class BooleanValueTracker(IntValueTracker):
+    """A value tracker for boolean values."""
+
     def __init__(self, value=False, **kwargs):
         super().__init__(value=bool(value), **kwargs)
 

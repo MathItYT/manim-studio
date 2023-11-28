@@ -3,6 +3,8 @@ from manim_studio.communicate import Communicate
 
 
 class Button(QPushButton):
+    """A button to run the same code every time it's clicked."""
+
     def __init__(self, callback: str, communicate: Communicate, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.callback = callback

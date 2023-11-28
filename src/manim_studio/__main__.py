@@ -3,7 +3,8 @@ from .live_scene import LiveScene
 from .client.dialog import ClientDialog
 from .client.client import ManimStudioClient
 from PyQt6.QtWidgets import QApplication
-from manim import logger, config
+from manim import logger, config, error_console
+from rich.console import Console
 import argparse
 import sys
 
@@ -47,7 +48,6 @@ def main():
                         action="store_true", required=False)
     parser.add_argument("--not_write", "-n", help="not write to any file",
                         action="store_true", required=False)
-    logger.removeHandler(logger.handlers[0])
     args = parser.parse_args()
     preview = args.preview
     config.transparent = args.transparent

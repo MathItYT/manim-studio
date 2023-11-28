@@ -10,6 +10,8 @@ from manim._config import config
 
 
 class PreviewWidget(QWidget):
+    """A widget to preview the final result."""
+
     def __init__(self, communicate: Communicate, scene: LiveScene, screen_size: tuple, preview, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.communicate = communicate

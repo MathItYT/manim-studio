@@ -20,6 +20,8 @@ else:
         + "Your answer must be a code block, it starts with ```python and ends with ```."
 
     class AIWidget(QWidget):
+        """A widget to generate Python code snippets through OpenAI's API."""
+
         def __init__(self, communicate: Communicate, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.setWindowTitle("Manim Studio - AI Power")

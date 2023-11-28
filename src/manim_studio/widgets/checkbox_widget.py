@@ -4,6 +4,8 @@ from manim_studio.value_trackers.boolean_value_tracker import BooleanValueTracke
 
 
 class CheckboxWidget(QCheckBox):
+    """A checkbox widget to edit a boolean property."""
+
     def __init__(self, name: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.value_tracker = BooleanValueTracker(False)

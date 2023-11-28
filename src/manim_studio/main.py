@@ -12,6 +12,20 @@ from .inherits_dialog import InheritsDialog
 
 
 def main(scene_type=LiveScene, server=False, namespace=None, preview=False) -> None:
+    """
+    Run the main window of Manim Studio.
+
+    Parameters
+    ----------
+    scene_type
+        The base class of the scene to be rendered.
+    server
+        Whether to run the server.
+    namespace
+        The namespace of the scene to be rendered.
+    preview
+        Whether to preview the final result.
+    """
     app = QApplication(sys.argv)
     screen_size = app.primaryScreen().size()
     w, h = screen_size.width(), screen_size.height()

@@ -3,6 +3,8 @@ from PyQt6.QtCore import Qt
 
 
 class ClientDialog(QDialog):
+    """A dialog to connect to a Manim Studio server."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Manim Studio Client Dialog")

@@ -7,6 +7,8 @@ import numpy as np
 
 
 class ClientControls(QScrollArea):
+    """A widget to display the controls of the scene in Manim Studio Client."""
+
     add_slider_to_client = pyqtSignal(str, str, str, str, str)
     add_color_widget_to_client = pyqtSignal(str, int, int, int, int)
     add_dropdown_to_client = pyqtSignal(str, list, str)

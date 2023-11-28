@@ -89,6 +89,23 @@ def render_mathjax(mathjax_str: str, check_installation=True):
 
 
 class MathJax(SVGMobject):
+    """A mobject that comes from rendering a MathJax string.
+
+    Parameters
+    ----------
+    expr : str
+        The MathJax string to render.
+    font_size : int, optional
+        The font size of the rendered string.
+    color : ManimColor, optional
+        The color of the rendered string.
+    opacity : float, optional
+        The opacity of the rendered string.
+    stroke_width : float, optional
+        The stroke width of the rendered string.
+    **kwargs
+        Keyword arguments to pass to SVGMobject constructor."""
+
     first_time = True
 
     def __init__(self, expr: str, font_size: int = 48, color=None, opacity=None, stroke_width=None, **kwargs):

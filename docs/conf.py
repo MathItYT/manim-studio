@@ -6,10 +6,12 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+from manim_studio import __version__
+
 project = 'Manim Studio'
 copyright = '2023, MathLike'
 author = 'MathLike'
-release = '0.4.11'
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
