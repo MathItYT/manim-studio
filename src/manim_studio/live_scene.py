@@ -3,15 +3,13 @@ from PyQt6.QtCore import QObject, pyqtSlot, Qt
 from PyQt6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLineEdit, QLabel, QPushButton, QFileDialog
 from .communicate import Communicate
 from PIL import Image
-from manim_studio import save_mobject
 import time
 import ctypes
+from manim_studio.saving_and_loading_mobjects import save_mobject, load_mobject
 from manim_studio.value_trackers.boolean_value_tracker import BooleanValueTracker
 from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 from manim_studio.value_trackers.int_value_tracker import IntValueTracker
 from manim_studio.value_trackers.string_value_tracker import StringValueTracker
-
-from .load_mobject import load_mobject
 
 
 class CalledFromEditorException(Exception):
@@ -360,7 +358,7 @@ class Result(%s):
             return
         file_name = QFileDialog.getSaveFileName(
             caption="Save mobject",
-            filter="Pickle file (*.pkl)"
+            filter="JSON (*.json)"
         )
         if file_name[0]:
             save_mobject(mobject_to_save, file_name[0])
@@ -382,7 +380,7 @@ class Result(%s):
     def load_mobject(self):
         file_name = QFileDialog.getOpenFileName(
             caption="Load mobject",
-            filter="Pickle file (*.pkl)"
+            filter="JSON (*.json)"
         )
         if not file_name[0]:
             alert = QMessageBox(
