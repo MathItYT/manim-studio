@@ -3,7 +3,7 @@ from PyQt6.QtCore import QObject, pyqtSlot, Qt
 from PyQt6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLineEdit, QLabel, QPushButton, QFileDialog
 from .communicate import Communicate
 from PIL import Image
-from manim_studio.save_mobject import save_mobject
+from manim_studio import save_mobject
 import time
 import ctypes
 from manim_studio.value_trackers.boolean_value_tracker import BooleanValueTracker
