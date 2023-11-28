@@ -47,6 +47,7 @@ def main():
                         action="store_true", required=False)
     parser.add_argument("--not_write", "-n", help="not write to any file",
                         action="store_true", required=False)
+    logger.removeHandler(logger.handlers[0])
     args = parser.parse_args()
     preview = args.preview
     config.transparent = args.transparent
