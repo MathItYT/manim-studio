@@ -24,7 +24,7 @@ else:
 def save_mobject(mobject: Mobject, file_name: str):
     """Save a mobject to a file."""
     with open(file_name, "w") as f:
-        json_str = jsonpickle.encode(mobject)
+        json_str = jsonpickle.encode(mobject, unpicklable=False)
         f.write(json_str)
 
 
@@ -33,4 +33,4 @@ def load_mobject(file_name: str) -> Mobject:
     with open(file_name, "r") as f:
         json_str = f.read()
         mobject = jsonpickle.decode(json_str)
-        return mobject
+    return mobject
