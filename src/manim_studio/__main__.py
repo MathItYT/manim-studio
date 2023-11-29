@@ -3,8 +3,7 @@ from .live_scene import LiveScene
 from .client.dialog import ClientDialog
 from .client.client import ManimStudioClient
 from PyQt6.QtWidgets import QApplication
-from manim import logger, config, error_console
-from rich.console import Console
+from manim import config, logger
 import argparse
 import sys
 
