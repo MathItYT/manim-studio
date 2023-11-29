@@ -363,7 +363,7 @@ class Result(%s):
             filter="Pickle (*.pkl)"
         )
         if file_name[0]:
-            save_mobject(mobject_to_save, file_name[0])
+            save_mobject(mobject_to_save, file_name[0], self.scope)
         else:
             alert = QMessageBox(
                 text="You must enter a file name.")
