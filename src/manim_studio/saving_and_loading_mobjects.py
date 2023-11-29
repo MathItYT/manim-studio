@@ -7,7 +7,7 @@ def load_mobject(path: str) -> Mobject:
         return pickle.load(f)
 
 
-def save_mobject(mobject: Mobject, path: str, scope=None) -> None:
+def save_mobject(mobject: Mobject, path: str, scope) -> None:
     scope["console"] = None  # To fix a bug
     scope["logger"] = None  # To fix a bug
     scope["error_console"] = None  # To fix a bug
