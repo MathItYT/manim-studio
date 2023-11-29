@@ -253,6 +253,7 @@ class Result(%s):
             current_code = self.current_code
             self.current_code = None
             self.scope["self"] = self
+            current_scope = self.scope.copy()
             exec(current_code, self.scope)
         except EndSceneEarlyException:
             raise EndSceneEarlyException()
@@ -261,6 +262,7 @@ class Result(%s):
                 f"Exception occured in live scene ({e.__class__.__name__}: {e})")
             self.communicate.alert.emit(e)
             self.restore_state("temp")
+            self.scope = current_scope
         else:
             if self.append_code:
                 self.codes[self.current_state].append(current_code)
@@ -358,7 +360,7 @@ class Result(%s):
             return
         file_name = QFileDialog.getSaveFileName(
             caption="Save mobject",
-            filter="JSON (*.json)"
+            filter="Pickle (*.pkl)"
         )
         if file_name[0]:
             save_mobject(mobject_to_save, file_name[0])
@@ -380,7 +382,7 @@ class Result(%s):
     def load_mobject(self):
         file_name = QFileDialog.getOpenFileName(
             caption="Load mobject",
-            filter="JSON (*.json)"
+            filter="Pickle (*.pkl)"
         )
         if not file_name[0]:
             alert = QMessageBox(
