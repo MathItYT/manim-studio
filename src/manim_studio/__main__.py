@@ -66,6 +66,8 @@ def main():
         if client.success:
             client.controls_dialog.show()
             sys.exit(app.exec())
+        else:
+            sys.exit(1)
     if args.resolution is not None:
         try:
             factor = config.frame_height / config.pixel_height

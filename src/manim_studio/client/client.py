@@ -17,7 +17,7 @@ class ManimStudioClient(QWidget):
         self.password = password
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((self.host, self.port))
-        self.s.sendall(self.password.encode("utf-8"))
+        self.s.sendall(self.password.encode("utf-8") or "None".encode("utf-8"))
         msg = self.s.recv(1024)
         if msg.decode("utf-8") == "Correct password":
             self.s.sendall(f"username={self.username}".encode("utf-8"))
@@ -28,8 +28,7 @@ class ManimStudioClient(QWidget):
                 self.close()
                 self.success = False
                 return
-            else:
-                self.success = True
+            self.success = True
             self.setLayout(QVBoxLayout())
             self.label = QLabel()
             self.label.setText(
@@ -47,14 +46,13 @@ class ManimStudioClient(QWidget):
             self.layout().addWidget(self.status_bar)
             self.controls_dialog = ClientControls(self, self.s)
         else:
-            QMessageBox.critical(
-                self, "Error", msg.decode("utf-8"))
+            QMessageBox.critical(self, "Error", msg.decode("utf-8"))
+            self.success = False
             self.close()
 
-    def closeEvent(self, event):
-        self.s.sendall(b"exit")
+    def close(self):
         self.s.close()
-        super().closeEvent(event)
+        super().close()
 
     def send_code(self):
         code = self.code_edit.text()

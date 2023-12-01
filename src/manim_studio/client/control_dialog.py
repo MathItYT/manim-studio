@@ -1,9 +1,11 @@
 from PyQt6.QtWidgets import QVBoxLayout, QLabel, QSlider, QColorDialog, QComboBox, QLineEdit, QTextEdit, QCheckBox, \
-    QPushButton, QScrollArea, QGroupBox, QDoubleSpinBox, QHBoxLayout
+    QPushButton, QScrollArea, QGroupBox, QDoubleSpinBox, QHBoxLayout, QFileDialog
 from PyQt6.QtGui import QColor
 from PyQt6.QtCore import QThread, pyqtSignal, Qt
 import socket
 import numpy as np
+import os
+import sys
 
 
 class ClientControls(QScrollArea):
@@ -18,6 +20,8 @@ class ClientControls(QScrollArea):
     add_button_to_client = pyqtSignal(str)
     add_position_control_to_client = pyqtSignal(str, np.ndarray)
     set_control_value = pyqtSignal(str, str)
+    add_file_widget_to_client = pyqtSignal(str, str)
+    add_spin_box_to_client = pyqtSignal(str, float)
     close_signal = pyqtSignal()
 
     def __init__(self, main, s: socket.socket, *args, **kwargs):
@@ -48,6 +52,10 @@ class ClientControls(QScrollArea):
             self.set_control_value_command)
         self.add_position_control_to_client.connect(
             self.add_position_control_to_client_command)
+        self.add_file_widget_to_client.connect(
+            self.add_file_widget_to_client_command)
+        self.add_spin_box_to_client.connect(
+            self.add_spin_box_to_client_command)
         self.close_signal.connect(self.close)
         self.update_controls_thread = UpdateControlsThread(
             self.s,
@@ -59,6 +67,8 @@ class ClientControls(QScrollArea):
             add_checkbox_to_client=self.add_checkbox_to_client,
             add_button_to_client=self.add_button_to_client,
             add_position_control_to_client=self.add_position_control_to_client,
+            add_file_widget_to_client=self.add_file_widget_to_client,
+            add_spin_box_to_client=self.add_spin_box_to_client,
             close_signal=self.close_signal,
             set_control_value=self.set_control_value)
         self.update_controls_thread.start()
@@ -89,6 +99,69 @@ class ClientControls(QScrollArea):
                 return
         else:
             return
+
+    def add_spin_box_to_client_command(self, name, default):
+        if self.label.isVisible():
+            self.label.hide()
+        name_label = QLabel(text=name)
+        spin_box = QDoubleSpinBox()
+        spin_box.setRange(-sys.float_info.max, sys.float_info.max)
+        spin_box.setValue(default)
+        spin_box.valueChanged.connect(
+            lambda value: self.s.sendall(f"set_spin_box_value {name} {value}".encode("utf-8")))
+        self.layout().addWidget(name_label)
+        self.layout().addWidget(spin_box)
+        self.controls[name] = spin_box
+
+    def add_file_widget_to_client_command(self, name, file_flags):
+        if self.label.isVisible():
+            self.label.hide()
+        widget = QGroupBox(name)
+        widget.setTitle(name)
+        widget.setLayout(QVBoxLayout())
+        widget.name_label = QLabel(name)
+        widget.file_path_label = QLabel()
+        widget.file_size_label = QLabel()
+        widget.file_flags = file_flags
+        widget.select_file_button = QPushButton("Select File")
+        widget.select_file_button.clicked.connect(
+            self.select_file_command)
+        widget.clear_file_button = QPushButton("Clear File")
+        widget.clear_file_button.clicked.connect(
+            self.clear_file_command)
+        widget.clear_file_button.setEnabled(False)
+        widget.layout().addWidget(widget.name_label)
+        widget.layout().addWidget(widget.file_path_label)
+        widget.layout().addWidget(widget.file_size_label)
+        widget.layout().addWidget(widget.select_file_button)
+        widget.layout().addWidget(widget.clear_file_button)
+        self.layout().addWidget(widget)
+        self.controls[name] = widget
+
+    def select_file_command(self):
+        file_name, _ = QFileDialog.getOpenFileName(
+            self, "Select File", "", self.controls[self.sender().parent().title()].file_flags)
+        if file_name:
+            self.controls[self.sender().parent().title()].file_path_label.setText(
+                file_name)
+            self.controls[self.sender().parent().title()].file_size_label.setText(
+                f"File Size: {os.path.getsize(file_name)} bytes")
+            self.controls[self.sender().parent().title()].clear_file_button.setEnabled(
+                True)
+            with open(file_name, "rb") as f:
+                self.s.sendall(f"set_file_widget_value?{self.sender().parent().title()}?".encode("utf-8")
+                               + f"{file_name}?".encode("utf-8") +
+                               f"{os.path.getsize(file_name)}?".encode("utf-8") + f.read())
+
+    def clear_file_command(self):
+        self.controls[self.sender().parent().title()].file_path_label.setText(
+            "")
+        self.controls[self.sender().parent().title()].file_size_label.setText(
+            "")
+        self.controls[self.sender().parent().title()].clear_file_button.setEnabled(
+            False)
+        self.s.sendall(f"set_file_widget_value?{self.sender().parent().title()}".encode("utf-8") +
+                       "?<None?<None?<None".encode("utf-8"))
 
     def add_slider_to_client_command(self, name, min_, max_, step, default):
         if self.label.isVisible():
@@ -224,6 +297,8 @@ class UpdateControlsThread(QThread):
                  add_checkbox_to_client: pyqtSignal,
                  add_button_to_client: pyqtSignal,
                  add_position_control_to_client: pyqtSignal,
+                 add_file_widget_to_client: pyqtSignal,
+                 add_spin_box_to_client: pyqtSignal,
                  close_signal: pyqtSignal,
                  set_control_value: pyqtSignal):
         super().__init__()
@@ -236,6 +311,8 @@ class UpdateControlsThread(QThread):
         self.add_checkbox_to_client = add_checkbox_to_client
         self.add_button_to_client = add_button_to_client
         self.add_position_control_to_client = add_position_control_to_client
+        self.add_file_widget_to_client = add_file_widget_to_client
+        self.add_spin_box_to_client = add_spin_box_to_client
         self.close_signal = close_signal
         self.set_control_value = set_control_value
 
@@ -285,6 +362,13 @@ class UpdateControlsThread(QThread):
                 z = float(z)
                 self.add_position_control_to_client.emit(
                     name, np.array([x, y, z]))
+            elif command.startswith("add_file_widget"):
+                _, name, *file_flags = command.split(" ")
+                file_flags = " ".join(file_flags)
+                self.add_file_widget_to_client.emit(name, file_flags)
+            elif command.startswith("add_spin_box"):
+                _, name, default = command.split(" ")
+                self.add_spin_box_to_client.emit(name, float(default))
             elif command == "exit":
                 self.close_signal.emit()
                 break

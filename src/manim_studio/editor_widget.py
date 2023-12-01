@@ -1,12 +1,14 @@
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QFileDialog, \
     QMenuBar, QMessageBox, QDialog, QLineEdit, QLabel, QCheckBox, QGridLayout, QScrollArea, \
     QDoubleSpinBox, QStatusBar, QComboBox
-from PyQt6.QtGui import QAction, QIntValidator, QColor
+from PyQt6.QtGui import QAction, QIntValidator, QColor, QDoubleValidator
 from PyQt6.QtCore import pyqtSlot, Qt
 import numpy as np
 from pathlib import Path
 import dill as pickle
 import socket
+from typing import Union
+import sys
 
 from .communicate import Communicate
 from .live_scene import LiveScene
@@ -16,9 +18,11 @@ from manim_studio.widgets.dropdown_widget import DropdownWidget
 from manim_studio.widgets.line_editor_widget import LineEditorWidget
 from manim_studio.widgets.text_editor_widget import TextEditorWidget
 from manim_studio.widgets.checkbox_widget import CheckboxWidget
+from manim_studio.widgets.file_widget import FileWidget
 from .control_dialog import ControlDialog
 from manim_studio.widgets.button import Button
 from manim_studio.widgets.position_control import PositionControl
+from manim_studio.widgets.spin_box import SpinBox
 from .code_edit import CodeEdit
 
 
@@ -142,6 +146,18 @@ class EditorWidget(QWidget):
         self.add_position_control_action.triggered.connect(
             self.add_position_control)
         self.edit_menu.addAction(self.add_position_control_action)
+        self.add_file_widget_action = QAction(
+            "Add file widget", self)
+        self.add_file_widget_action.setShortcut("Ctrl+Shift+F")
+        self.add_file_widget_action.triggered.connect(
+            self.add_file_widget)
+        self.edit_menu.addAction(self.add_file_widget_action)
+        self.add_spin_box_action = QAction(
+            "Add spin box", self)
+        self.add_spin_box_action.setShortcut("Ctrl+Shift+B")
+        self.add_spin_box_action.triggered.connect(
+            self.add_spin_box)
+        self.edit_menu.addAction(self.add_spin_box_action)
         self.save_mobject_action = QAction("Save mobject", self)
         self.save_mobject_action.setShortcut("Ctrl+Shift+9")
         self.save_mobject_action.triggered.connect(self.save_mobject)
@@ -204,6 +220,10 @@ class EditorWidget(QWidget):
             self.add_line_editor_widget_to_editor)
         self.communicate.add_text_editor_to_editor.connect(
             self.add_text_editor_to_editor)
+        self.communicate.add_file_widget_to_editor.connect(
+            self.add_file_widget_to_editor)
+        self.communicate.add_spin_box_to_editor.connect(
+            self.add_spin_box_to_editor)
         self.communicate.add_checkbox_to_editor.connect(
             self.add_checkbox_to_editor)
         self.communicate.set_control_value.connect(self.set_control_value)
@@ -232,6 +252,75 @@ class EditorWidget(QWidget):
     def show(self):
         super().show()
         self.controls_scroll.show()
+
+    def add_spin_box(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add spin box")
+        text_edit = QLineEdit(dialog)
+        text_edit.setPlaceholderText("Spin box name")
+        default_value_edit = QLineEdit(dialog)
+        default_value_edit.setPlaceholderText("Default value")
+        validator = QDoubleValidator()
+        validator.setBottom(-sys.float_info.max)
+        validator.setTop(sys.float_info.max)
+        default_value_edit.setValidator(validator)
+        default_value_edit.setText("0.0")
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.close)
+        ok_button.clicked.connect(lambda: self.scene.add_spin_box_command(
+            text_edit.text(), float(default_value_edit.text())))
+        layout = QVBoxLayout()
+        layout.addWidget(text_edit)
+        layout.addWidget(default_value_edit)
+        layout.addWidget(ok_button)
+        dialog.setLayout(layout)
+        dialog.exec()
+
+    @pyqtSlot(str, float)
+    def add_spin_box_to_editor(self, name: str, default_value: float):
+        label = QLabel(text=name)
+        spin_box = SpinBox(name, default_value)
+        self.controls[name] = spin_box
+        self.controls_layout.addWidget(label)
+        self.controls_layout.addWidget(spin_box)
+        if self.no_controls.isVisible():
+            self.no_controls.hide()
+        if self.manim_studio_server is not None:
+            self.add_controls_to_clients(
+                self.manim_studio_server.clients, {name: spin_box})
+
+    def add_file_widget(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add file widget")
+        text_edit = QLineEdit(dialog)
+        text_edit.setPlaceholderText("File widget name")
+        file_flags_edit = QLineEdit(dialog)
+        file_flags_edit.setPlaceholderText("File flags")
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.close)
+        ok_button.clicked.connect(lambda: self.scene.add_file_widget_command(
+            text_edit.text(), file_flags_edit.text()))
+        layout = QVBoxLayout()
+        layout.addWidget(text_edit)
+        layout.addWidget(file_flags_edit)
+        layout.addWidget(ok_button)
+        dialog.setLayout(layout)
+        dialog.exec()
+
+    @pyqtSlot(str, str)
+    def add_file_widget_to_editor(self, name: str, file_flags: str):
+        label = QLabel(text=name)
+        file_widget = FileWidget(name, file_flags)
+        self.controls[name] = file_widget
+        self.scene.value_trackers[name] = file_widget.value_tracker
+        setattr(self.scene, name, file_widget.value_tracker)
+        self.controls_layout.addWidget(label)
+        self.controls_layout.addWidget(file_widget)
+        if self.no_controls.isVisible():
+            self.no_controls.hide()
+        if self.manim_studio_server is not None:
+            self.add_controls_to_clients(
+                self.manim_studio_server.clients, {name: file_widget})
 
     def write_to_python_file(self):
         file_name = QFileDialog.getSaveFileName(
@@ -421,6 +510,12 @@ class EditorWidget(QWidget):
             elif isinstance(control, PositionControl):
                 s.sendall(f"add_position_control {name} {control.x_.value()} {control.y_.value()} {control.z_.value()}".encode(
                     "utf-8"))
+            elif isinstance(control, FileWidget):
+                s.sendall(f"add_file_widget {name} {control.file_flags}".encode(
+                    "utf-8"))
+            elif isinstance(control, SpinBox):
+                s.sendall(f"add_spin_box {name} {control.value()}".encode(
+                    "utf-8"))
 
     def add_controls_to_clients(self, clients: list[socket.socket], controls: dict):
         for client in clients:
@@ -459,37 +554,57 @@ class EditorWidget(QWidget):
             self.add_controls_to_clients(
                 self.manim_studio_server.clients, {name: button})
 
-    @pyqtSlot(str, str)
-    def set_control_value(self, name: str, value: str):
-        control = self.controls.get(name)
+    @pyqtSlot(object, object)
+    def set_control_value(self, name: Union[str, bytes], value: Union[str, bytes]):
+        if isinstance(name, str):
+            name = name.encode("utf-8")
+        if isinstance(value, str):
+            value = value.encode("utf-8")
+        control = self.controls.get(name.decode("utf-8"))
         if control is None:
             alert = QMessageBox()
             alert.setText(f"Control {name} not found")
             alert.exec()
             return
         if isinstance(control, Slider):
-            control.setValue(int(value))
+            control.setValue(int(value.decode("utf-8")))
         elif isinstance(control, ColorWidget):
-            value = value.split(",")
+            value = value.decode("utf-8").split(",")
             control.setCurrentColor(QColor(int(value[0]), int(
                 value[1]), int(value[2]), int(value[3])))
         elif isinstance(control, DropdownWidget):
-            control.setCurrentText(value)
+            control.setCurrentText(value.decode("utf-8"))
         elif isinstance(control, LineEditorWidget):
-            control.setText(value)
+            control.setText(value.decode("utf-8"))
         elif isinstance(control, TextEditorWidget):
-            control.setText(value)
+            control.setText(value.decode("utf-8"))
         elif isinstance(control, CheckboxWidget):
-            control.setChecked(value == "True")
+            control.setChecked(value.decode("utf-8") == "True")
         elif isinstance(control, Button):
             control.clicked.disconnect()
             control.clicked.connect(
-                lambda: self.communicate.update_scene.emit(value))
+                lambda: self.communicate.update_scene.emit(value.decode("utf-8")))
         elif isinstance(control, PositionControl):
-            value = value.split(",")
+            value = value.decode("utf-8").split(",")
             control.x_.setValue(float(value[0]))
             control.y_.setValue(float(value[1]))
             control.z_.setValue(float(value[2]))
+        elif isinstance(control, FileWidget):
+            file_path, file_size, *file_contents = value.split(b"?")
+            if file_path == b"<None":
+                control.clear_file()
+                return
+            file_contents = b"?".join(file_contents)
+            control.file_path = file_path.decode("utf-8")
+            control.file_size = int(file_size.decode("utf-8"))
+            control.value_tracker.set_value(file_contents)
+            control.file_size_label.setText(
+                f"File Size: {control.file_size} bytes")
+            control.file_path_label.setText(
+                control.file_path)
+            control.clear_file_button.setEnabled(True)
+        elif isinstance(control, SpinBox):
+            control.setValue(float(value.decode("utf-8")))
 
     def save_mobject(self):
         self.communicate.save_mobject.emit()
@@ -782,6 +897,10 @@ class EditorWidget(QWidget):
                         return ("Button", v.callback)
                     elif isinstance(v, PositionControl):
                         return ("PositionControl", v.x_.value(), v.y_.value(), v.z_.value(), v.display_dot_checkbox.isChecked())
+                    elif isinstance(v, FileWidget):
+                        return ("FileWidget", v.file_flags)
+                    elif isinstance(v, SpinBox):
+                        return ("SpinBox", v.value())
 
                 controls = {k: get_tup(v) for k, v in controls.items()}
                 with open(f"{file_[0]}.controls", "wb") as f:
@@ -831,6 +950,12 @@ class EditorWidget(QWidget):
                     elif control[0] == "PositionControl":
                         self.add_position_control_to_editor(
                             name, np.array([control[1], control[2], control[3]]))
+                    elif control[0] == "FileWidget":
+                        self.add_file_widget_to_editor(
+                            name, control[1])
+                    elif control[0] == "SpinBox":
+                        self.add_spin_box_to_editor(
+                            name, control[1])
         else:
             alert = QMessageBox(
                 text="No file selected.")

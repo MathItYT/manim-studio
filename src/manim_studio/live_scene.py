@@ -55,6 +55,9 @@ class LiveScene(QObject, Scene):
         self.python_file_to_write = None
         self.scope = globals()
         self.scope.update(self.namespace)
+        self.scope["console"] = None
+        self.scope["logger"] = None
+        self.scope["error_console"] = None
         self.scope["self"] = self
         if isinstance(self, MovingCameraScene):
             self.add(self.camera.frame)
@@ -193,6 +196,12 @@ class LiveScene(QObject, Scene):
         self.communicate.add_button_to_editor.emit(
             name, callback)
 
+    def add_file_widget_command(self, name: str, file_flags: str):
+        if self.called_from_editor:
+            raise CalledFromEditorException("Cannot add widgets from editor")
+        self.communicate.add_file_widget_to_editor.emit(
+            name, file_flags)
+
     def wait(self, *args, frozen_frame=False, **kwargs):
         super().wait(*args, frozen_frame=frozen_frame, **kwargs)
 
@@ -253,6 +262,9 @@ class Result(%s):
             current_code = self.current_code
             self.current_code = None
             self.scope["self"] = self
+            self.scope["console"] = None
+            self.scope["logger"] = None
+            self.scope["error_console"] = None
             current_scope = self.scope.copy()
             exec(current_code, self.scope)
         except EndSceneEarlyException:
@@ -269,6 +281,12 @@ class Result(%s):
         finally:
             self.remove_state("temp")
             self.called_from_editor = False
+
+    def add_spin_box_command(self, name: str, default_value: float):
+        if self.called_from_editor:
+            raise CalledFromEditorException("Cannot add widgets from editor")
+        self.communicate.add_spin_box_to_editor.emit(
+            name, default_value)
 
     def add_position_control_command(self, name: str, default_value: np.ndarray):
         if self.called_from_editor:

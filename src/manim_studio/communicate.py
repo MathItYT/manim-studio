@@ -1,6 +1,7 @@
 from PyQt6.QtCore import pyqtSignal, QObject
 import numpy as np
 import socket
+from typing import Union
 
 
 class Communicate(QObject):
@@ -19,9 +20,11 @@ class Communicate(QObject):
     add_checkbox_to_editor = pyqtSignal(str, bool)
     add_button_to_editor = pyqtSignal(str, str)
     add_position_control_to_editor = pyqtSignal(str, np.ndarray)
+    add_file_widget_to_editor = pyqtSignal(str, str)
+    add_spin_box_to_editor = pyqtSignal(str, float)
     save_mobject = pyqtSignal()
     load_mobject = pyqtSignal()
-    set_control_value = pyqtSignal(str, str)
+    set_control_value = pyqtSignal(object, object)
     add_controls_to_client = pyqtSignal(socket.socket, dict)
     add_controls_to_clients = pyqtSignal(list, dict)
     press_button = pyqtSignal(str)

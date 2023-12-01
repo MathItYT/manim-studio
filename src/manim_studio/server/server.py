@@ -63,14 +63,20 @@ class ClientThread(QThread):
             msg.decode("utf-8")
         except UnicodeDecodeError:
             self.client.sendall(b"Wrong password (UnicodeDecodeError)")
-            self.client.close()
             return
         if msg.decode("utf-8") == self.password:
             self.main_thread.clients.append(self.client)
             self.client.sendall(b"Correct password")
             while True:
                 msg = self.guaranteed_recv()
-                if msg.decode("utf-8").startswith("username="):
+                if msg.startswith(b"set_file_widget_value"):
+                    _, name, file_name, file_size, * \
+                        file_contents = msg.split(b"?")
+                    file_contents = b"?".join(file_contents)
+                    print(file_name)
+                    self.communicate.set_control_value.emit(
+                        name, b"?".join([file_name, file_size, file_contents]))
+                elif msg.decode("utf-8").startswith("username="):
                     user = msg.decode("utf-8").split("=")[1]
                     if user not in self.main_thread.users:
                         self.main_thread.users[user] = self.client
@@ -142,11 +148,15 @@ class ClientThread(QThread):
                     self.communicate.set_position_control_display_dot.emit(
                         name, value)
                     continue
+                elif msg.decode("utf-8").startswith("set_spin_box_value"):
+                    _, name, value = msg.decode("utf-8").split(" ")
+                    self.communicate.set_control_value.emit(
+                        name, value)
+                    continue
                 else:
                     self.communicate.update_scene.emit(msg.decode("utf-8"))
         else:
             self.client.sendall(b"Wrong password")
-            self.client.close()
 
     def guaranteed_recv(self):
-        return self.client.recv(1024)
+        return self.client.recv(2**16)

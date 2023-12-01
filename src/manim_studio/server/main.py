@@ -17,7 +17,7 @@ class ManimStudioServer(QWidget):
         password_dialog.setModal(True)
         password_dialog.setTextEchoMode(QLineEdit.EchoMode.Password)
         password_dialog.exec()
-        self.password = password_dialog.textValue()
+        self.password = password_dialog.textValue() or "None"
         self.server = Server("", 5555, self.password, self.communicate, editor)
         self.server.start()
         self.label = QLabel()
