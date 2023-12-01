@@ -13,6 +13,7 @@ import sys
 from .communicate import Communicate
 from .live_scene import LiveScene
 from manim_studio.widgets.slider import Slider
+from manim_studio.mobject_picker import MobjectPicker
 from manim_studio.widgets.color_widget import ColorWidget
 from manim_studio.widgets.dropdown_widget import DropdownWidget
 from manim_studio.widgets.line_editor_widget import LineEditorWidget
@@ -23,6 +24,7 @@ from .control_dialog import ControlDialog
 from manim_studio.widgets.button import Button
 from manim_studio.widgets.position_control import PositionControl
 from manim_studio.widgets.spin_box import SpinBox
+from manim import VMobject, Mobject, color_to_int_rgba
 from .code_edit import CodeEdit
 
 
@@ -32,6 +34,7 @@ class EditorWidget(QWidget):
     def __init__(self, communicate: Communicate, scene: LiveScene, server: bool, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.communicate = communicate
+        self.mobject_picker = MobjectPicker(self.communicate, self)
         self.manim_studio_server = None
         self.server = server
         self.setWindowTitle("Manim Studio - Editor")
@@ -87,6 +90,12 @@ class EditorWidget(QWidget):
         self.write_to_python_file_button.setGeometry(0, 0, 100, 50)
         self.write_to_python_file_button.clicked.connect(
             self.write_to_python_file)
+        self.show_mobject_picker_button = QPushButton(
+            "Show mobject picker (Ctrl+M)")
+        self.show_mobject_picker_button.setShortcut("Ctrl+M")
+        self.show_mobject_picker_button.setGeometry(0, 0, 100, 50)
+        self.show_mobject_picker_button.clicked.connect(
+            self.mobject_picker.show)
 
         self.menu_bar = QMenuBar()
         self.file_menu = self.menu_bar.addMenu("File")
@@ -185,6 +194,29 @@ class EditorWidget(QWidget):
         self.replay_from_state_action.triggered.connect(
             self.replay_from_state)
         self.states_menu.addAction(self.replay_from_state_action)
+        self.transform_menu = self.menu_bar.addMenu("Transform")
+        self.change_stroke_width_action = QAction(
+            "Change stroke width", self)
+        self.transform_menu.addAction(self.change_stroke_width_action)
+        self.change_stroke_width_action.triggered.connect(
+            self.change_stroke_width)
+        self.change_stroke_color_action = QAction(
+            "Change stroke RGBA color", self)
+        self.transform_menu.addAction(self.change_stroke_color_action)
+        self.change_stroke_color_action.triggered.connect(
+            self.change_stroke_color)
+        self.change_fill_color_action = QAction(
+            "Change fill RGBA color", self)
+        self.transform_menu.addAction(self.change_fill_color_action)
+        self.change_fill_color_action.triggered.connect(
+            self.change_fill_color)
+        self.move_to_action = QAction("Move to", self)
+        self.transform_menu.addAction(self.move_to_action)
+        self.move_to_action.triggered.connect(self.move_to)
+        self.scale_or_stretch_action = QAction("Scale or stretch", self)
+        self.transform_menu.addAction(self.scale_or_stretch_action)
+        self.scale_or_stretch_action.triggered.connect(
+            self.scale_or_stretch)
 
         self.layout_ = QVBoxLayout()
         self.layout_.addWidget(self.menu_bar)
@@ -199,6 +231,7 @@ class EditorWidget(QWidget):
         self.layout_.addWidget(self.resume_scene_button)
         self.layout_.addWidget(self.screenshot_button)
         self.layout_.addWidget(self.write_to_python_file_button)
+        self.layout_.addWidget(self.show_mobject_picker_button)
         self.controls_widget = QWidget()
         self.controls_scroll = QScrollArea()
         self.controls_scroll.setWidget(self.controls_widget)
@@ -253,6 +286,220 @@ class EditorWidget(QWidget):
         super().show()
         self.controls_scroll.show()
 
+    def change_stroke_width(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Enter name of mobject")
+        dialog.layout_ = QVBoxLayout()
+        dialog.label = QLabel(
+            "Enter the name of the mobject (it must be an attribute of the scene):")
+        dialog.layout_.addWidget(dialog.label)
+        dialog.name_edit = QLineEdit()
+        dialog.name_edit.setPlaceholderText("Mobject name")
+        dialog.layout_.addWidget(dialog.name_edit)
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.accept)
+        dialog.layout_.addWidget(ok_button)
+        dialog.setLayout(dialog.layout_)
+        dialog.exec()
+        if dialog.result() == QDialog.DialogCode.Rejected:
+            return
+        if not hasattr(self.scene, dialog.name_edit.text().strip()):
+            alert = QMessageBox(
+                text="Mobject not found.")
+            alert.setWindowTitle("Mobject not found")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        if not isinstance(getattr(self.scene, dialog.name_edit.text().strip()), VMobject):
+            alert = QMessageBox(
+                text="Mobject must be a vectorized mobject.")
+            alert.setWindowTitle("Mobject must be a VMobject")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        self.communicate.add_spin_box_to_editor.emit(
+            dialog.name_edit.text().strip() + "_stroke_width",
+            getattr(self.scene, dialog.name_edit.text().strip()).stroke_width)
+        self.communicate.add_button_to_editor.emit(
+            dialog.name_edit.text().strip() + "_update_stroke_width",
+            f"""
+self.{dialog.name_edit.text().strip()}.set_stroke(width=self.{dialog.name_edit.text().strip()}_stroke_width.get_value())""".strip())
+
+    def change_stroke_color(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Enter name of mobject")
+        dialog.layout_ = QVBoxLayout()
+        dialog.label = QLabel(
+            "Enter the name of the mobject (it must be an attribute of the scene):")
+        dialog.layout_.addWidget(dialog.label)
+        dialog.name_edit = QLineEdit()
+        dialog.name_edit.setPlaceholderText("Mobject name")
+        dialog.layout_.addWidget(dialog.name_edit)
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.accept)
+        dialog.layout_.addWidget(ok_button)
+        dialog.setLayout(dialog.layout_)
+        dialog.exec()
+        if dialog.result() == QDialog.DialogCode.Rejected:
+            return
+        if not hasattr(self.scene, dialog.name_edit.text().strip()):
+            alert = QMessageBox(
+                text="Mobject not found.")
+            alert.setWindowTitle("Mobject not found")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        if not isinstance(getattr(self.scene, dialog.name_edit.text().strip()), VMobject):
+            alert = QMessageBox(
+                text="Mobject must be a vectorized mobject.")
+            alert.setWindowTitle("Mobject must be a VMobject")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        self.communicate.add_color_widget_to_editor.emit(
+            dialog.name_edit.text().strip() + "_stroke_color",
+            color_to_int_rgba(getattr(self.scene, dialog.name_edit.text().strip()).stroke_color or VMobject().color, getattr(self.scene, dialog.name_edit.text().strip()).stroke_opacity))
+
+        self.communicate.add_button_to_editor.emit(
+            dialog.name_edit.text().strip() + "_update_stroke_color",
+            f"""self.{dialog.name_edit.text().strip()}.set_stroke(color=rgb_to_color(self.{dialog.name_edit.text().strip()}_stroke_color.get_value()[0]), opacity=self.{dialog.name_edit.text().strip()}_stroke_color.get_value()[1])""")
+
+    def change_fill_color(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Enter name of mobject")
+        dialog.layout_ = QVBoxLayout()
+        dialog.label = QLabel(
+            "Enter the name of the mobject (it must be an attribute of the scene):")
+        dialog.layout_.addWidget(dialog.label)
+        dialog.name_edit = QLineEdit()
+        dialog.name_edit.setPlaceholderText("Mobject name")
+        dialog.layout_.addWidget(dialog.name_edit)
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.accept)
+        dialog.layout_.addWidget(ok_button)
+        dialog.setLayout(dialog.layout_)
+        dialog.exec()
+        if dialog.result() == QDialog.DialogCode.Rejected:
+            return
+        if not hasattr(self.scene, dialog.name_edit.text().strip()):
+            alert = QMessageBox(
+                text="Mobject not found.")
+            alert.setWindowTitle("Mobject not found")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        if not isinstance(getattr(self.scene, dialog.name_edit.text().strip()), VMobject):
+            alert = QMessageBox(
+                text="Mobject must be a vectorized mobject.")
+            alert.setWindowTitle("Mobject must be a VMobject")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        self.communicate.add_color_widget_to_editor.emit(
+            dialog.name_edit.text().strip() + "_fill_color",
+            color_to_int_rgba(getattr(self.scene, dialog.name_edit.text().strip()).fill_color or VMobject().color, getattr(self.scene, dialog.name_edit.text().strip()).fill_opacity))
+
+        self.communicate.add_button_to_editor.emit(
+            dialog.name_edit.text().strip() + "_update_fill_color",
+            f"""self.{dialog.name_edit.text().strip()}.set_fill(color=rgb_to_color(self.{dialog.name_edit.text().strip()}_fill_color.get_value()[0]), opacity=self.{dialog.name_edit.text().strip()}_fill_color.get_value()[1])""")
+
+    def move_to(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Enter name of mobject")
+        dialog.layout_ = QVBoxLayout()
+        dialog.label = QLabel(
+            "Enter the name of the mobject (it must be an attribute of the scene):")
+        dialog.layout_.addWidget(dialog.label)
+        dialog.name_edit = QLineEdit()
+        dialog.name_edit.setPlaceholderText("Mobject name")
+        dialog.layout_.addWidget(dialog.name_edit)
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.accept)
+        dialog.layout_.addWidget(ok_button)
+        dialog.setLayout(dialog.layout_)
+        dialog.exec()
+        if dialog.result() == QDialog.DialogCode.Rejected:
+            return
+        if not hasattr(self.scene, dialog.name_edit.text().strip()):
+            alert = QMessageBox(
+                text="Mobject not found.")
+            alert.setWindowTitle("Mobject not found")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        if not isinstance(getattr(self.scene, dialog.name_edit.text().strip()), Mobject):
+            alert = QMessageBox(
+                text="Mobject must be a mobject.")
+            alert.setWindowTitle("Mobject must be a Mobject")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        self.communicate.add_position_control_to_editor.emit(
+            dialog.name_edit.text().strip() + "_move_to",
+            getattr(self.scene, dialog.name_edit.text().strip()).get_center())
+
+        self.communicate.add_button_to_editor.emit(
+            dialog.name_edit.text().strip() + "_update_move_to",
+            f"""self.{dialog.name_edit.text().strip()}.move_to(self.{dialog.name_edit.text().strip()}_move_to.get_center())""")
+
+    def scale_or_stretch(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Enter name of mobject")
+        dialog.layout_ = QVBoxLayout()
+        dialog.label = QLabel(
+            "Enter the name of the mobject (it must be an attribute of the scene):")
+        dialog.layout_.addWidget(dialog.label)
+        dialog.name_edit = QLineEdit()
+        dialog.name_edit.setPlaceholderText("Mobject name")
+        dialog.layout_.addWidget(dialog.name_edit)
+        ok_button = QPushButton("OK", dialog)
+        ok_button.clicked.connect(dialog.accept)
+        dialog.layout_.addWidget(ok_button)
+        dialog.setLayout(dialog.layout_)
+        dialog.exec()
+        if dialog.result() == QDialog.DialogCode.Rejected:
+            return
+        if not hasattr(self.scene, dialog.name_edit.text().strip()):
+            alert = QMessageBox(
+                text="Mobject not found.")
+            alert.setWindowTitle("Mobject not found")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        if not isinstance(getattr(self.scene, dialog.name_edit.text().strip()), Mobject):
+            alert = QMessageBox(
+                text="Mobject must be a mobject.")
+            alert.setWindowTitle("Mobject must be a Mobject")
+            alert.setIcon(QMessageBox.Icon.Information)
+            alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+            alert.exec()
+            return
+        self.communicate.add_spin_box_to_editor.emit(
+            dialog.name_edit.text().strip() + "_width_main_if_preserve", getattr(self.scene, dialog.name_edit.text().strip()).width)
+        self.communicate.add_spin_box_to_editor.emit(
+            dialog.name_edit.text().strip() + "_height", getattr(self.scene, dialog.name_edit.text().strip()).height)
+        self.communicate.add_spin_box_to_editor.emit(
+            dialog.name_edit.text().strip() + "_depth", getattr(self.scene, dialog.name_edit.text().strip()).depth)
+        self.communicate.add_checkbox_to_editor.emit(
+            dialog.name_edit.text().strip() + "_preserve_aspect_ratio", True)
+        self.communicate.add_button_to_editor.emit(
+            dialog.name_edit.text().strip() + "_update_scale_or_stretch",
+            f"""if self.{dialog.name_edit.text().strip()}_preserve_aspect_ratio.get_value():
+    self.{dialog.name_edit.text().strip()}.scale_to_fit_width(self.{dialog.name_edit.text().strip()}_width_main_if_preserve.get_value())
+else:
+    self.{dialog.name_edit.text().strip()}.stretch_to_fit_width(self.{dialog.name_edit.text().strip()}_width_main_if_preserve.get_value())
+    self.{dialog.name_edit.text().strip()}.stretch_to_fit_height(self.{dialog.name_edit.text().strip()}_height.get_value())
+    self.{dialog.name_edit.text().strip()}.stretch_to_fit_depth(self.{dialog.name_edit.text().strip()}_depth.get_value())""")
+
     def add_spin_box(self):
         dialog = QDialog(self)
         dialog.setWindowTitle("Add spin box")
@@ -281,6 +528,7 @@ class EditorWidget(QWidget):
         label = QLabel(text=name)
         spin_box = SpinBox(name, default_value)
         self.scene.value_trackers[name] = spin_box.value_tracker
+        setattr(self.scene, name, spin_box.value_tracker)
         self.controls[name] = spin_box
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(spin_box)
@@ -314,7 +562,11 @@ class EditorWidget(QWidget):
         file_widget = FileWidget(name, file_flags)
         self.controls[name] = file_widget
         self.scene.value_trackers[name] = file_widget.value_tracker
+        self.scene.value_trackers[name + "_path"] = file_widget.file_path
+        self.scene.value_trackers[name + "_size"] = file_widget.file_size
         setattr(self.scene, name, file_widget.value_tracker)
+        setattr(self.scene, name + "_path", file_widget.file_path)
+        setattr(self.scene, name + "_size", file_widget.file_size)
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(file_widget)
         if self.no_controls.isVisible():

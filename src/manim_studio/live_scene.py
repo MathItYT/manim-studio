@@ -11,6 +11,7 @@ from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 from manim_studio.value_trackers.int_value_tracker import IntValueTracker
 from manim_studio.value_trackers.string_value_tracker import StringValueTracker
 from manim_studio.value_trackers.bytes_value_tracker import BytesValueTracker
+from manim_studio.mobject_picker import get_image_for_mobject
 
 
 class CalledFromEditorException(Exception):
@@ -290,8 +291,7 @@ class Result(%s):
         except EndSceneEarlyException:
             raise EndSceneEarlyException()
         except Exception as e:
-            logger.info(
-                f"Exception occured in live scene ({e.__class__.__name__}: {e})")
+            self.print_gui(f"{e.__class__.__name__}: {e}")
             self.communicate.alert.emit(e)
             self.restore_state("temp")
             self.scope = current_scope
