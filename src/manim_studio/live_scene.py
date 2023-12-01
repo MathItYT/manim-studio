@@ -1,5 +1,5 @@
 from manim import *
-from PyQt6.QtCore import QObject, pyqtSlot, Qt
+from PyQt6.QtCore import QObject, pyqtSlot
 from PyQt6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLineEdit, QLabel, QPushButton, QFileDialog
 from .communicate import Communicate
 from PIL import Image
@@ -10,6 +10,7 @@ from manim_studio.value_trackers.boolean_value_tracker import BooleanValueTracke
 from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 from manim_studio.value_trackers.int_value_tracker import IntValueTracker
 from manim_studio.value_trackers.string_value_tracker import StringValueTracker
+from manim_studio.value_trackers.bytes_value_tracker import BytesValueTracker
 
 
 class CalledFromEditorException(Exception):
@@ -213,12 +214,20 @@ class LiveScene(QObject, Scene):
         self.called_from_editor = True
         self.restore_state(name)
         self.current_code = "\n".join(self.codes[name])
+        bases = [
+            i.__name__
+            for i in self.__class__.__bases__
+            if i.__name__ not in ("LiveScene", "QObject")
+            and (not issubclass(j, i) for j in self.__class__.__bases__)
+        ]
+        bases_str = ", ".join(bases)
         if self.python_file_to_write is not None:
             CODE = """from manim import *
 from manim_studio.value_trackers.boolean_value_tracker import BooleanValueTracker
 from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 from manim_studio.value_trackers.int_value_tracker import IntValueTracker
 from manim_studio.value_trackers.string_value_tracker import StringValueTracker
+from manim_studio.value_trackers.bytes_value_tracker import BytesValueTracker
 
             
 class Result(%s):
@@ -226,9 +235,10 @@ class Result(%s):
         %s
     
     def print_gui(self, text: str):
-        print(text)""" % (",".join([i.__name__ for i in self.__class__.__bases__ if i.__name__ not in ("LiveScene", "QObject")]),
-                          self.get_value_trackers_code(),
-                          "\n        ".join([line for code in self.codes[name] for line in code.split("\n") if line.strip() != ""]))
+        print(text)
+""" % (bases_str,
+                self.get_value_trackers_code(),
+                "\n        ".join([line for code in self.codes[name] for line in code.split("\n") if line.strip() != ""]))
             with open(self.python_file_to_write, "w") as f:
                 f.write(CODE)
             self.print_gui("Python file has been exported.")
@@ -253,6 +263,16 @@ class Result(%s):
             elif isinstance(value_tracker, StringValueTracker):
                 code += f"\n        self.{
                     name} = StringValueTracker({value_tracker.get_value()})"
+            elif isinstance(value_tracker, BytesValueTracker):
+                code += f"\n        self.{
+                    name} = BytesValueTracker({value_tracker.get_value().__repr__()})"
+            elif isinstance(value_tracker, ValueTracker):
+                code += f"\n        self.{
+                    name} = ValueTracker({value_tracker.get_value()})"
+            elif isinstance(value_tracker, Dot):
+                x, y, z = value_tracker.get_center()
+                code += f"\n        self.{
+                    name} = Dot({x} * RIGHT + {y} * UP + {z} * OUT)"
         return code
 
     def run_instruction(self):

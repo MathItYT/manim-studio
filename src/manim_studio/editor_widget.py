@@ -280,6 +280,7 @@ class EditorWidget(QWidget):
     def add_spin_box_to_editor(self, name: str, default_value: float):
         label = QLabel(text=name)
         spin_box = SpinBox(name, default_value)
+        self.scene.value_trackers[name] = spin_box.value_tracker
         self.controls[name] = spin_box
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(spin_box)
@@ -475,6 +476,7 @@ class EditorWidget(QWidget):
         position_control = PositionControl(name, self.scene, default_value)
         self.controls[name] = position_control
         self.controls_layout.addWidget(position_control)
+        self.scene.value_trackers[name] = position_control.dot
         if self.no_controls.isVisible():
             self.no_controls.hide()
         if self.manim_studio_server is not None:
@@ -637,6 +639,7 @@ class EditorWidget(QWidget):
         checkbox = CheckboxWidget(name)
         checkbox.setChecked(default_value)
         self.controls[name] = checkbox
+        self.scene.value_trackers[name] = checkbox.value_tracker
         setattr(self.scene, name, checkbox.value_tracker)
         self.controls_layout.addWidget(label)
         self.controls_layout.addWidget(checkbox)
