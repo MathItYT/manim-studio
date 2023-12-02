@@ -617,7 +617,7 @@ else:
         dialog.label = QLabel("Select the state to replay from:")
         dialog.layout_.addWidget(dialog.label)
         dialog.states = QComboBox()
-        dialog.states.addItems([state for state in self.scene.states.keys()])
+        dialog.states.addItems(self.scene.production_states)
         dialog.layout_.addWidget(dialog.states)
         dialog.ok_button = QPushButton("OK")
         dialog.ok_button.clicked.connect(dialog.close)
