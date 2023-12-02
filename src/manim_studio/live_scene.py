@@ -133,7 +133,7 @@ class LiveScene(QObject, Scene):
         return True
 
     def restore_state(self, name: str):
-        if self.running:
+        if self.running and name != "temp":
             raise CalledFromEditorException(
                 "Cannot restore states while running")
         if self.called_from_editor:
