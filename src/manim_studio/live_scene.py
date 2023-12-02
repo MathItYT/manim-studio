@@ -11,7 +11,7 @@ from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 from manim_studio.value_trackers.int_value_tracker import IntValueTracker
 from manim_studio.value_trackers.string_value_tracker import StringValueTracker
 from manim_studio.value_trackers.bytes_value_tracker import BytesValueTracker
-from manim_studio.mobject_picker import get_image_for_mobject
+from manim_studio.mobject_picker import get_image_for_mobject, get_svg_for_mobject
 
 
 class CalledFromEditorException(Exception):
@@ -65,12 +65,14 @@ class LiveScene(QObject, Scene):
             self.add(self.camera.frame)
         self.states = {}
         self.save_state("first")
+        self.developer_mode = True
+        self.production_states = []
 
     def screenshot(self, name: str):
         arr = self.renderer.get_frame()
         Image.fromarray(arr).save(name)
 
-    def save_state(self, name: str | None = None):
+    def save_state(self, name: str | None = None, dev: bool = False):
         if name is None or name.strip() == "":
             name = "Untitled"
         name = str(name).strip()
@@ -88,6 +90,10 @@ class LiveScene(QObject, Scene):
             self.codes[name] = []
         if not self.called_from_editor:
             self.print_gui(f"State '{name}' saved.")
+        self.developer_mode = dev
+        if not dev:
+            self.production_states.append(name)
+        self.communicate.set_developer_mode.emit(dev)
         return True
 
     def remove_state(self, name: str):
@@ -157,36 +163,60 @@ class LiveScene(QObject, Scene):
                 self.run_instruction()
 
     def add_checkbox_command(self, name: str, default_value: bool):
+        if self.developer_mode:
+            self.print_gui(
+                "Cannot add widgets in production mode. Go to 'States' tab and create a state with developer mode enabled.")
+            return
         if self.called_from_editor:
             raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_checkbox_to_editor.emit(
             name, default_value)
 
     def add_text_editor_command(self, name: str, default_value: str):
+        if self.developer_mode:
+            self.print_gui(
+                "Cannot add widgets in production mode. Go to 'States' tab and create a state with developer mode enabled.")
+            return
         if self.called_from_editor:
             raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_text_editor_to_editor.emit(
             name, default_value)
 
     def add_line_edit_command(self, name: str, default_value: str):
+        if self.developer_mode:
+            self.print_gui(
+                "Cannot add widgets in production mode. Go to 'States' tab and create a state with developer mode enabled.")
+            return
         if self.called_from_editor:
             raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_line_edit_to_editor.emit(
             name, default_value)
 
     def add_dropdown_command(self, name: str, options: list[str], default_value: str):
+        if self.developer_mode:
+            self.print_gui(
+                "Cannot add widgets in production mode. Go to 'States' tab and create a state with developer mode enabled.")
+            return
         if self.called_from_editor:
             raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_dropdown_to_editor.emit(
             name, options, default_value)
 
     def add_color_widget_command(self, name: str, default_value: np.ndarray):
+        if self.developer_mode:
+            self.print_gui(
+                "Cannot add widgets in production mode. Go to 'States' tab and create a state with developer mode enabled.")
+            return
         if self.called_from_editor:
             raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_color_widget_to_editor.emit(
             name, default_value)
 
     def add_slider_command(self, name: str, default_value: str, min_value: str, max_value: str, step_value: str):
+        if self.developer_mode:
+            self.print_gui(
+                "Cannot add widgets in production mode. Go to 'States' tab and create a state with developer mode enabled.")
+            return
         if self.called_from_editor:
             raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_slider_to_editor.emit(
@@ -199,6 +229,10 @@ class LiveScene(QObject, Scene):
             name, callback)
 
     def add_file_widget_command(self, name: str, file_flags: str):
+        if self.developer_mode:
+            self.print_gui(
+                "Cannot add widgets in production mode. Go to 'States' tab and create a state with developer mode enabled.")
+            return
         if self.called_from_editor:
             raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_file_widget_to_editor.emit(
@@ -303,12 +337,20 @@ class Result(%s):
             self.called_from_editor = False
 
     def add_spin_box_command(self, name: str, default_value: float):
+        if self.developer_mode:
+            self.print_gui(
+                "Cannot add widgets in production mode. Go to 'States' tab and create a state with developer mode enabled.")
+            return
         if self.called_from_editor:
             raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_spin_box_to_editor.emit(
             name, default_value)
 
     def add_position_control_command(self, name: str, default_value: np.ndarray):
+        if self.developer_mode:
+            self.print_gui(
+                "Cannot add widgets in production mode. Go to 'States' tab and create a state with developer mode enabled.")
+            return
         if self.called_from_editor:
             raise CalledFromEditorException("Cannot add widgets from editor")
         self.communicate.add_position_control_to_editor.emit(

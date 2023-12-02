@@ -1,4 +1,16 @@
-from manim import Text, Mobject, Camera, MathTex, Tex, ImageMobject, Circle, Line
+from manim import (
+    Text,
+    Mobject,
+    Camera,
+    MathTex,
+    Tex,
+    ImageMobject,
+    Circle,
+    Line,
+    Square,
+    Rectangle,
+    SVGMobject
+)
 from manimpango import list_fonts
 from manim_studio.communicate import Communicate
 from PyQt6.QtWidgets import (
@@ -27,6 +39,13 @@ def get_image_for_mobject() -> Path:
     return assets_path / "duck.jpg"
 
 
+def get_svg_for_mobject() -> Path:
+    manim_studio = importlib.import_module("manim_studio")
+    manim_studio_path = Path(manim_studio.__file__).parent
+    assets_path = manim_studio_path / "assets"
+    return assets_path / "svg_file.svg"
+
+
 class MobjectPicker(QScrollArea):
     def __init__(
         self,
@@ -48,7 +67,10 @@ class MobjectPicker(QScrollArea):
             Tex,
             ImageMobject,
             Circle,
-            Line
+            Line,
+            Square,
+            Rectangle,
+            SVGMobject
         ]
         self.sample_mobjects: list[Mobject] = [
             Text("Text"),
@@ -56,7 +78,10 @@ class MobjectPicker(QScrollArea):
             Tex("\\LaTeX"),
             ImageMobject(get_image_for_mobject()),
             Circle(),
-            Line()
+            Line(),
+            Square(),
+            Rectangle(),
+            SVGMobject(get_svg_for_mobject())
         ]
 
     def _setup_ui(self):
@@ -135,7 +160,10 @@ class MobjectPicker(QScrollArea):
             Tex: self._add_tex,
             ImageMobject: self._add_image,
             Circle: self._add_circle,
-            Line: self._add_line
+            Line: self._add_line,
+            Square: self._add_square,
+            Rectangle: self._add_rectangle,
+            SVGMobject: self._add_svg
         }
         FUNCTION_MAP[mobject_type](name)
         dialog.close()
@@ -309,6 +337,20 @@ self.add(self.{name})
                 f"Name {name}_start is a controller that already exists")
             alert.exec()
             return
+        if name + "_end" in self.editor.controls.keys():
+            alert = QMessageBox()
+            alert.setWindowTitle("Error")
+            alert.setText(
+                f"Name {name}_end is a controller that already exists")
+            alert.exec()
+            return
+        if name + "_update_button" in self.editor.controls.keys():
+            alert = QMessageBox()
+            alert.setWindowTitle("Error")
+            alert.setText(
+                f"Name {name}_update_button is a controller that already exists")
+            alert.exec()
+            return
         self.communicate.update_scene.emit(f"""
 self.{name} = Line()
 self.add(self.{name})""".strip())
@@ -330,3 +372,108 @@ self.add(self.{name})
         self.editor.controls[name + "_end"].x_.setValue(1.0)
         self.editor.controls[name + "_end"].y_.setValue(0.0)
         self.editor.controls[name + "_end"].z_.setValue(0.0)
+
+    def _add_square(self, name: str):
+        if name + "_side_length" in self.editor.controls.keys():
+            alert = QMessageBox()
+            alert.setWindowTitle("Error")
+            alert.setText(
+                f"Name {name}_side_length is a controller that already exists")
+            alert.exec()
+            return
+        if name + "_update_button" in self.editor.controls.keys():
+            alert = QMessageBox()
+            alert.setWindowTitle("Error")
+            alert.setText(
+                f"Name {name}_update_button is a controller that already exists")
+            alert.exec()
+            return
+        self.communicate.update_scene.emit(f"""
+self.{name} = Square()
+self.add(self.{name})""".strip())
+        self.communicate.add_spin_box_to_editor.emit(
+            name + "_side_length", 1.0)
+        self.communicate.add_button_to_editor.emit(name + "_update_button", f"""
+self.remove(self.{name})
+self.{name} = Square(side_length=self.{name}_side_length.get_value())
+self.add(self.{name})
+        """.strip())
+        self.editor.controls[name + "_side_length"].setValue(2.0)
+
+    def _add_rectangle(self, name: str):
+        if name + "_width" in self.editor.controls.keys():
+            alert = QMessageBox()
+            alert.setWindowTitle("Error")
+            alert.setText(
+                f"Name {name}_width is a controller that already exists")
+            alert.exec()
+            return
+        if name + "_height" in self.editor.controls.keys():
+            alert = QMessageBox()
+            alert.setWindowTitle("Error")
+            alert.setText(
+                f"Name {name}_height is a controller that already exists")
+            alert.exec()
+            return
+        if name + "_update_button" in self.editor.controls.keys():
+            alert = QMessageBox()
+            alert.setWindowTitle("Error")
+            alert.setText(
+                f"Name {name}_update_button is a controller that already exists")
+            alert.exec()
+            return
+        self.communicate.update_scene.emit(f"""
+self.{name} = Rectangle()
+self.add(self.{name})""".strip())
+        self.communicate.add_spin_box_to_editor.emit(
+            name + "_width", 1.0)
+        self.communicate.add_spin_box_to_editor.emit(
+            name + "_height", 1.0)
+        self.communicate.add_button_to_editor.emit(name + "_update_button", f"""
+self.remove(self.{name})
+self.{name} = Rectangle(width=self.{name}_width.get_value(), height=self.{name}_height.get_value())
+self.add(self.{name})
+        """.strip())
+        self.editor.controls[name + "_width"].setValue(4.0)
+        self.editor.controls[name + "_height"].setValue(2.0)
+
+    def _add_svg(self, name: str):
+        if name + "_file_widget" in self.editor.controls.keys():
+            alert = QMessageBox()
+            alert.setWindowTitle("Error")
+            alert.setText(
+                f"Name {name}_file_widget is a controller that already exists")
+            alert.exec()
+            return
+        if name + "_update_button" in self.editor.controls.keys():
+            alert = QMessageBox()
+            alert.setWindowTitle("Error")
+            alert.setText(
+                f"Name {name}_update_button is a controller that already exists")
+            alert.exec()
+            return
+        warning = QMessageBox()
+        warning.setWindowTitle("Warning")
+        warning.setText(
+            "SVGs are partially supported in ManimCE and may not render properly (e.g. gradients, filters, etc.)")
+        warning.exec()
+        self.communicate.update_scene.emit(f"""
+self.{name} = SVGMobject(get_svg_for_mobject())
+self.add(self.{name})""".strip())
+        self.communicate.add_file_widget_to_editor.emit(
+            name + "_file_widget", "SVG Files (*.svg)")
+        self.communicate.add_button_to_editor.emit(name + "_update_button", f"""
+self.remove(self.{name})
+try:
+    self.{name} = SVGMobject(self.{name}_file_widget_path.get_value())
+except OSError:
+    self.print_gui("Invalid SVG")
+    self.{name} = SVGMobject(get_svg_for_mobject())
+    self.add(self.{name})
+else:
+    self.add(self.{name})
+        """.strip())
+        while not hasattr(self.editor.scene, name + "_file_widget_size"):
+            time.sleep(0)
+        self.editor.controls[name + "_file_widget"].select_file_command(
+            get_svg_for_mobject())

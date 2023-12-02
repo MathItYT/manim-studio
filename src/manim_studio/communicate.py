@@ -6,6 +6,7 @@ from typing import Union
 
 class Communicate(QObject):
     """A class to communicate using signals and slots."""
+
     update_scene = pyqtSignal(str)
     update_image = pyqtSignal(np.ndarray)
     end_scene = pyqtSignal()
@@ -37,3 +38,4 @@ class Communicate(QObject):
     resume_scene = pyqtSignal()
     print_gui = pyqtSignal(str)
     screenshot = pyqtSignal(str)
+    set_developer_mode = pyqtSignal(bool)

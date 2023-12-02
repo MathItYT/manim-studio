@@ -22,6 +22,8 @@ class ClientControls(QScrollArea):
     set_control_value = pyqtSignal(str, str)
     add_file_widget_to_client = pyqtSignal(str, str)
     add_spin_box_to_client = pyqtSignal(str, float)
+    disable_controls = pyqtSignal()
+    enable_controls = pyqtSignal()
     close_signal = pyqtSignal()
 
     def __init__(self, main, s: socket.socket, *args, **kwargs):
@@ -56,6 +58,8 @@ class ClientControls(QScrollArea):
             self.add_file_widget_to_client_command)
         self.add_spin_box_to_client.connect(
             self.add_spin_box_to_client_command)
+        self.disable_controls.connect(self.disable_controls_command)
+        self.enable_controls.connect(self.enable_controls_command)
         self.close_signal.connect(self.close)
         self.update_controls_thread = UpdateControlsThread(
             self.s,
@@ -69,9 +73,21 @@ class ClientControls(QScrollArea):
             add_position_control_to_client=self.add_position_control_to_client,
             add_file_widget_to_client=self.add_file_widget_to_client,
             add_spin_box_to_client=self.add_spin_box_to_client,
+            disable_controls=self.disable_controls,
+            enable_controls=self.enable_controls,
             close_signal=self.close_signal,
             set_control_value=self.set_control_value)
         self.update_controls_thread.start()
+
+    def disable_controls_command(self):
+        for control in self.controls.values():
+            if not isinstance(control, QPushButton):
+                control.setEnabled(False)
+
+    def enable_controls_command(self):
+        for control in self.controls.values():
+            if not isinstance(control, QPushButton):
+                control.setEnabled(True)
 
     def set_control_value_command(self, name, value):
         if name in self.controls:
@@ -299,6 +315,8 @@ class UpdateControlsThread(QThread):
                  add_position_control_to_client: pyqtSignal,
                  add_file_widget_to_client: pyqtSignal,
                  add_spin_box_to_client: pyqtSignal,
+                 disable_controls: pyqtSignal,
+                 enable_controls: pyqtSignal,
                  close_signal: pyqtSignal,
                  set_control_value: pyqtSignal):
         super().__init__()
@@ -313,6 +331,8 @@ class UpdateControlsThread(QThread):
         self.add_position_control_to_client = add_position_control_to_client
         self.add_file_widget_to_client = add_file_widget_to_client
         self.add_spin_box_to_client = add_spin_box_to_client
+        self.disable_controls = disable_controls
+        self.enable_controls = enable_controls
         self.close_signal = close_signal
         self.set_control_value = set_control_value
 
@@ -369,6 +389,10 @@ class UpdateControlsThread(QThread):
             elif command.startswith("add_spin_box"):
                 _, name, default = command.split(" ")
                 self.add_spin_box_to_client.emit(name, float(default))
+            elif command == "disable_controls":
+                self.disable_controls.emit()
+            elif command == "enable_controls":
+                self.enable_controls.emit()
             elif command == "exit":
                 self.close_signal.emit()
                 break

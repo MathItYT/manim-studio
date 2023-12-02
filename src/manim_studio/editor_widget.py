@@ -280,7 +280,28 @@ class EditorWidget(QWidget):
         self.communicate.show_in_status_bar.connect(
             self.status_bar.showMessage)
         self.communicate.print_gui.connect(self.print_gui)
+        self.communicate.set_developer_mode.connect(
+            self.set_developer_mode)
         self.setLayout(self.layout_)
+
+    def set_developer_mode(self, developer_mode: bool):
+        if developer_mode:
+            self.disable_controls()
+        else:
+            self.enable_controls()
+
+    def disable_controls(self):
+        for control in self.controls.values():
+            if not isinstance(control, Button):
+                control.setEnabled(False)
+        if self.server:
+            self.manim_studio_server.disable_controls()
+
+    def enable_controls(self):
+        for control in self.controls.values():
+            control.setEnabled(True)
+        if self.server:
+            self.manim_studio_server.enable_controls()
 
     def show(self):
         super().show()
@@ -672,10 +693,13 @@ else:
         dialog.name_edit = QLineEdit()
         dialog.name_edit.setPlaceholderText("State name")
         dialog.layout_.addWidget(dialog.name_edit)
+        developer_mode = QCheckBox("Developer mode")
+        developer_mode.setChecked(True)
+        dialog.layout_.addWidget(developer_mode)
         dialog.ok_button = QPushButton("OK")
         dialog.ok_button.clicked.connect(dialog.close)
         dialog.ok_button.clicked.connect(
-            lambda: self.scene.save_state(dialog.name_edit.text()))
+            lambda: self.scene.save_state(dialog.name_edit.text(), developer_mode.isChecked()))
         dialog.layout_.addWidget(dialog.ok_button)
         dialog.setLayout(dialog.layout_)
         dialog.exec()
