@@ -286,9 +286,9 @@ class EditorWidget(QWidget):
 
     def set_developer_mode(self, developer_mode: bool):
         if developer_mode:
-            self.disable_controls()
-        else:
             self.enable_controls()
+        else:
+            self.disable_controls()
 
     def disable_controls(self):
         for control in self.controls.values():

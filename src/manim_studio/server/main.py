@@ -49,12 +49,6 @@ class ManimStudioServer(QWidget):
             self.stop_ngrok()
         super().closeEvent(event)
 
-    def disable_controls(self):
-        self.server.s.sendall(b"disable_controls")
-
-    def enable_controls(self):
-        self.server.s.sendall(b"enable_controls")
-
     def show_users(self):
         dialog = QDialog()
         layout = QVBoxLayout()

@@ -22,6 +22,14 @@ class Server(QThread):
         self.running = True
         self.editor = editor
 
+    def disable_controls(self):
+        for client in self.clients:
+            client.sendall(b"disable_controls")
+
+    def enable_controls(self):
+        for client in self.clients:
+            client.sendall(b"enable_controls")
+
     def run(self):
         while self.running:
             try:
