@@ -8,7 +8,7 @@ class SpinBox(QDoubleSpinBox):
 
     def __init__(self, name: str, default_value: float = 0.0, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # It must be signed
+        self.setValue(default_value)
         self.setRange(-sys.float_info.max, sys.float_info.max)
         self.name = name
         self.value_tracker = ValueTracker(default_value)

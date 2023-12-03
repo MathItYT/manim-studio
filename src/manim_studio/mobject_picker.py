@@ -183,6 +183,13 @@ class MobjectPicker(QScrollArea):
                 f"Name {name}_font_dropdown is a controller that already exists")
             alert.exec()
             return
+        if name + "_font_size" in self.editor.controls.keys():
+            alert = QMessageBox()
+            alert.setWindowTitle("Error")
+            alert.setText(
+                f"Name {name}_font_size is a controller that already exists")
+            alert.exec()
+            return
         if name + "_update_button" in self.editor.controls.keys():
             alert = QMessageBox()
             alert.setWindowTitle("Error")
@@ -190,15 +197,17 @@ class MobjectPicker(QScrollArea):
                 f"Name {name}_update_button is a controller that already exists")
             alert.exec()
             return
-        self.communicate.update_scene.emit(f"""
-self.{name} = Text("{name}")
-self.add(self.{name})""".strip())
+        setattr(self.editor.scene, name, Text(
+            name, font="Times New Roman", font_size=48))
+        self.editor.scene.add(getattr(self.editor.scene, name))
         self.communicate.add_text_editor_to_editor.emit(name + "_edit", name)
         self.communicate.add_dropdown_to_editor.emit(
             name + "_font_dropdown", list_fonts(), "Times New Roman")
+        self.communicate.add_spin_box_to_editor.emit(
+            name + "_font_size", 48.0)
         self.communicate.add_button_to_editor.emit(name + "_update_button", f"""
 self.remove(self.{name})
-self.{name} = Text(self.{name}_edit.get_value(), font=self.{name}_font_dropdown.get_value())
+self.{name} = Text(self.{name}_edit.get_value(), font=self.{name}_font_dropdown.get_value(), font_size=self.{name}_font_size.get_value())
 self.add(self.{name})
         """.strip())
 
@@ -217,9 +226,8 @@ self.add(self.{name})
                 f"Name {name}_update_button is a controller that already exists")
             alert.exec()
             return
-        self.communicate.update_scene.emit(f"""
-self.{name} = MathTex("\\text{{{name}}}")
-self.add(self.{name})""".strip())
+        setattr(self.editor.scene, name, MathTex(f"\\text{{{name}}}"))
+        self.editor.scene.add(getattr(self.editor.scene, name))
         self.communicate.add_text_editor_to_editor.emit(
             name + "_edit", f"\\text{{{name}}}")
         self.communicate.add_button_to_editor.emit(name + "_update_button", f"""
@@ -249,9 +257,8 @@ else:
                 f"Name {name}_update_button is a controller that already exists")
             alert.exec()
             return
-        self.communicate.update_scene.emit(f"""
-self.{name} = Tex("{name}")
-self.add(self.{name})""".strip())
+        setattr(self.editor.scene, name, Tex(f"{name}"))
+        self.editor.scene.add(getattr(self.editor.scene, name))
         self.communicate.add_text_editor_to_editor.emit(
             name + "_edit", name)
         self.communicate.add_button_to_editor.emit(name + "_update_button", f"""
@@ -281,9 +288,8 @@ else:
                 f"Name {name}_update_button is a controller that already exists")
             alert.exec()
             return
-        self.communicate.update_scene.emit(f"""
-self.{name} = ImageMobject(get_image_for_mobject())
-self.add(self.{name})""".strip())
+        setattr(self.editor.scene, name, ImageMobject(get_image_for_mobject()))
+        self.editor.scene.add(getattr(self.editor.scene, name))
         self.communicate.add_file_widget_to_editor.emit(
             name + "_file_widget", "Image Files (*.png *.jpg *.jpeg)")
         self.communicate.add_button_to_editor.emit(name + "_update_button", f"""
@@ -317,9 +323,8 @@ else:
                 f"Name {name}_update_button is a controller that already exists")
             alert.exec()
             return
-        self.communicate.update_scene.emit(f"""
-self.{name} = Circle()
-self.add(self.{name})""".strip())
+        setattr(self.editor.scene, name, Circle())
+        self.editor.scene.add(getattr(self.editor.scene, name))
         self.communicate.add_spin_box_to_editor.emit(
             name + "_radius", 1.0)
         self.communicate.add_button_to_editor.emit(name + "_update_button", f"""
@@ -351,9 +356,8 @@ self.add(self.{name})
                 f"Name {name}_update_button is a controller that already exists")
             alert.exec()
             return
-        self.communicate.update_scene.emit(f"""
-self.{name} = Line()
-self.add(self.{name})""".strip())
+        setattr(self.editor.scene, name, Line())
+        self.editor.scene.add(getattr(self.editor.scene, name))
         self.communicate.add_position_control_to_editor.emit(
             name + "_start", np.array([0.0, 0.0, 0.0]))
         self.communicate.add_position_control_to_editor.emit(
@@ -388,17 +392,15 @@ self.add(self.{name})
                 f"Name {name}_update_button is a controller that already exists")
             alert.exec()
             return
-        self.communicate.update_scene.emit(f"""
-self.{name} = Square()
-self.add(self.{name})""".strip())
+        setattr(self.editor.scene, name, Square())
+        self.editor.scene.add(getattr(self.editor.scene, name))
         self.communicate.add_spin_box_to_editor.emit(
-            name + "_side_length", 1.0)
+            name + "_side_length", 2.0)
         self.communicate.add_button_to_editor.emit(name + "_update_button", f"""
 self.remove(self.{name})
 self.{name} = Square(side_length=self.{name}_side_length.get_value())
 self.add(self.{name})
         """.strip())
-        self.editor.controls[name + "_side_length"].setValue(2.0)
 
     def _add_rectangle(self, name: str):
         if name + "_width" in self.editor.controls.keys():
@@ -422,9 +424,8 @@ self.add(self.{name})
                 f"Name {name}_update_button is a controller that already exists")
             alert.exec()
             return
-        self.communicate.update_scene.emit(f"""
-self.{name} = Rectangle()
-self.add(self.{name})""".strip())
+        setattr(self.editor.scene, name, Rectangle())
+        self.editor.scene.add(getattr(self.editor.scene, name))
         self.communicate.add_spin_box_to_editor.emit(
             name + "_width", 1.0)
         self.communicate.add_spin_box_to_editor.emit(
@@ -457,9 +458,8 @@ self.add(self.{name})
         warning.setText(
             "SVGs are partially supported in ManimCE and may not render properly (e.g. gradients, filters, etc.)")
         warning.exec()
-        self.communicate.update_scene.emit(f"""
-self.{name} = SVGMobject(get_svg_for_mobject())
-self.add(self.{name})""".strip())
+        setattr(self.editor.scene, name, SVGMobject(get_svg_for_mobject()))
+        self.editor.scene.add(getattr(self.editor.scene, name))
         self.communicate.add_file_widget_to_editor.emit(
             name + "_file_widget", "SVG Files (*.svg)")
         self.communicate.add_button_to_editor.emit(name + "_update_button", f"""

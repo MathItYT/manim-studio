@@ -47,7 +47,6 @@ class LiveScene(QObject, Scene):
         self.communicate.resume_scene.connect(self.resume_scene)
         self.communicate.screenshot.connect(self.screenshot)
         self.current_code = None
-        self.running = False
         self.value_trackers = {}
         self.codes = {}
         self.append_code = True
@@ -69,6 +68,11 @@ class LiveScene(QObject, Scene):
         self.save_state("first")
         self.production_states = []
 
+    def set_editor(self, editor):
+        if self.called_from_editor:
+            raise CalledFromEditorException("Cannot set editor from editor")
+        self.editor = editor
+
     def screenshot(self, name: str):
         if self.called_from_editor:
             raise CalledFromEditorException(
@@ -77,7 +81,7 @@ class LiveScene(QObject, Scene):
         Image.fromarray(arr).save(name)
 
     def save_state(self, name: str | None = None, dev: bool = True):
-        if self.running:
+        if not hasattr(self, "communicate"):
             raise CalledFromEditorException(
                 "Cannot save states while running")
         if self.called_from_editor and not self.beginning:
@@ -95,6 +99,7 @@ class LiveScene(QObject, Scene):
         if name != "temp":
             self.current_state = name
             self.codes[name] = []
+        if name not in ("temp", "first"):
             self.print_gui(f"State '{name}' saved.")
         self.developer_mode = dev
         if not dev:
@@ -103,7 +108,7 @@ class LiveScene(QObject, Scene):
         return True
 
     def remove_state(self, name: str):
-        if self.running:
+        if not hasattr(self, "communicate"):
             raise CalledFromEditorException(
                 "Cannot remove states while running")
         if self.called_from_editor:
@@ -116,7 +121,7 @@ class LiveScene(QObject, Scene):
             self.print_gui(f"State '{name}' does not exist.")
             return False
         del self.states[name]
-        if name == "temp" and self.running:
+        if name == "temp" and not hasattr(self, "communicate"):
             self.print_gui(
                 "Cannot remove 'temp'. It's reserved for internal use.")
             return False
@@ -132,8 +137,8 @@ class LiveScene(QObject, Scene):
             self.production_states.remove(name)
         return True
 
-    def restore_state(self, name: str):
-        if self.running and name != "temp":
+    def restore_state(self, name: str, delete_code: bool = True):
+        if not hasattr(self, "communicate") and name != "temp":
             raise CalledFromEditorException(
                 "Cannot restore states while running")
         if self.called_from_editor:
@@ -158,10 +163,9 @@ class LiveScene(QObject, Scene):
         self.developer_mode = name not in self.production_states
         self.communicate.set_developer_mode.emit(
             name not in self.production_states)
+        if delete_code and name != "temp":
+            self.codes[name].clear()
         return True
-
-    def print_gui(self, text: str):
-        self.communicate.print_gui.emit(str(text))
 
     def pause_scene(self):
         if self.called_from_editor:
@@ -278,8 +282,7 @@ class LiveScene(QObject, Scene):
             self.print_gui("You must enter a name. Anyways, you can go to 'States' tab "
                            "and click on 'Replay from state' button to export to Python file.")
             return
-        self.called_from_editor = True
-        self.restore_state(name)
+        self.restore_state(name, False)
         self.current_code = "\n".join(self.codes[name])
         bases = [
             i.__name__
@@ -295,6 +298,8 @@ from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 from manim_studio.value_trackers.int_value_tracker import IntValueTracker
 from manim_studio.value_trackers.string_value_tracker import StringValueTracker
 from manim_studio.value_trackers.bytes_value_tracker import BytesValueTracker
+from manim_studio.saving_and_loading_mobjects import load_mobject
+from manim_studio.mobject_picker import get_image_for_mobject, get_svg_for_mobject
 
             
 class Result(%s):
@@ -312,6 +317,9 @@ class Result(%s):
                 f.write(CODE)
             self.print_gui("Python file has been exported.")
             self.python_file_to_write = None
+
+    def print_gui(self, text: str):
+        self.editor.communicate.print_gui.emit(text.__repr__())
 
     def get_value_trackers_code(self):
         if self.called_from_editor:
@@ -381,7 +389,6 @@ class Result(%s):
             globals()["logger"] = None
             globals()["error_console"] = None
             current_scope = globals().copy()
-            self.running = True
             exec(current_code, globals())
         except EndSceneEarlyException:
             raise EndSceneEarlyException()
@@ -413,7 +420,6 @@ class Result(%s):
             self.python_file_to_write = python_file_to_write
             self.developer_mode = developer_mode
             self.production_states = production_states
-            self.running = False
             self.remove_state("temp")
 
     def add_spin_box_command(self, name: str, default_value: float):

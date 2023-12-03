@@ -12,6 +12,7 @@ import sys
 
 from .communicate import Communicate
 from .live_scene import LiveScene
+from .list_of_mobjects import ListOfMobjects
 from manim_studio.widgets.slider import Slider
 from manim_studio.mobject_picker import MobjectPicker
 from manim_studio.widgets.color_widget import ColorWidget
@@ -43,6 +44,8 @@ class EditorWidget(QWidget):
         self.ready_to_save = True
         self.enter_your_code_label = QLabel(text="Enter your code below:")
         self.code_cell_edit = CodeEdit()
+        self.list_of_mobjects = ListOfMobjects(
+            lambda: self.scene.mobjects, self)
 
         self.send_button = QPushButton(
             "Send code (Ctrl+Return)")
@@ -96,6 +99,12 @@ class EditorWidget(QWidget):
         self.show_mobject_picker_button.setGeometry(0, 0, 100, 50)
         self.show_mobject_picker_button.clicked.connect(
             self.mobject_picker.show)
+        self.show_list_of_mobjects_button = QPushButton(
+            "Show list of mobjects (Ctrl+L)")
+        self.show_list_of_mobjects_button.setShortcut("Ctrl+L")
+        self.show_list_of_mobjects_button.setGeometry(0, 0, 100, 50)
+        self.show_list_of_mobjects_button.clicked.connect(
+            self.list_of_mobjects.show)
 
         self.menu_bar = QMenuBar()
         self.file_menu = self.menu_bar.addMenu("File")
@@ -232,6 +241,7 @@ class EditorWidget(QWidget):
         self.layout_.addWidget(self.screenshot_button)
         self.layout_.addWidget(self.write_to_python_file_button)
         self.layout_.addWidget(self.show_mobject_picker_button)
+        self.layout_.addWidget(self.show_list_of_mobjects_button)
         self.controls_widget = QWidget()
         self.controls_scroll = QScrollArea()
         self.controls_scroll.setWidget(self.controls_widget)
@@ -279,16 +289,34 @@ class EditorWidget(QWidget):
             lambda name, value: self.controls[name].display_dot_checkbox.setChecked(value == "True"))
         self.communicate.show_in_status_bar.connect(
             self.status_bar.showMessage)
-        self.communicate.print_gui.connect(self.print_gui)
         self.communicate.set_developer_mode.connect(
             self.set_developer_mode)
+        self.communicate.print_gui.connect(self.print_gui)
         self.setLayout(self.layout_)
 
     def set_developer_mode(self, developer_mode: bool):
         if developer_mode:
             self.enable_controls()
+            self.enable_mobject_list()
         else:
             self.disable_controls()
+            self.disable_mobject_list()
+
+    def disable_mobject_list(self):
+        self.disable_list_of_mobjects(self.list_of_mobjects)
+
+    def enable_mobject_list(self):
+        self.enable_list_of_mobjects(self.list_of_mobjects)
+
+    def disable_list_of_mobjects(self, list_of_mobjects: ListOfMobjects):
+        list_of_mobjects.setEnabled(False)
+        for list_of_submobjects in list_of_mobjects.lists_of_submobjects:
+            self.disable_list_of_mobjects(list_of_submobjects)
+
+    def enable_mobject_list(self):
+        self.list_of_mobjects.setEnabled(True)
+        for list_of_submobjects in self.list_of_mobjects.lists_of_submobjects:
+            self.enable_list_of_mobjects(list_of_submobjects)
 
     def disable_controls(self):
         for control in self.controls.values():
@@ -706,7 +734,7 @@ else:
 
     def print_gui(self, text: str):
         dialog = QDialog(self)
-        dialog.setWindowTitle("Print")
+        dialog.setWindowTitle("Manim Studio - Print GUI")
         dialog.layout_ = QVBoxLayout()
         dialog.text_edit = QTextEdit()
         dialog.text_edit.setReadOnly(True)

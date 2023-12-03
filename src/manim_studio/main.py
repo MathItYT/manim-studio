@@ -38,6 +38,7 @@ def main(scene_type=LiveScene, server=False, namespace=None, preview=False) -> N
     scene = scene_type(communicate, namespace)
     editor_window = EditorWidget(communicate, scene, server)
     preview_window = PreviewWidget(communicate, scene, (w, h), preview)
+    scene.set_editor(editor_window)
     preview_window.show()
     editor_window.show()
     if AIWidget is not None:
