@@ -7,13 +7,13 @@
 Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, and also it's useful for many other things!
 
 ## Features
-- [x] Live preview for Cairo animations.
-- [x] Saving and loading snippets.
-- [x] Saving full scene snipets.
-- [x] Create slides with Manim Studio.
-- [x] Collaborate with other people. 
-- [ ] Basic editing for Manim videos.
-- [ ] Snippet gallery.
+- [x] Live preview Manim animations made with Cairo.
+- [x] Work with Manim Mobject using the GUI.
+- [x] Export to a Python file the code of the animation.
+- [x] A live cell to interactively insert code into the scene.
+- [ ] Create animations with the GUI.
+- [ ] Create animations with AI.
+- [ ] Collaborate with other people in the same project.
 
 ## Requirements to install
 ### Install with `git`
@@ -48,38 +48,6 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
 
    **Warning:** The documentation is a work in progress, so it may not be complete. ⚠️
 
-
-## Examples
-
-1. **Basic example**
-   
-   ```python
-   from manim_studio import *
-
-
-   if __name__ == "__main__":
-       run_manim_studio(LiveScene)
-   ```
-
-2. **Example with initial part**
-   
-   ```python
-   from manim_studio import *
-
-
-   class InitialPartExample(LiveScene):
-       def construct(self):
-           txt = Tex("Hello world!")
-           self.play(Write(txt))
-           self.wait()
-           play_with_this = Tex("Play with the GUI!")
-           self.play(FadeIn(play_with_this))
-           self.wait()
-           
-           super().construct()
-   ```
-
-   **See examples at [examples folder](https://github.com/MathItYT/manim-studio/blob/main/examples/)**
 
 ## Manim Studio Client
 We removed the Manim Studio Client as an standalone application because anti-virus programs detected it as a virus. You can still use it by installing Manim Studio with `pip` and running `manim-studio -C` in the command line.
