@@ -15,3 +15,5 @@ class Communicate(QObject):
     restore_state = pyqtSignal(str)
     remove_state = pyqtSignal(str)
     add_value_tracker = pyqtSignal(str, Mobject)
+    save_mobject = pyqtSignal()
+    load_mobject = pyqtSignal()

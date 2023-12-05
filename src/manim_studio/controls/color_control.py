@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QColor
 from manim_studio.communicate import Communicate
-import numpy as np
 
 
 class ColorControl(QGroupBox):

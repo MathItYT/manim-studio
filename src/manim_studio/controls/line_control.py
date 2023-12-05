@@ -25,5 +25,5 @@ class LineControl(QGroupBox):
         self.value_tracker = StringValueTracker()
         self.line_edit.textChanged.connect(
             lambda: self.__communicate.update_scene.emit(
-                f"getattr(self, {self.name.__repr__()}).set_value('{self.line_edit.text().__repr__()}')"))
+                f"getattr(self, {self.name.__repr__()}).set_value({self.line_edit.text().__repr__()})"))
         self.layout().addWidget(self.line_edit)

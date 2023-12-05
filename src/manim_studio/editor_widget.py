@@ -10,7 +10,8 @@ from PyQt6.QtWidgets import (
     QLabel,
     QLineEdit,
     QComboBox,
-    QCheckBox
+    QCheckBox,
+    QTextEdit
 )
 from PyQt6.QtGui import QIntValidator, QDoubleValidator
 from manim_studio.controls.slider_control import SliderControl
@@ -22,27 +23,33 @@ from manim_studio.controls.checkbox_control import CheckboxControl
 from manim_studio.controls.spin_box_control import SpinBoxControl
 from manim_studio.controls.file_control import FileControl
 from manim_studio.controls.position_control import PositionControl
+from manim_studio.controls.button import Button
 from manim_studio.controls_widget import ControlsWidget
+from manim_studio.live_scene import LiveScene
+from manim_studio.mobject_picker import MobjectPicker
 import numpy as np
 
 
 class EditorWidget(QWidget):
-    def __init__(self, communicate: Communicate, controls_widget: ControlsWidget):
+    def __init__(self, communicate: Communicate, controls_widget: ControlsWidget, scene: LiveScene):
         super().__init__()
         self.setWindowTitle("Manim Studio Editor")
         self.controls_widget = controls_widget
         self.setWindowTitle("Manim Studio")
         self.communicate = communicate
+        self.scene = scene
         self.communicate.print_gui.connect(self.print_gui)
         self.states = ["first"]
+        self.controls = {}
         self.init_ui()
 
     def print_gui(self, text: str):
         dialog = QDialog(self)
         dialog.setWindowTitle("Print GUI")
         dialog.setLayout(QVBoxLayout(dialog))
-        label = QLabel(text)
-        dialog.layout().addWidget(label)
+        text_edit = QTextEdit(text)
+        text_edit.setReadOnly(True)
+        dialog.layout().addWidget(text_edit)
         ok_button = QPushButton("OK")
         dialog.layout().addWidget(ok_button)
         ok_button.clicked.connect(dialog.close)
@@ -52,6 +59,7 @@ class EditorWidget(QWidget):
         self.init_basic_ui()
         self.init_menu_bar()
         self.init_code_edit()
+        self.init_buttons()
         self.init_status_bar()
 
     def init_menu_bar(self):
@@ -87,6 +95,8 @@ class EditorWidget(QWidget):
             "Add Position Control")
         self.add_position_control_action.triggered.connect(
             self.add_position_control)
+        self.add_button_action = self.controls_menu.addAction("Add Button")
+        self.add_button_action.triggered.connect(self.add_button)
         self.states_menu = self.menu_bar.addMenu("States")
         self.save_state_action = self.states_menu.addAction("Save State")
         self.save_state_action.setShortcut("Ctrl+Shift+S")
@@ -108,6 +118,8 @@ class EditorWidget(QWidget):
         self.layout().addWidget(self.code_label)
         self.code_edit = CodeEdit()
         self.layout().addWidget(self.code_edit)
+
+    def init_buttons(self):
         self.run_button = QPushButton("Run (Ctrl+Return)")
         self.run_button.setShortcut("Ctrl+Return")
         self.run_button.clicked.connect(self.run)
@@ -116,6 +128,19 @@ class EditorWidget(QWidget):
         self.finish_button.setShortcut("Ctrl+Q")
         self.finish_button.clicked.connect(self.finish)
         self.layout().addWidget(self.finish_button)
+        self.save_mobject_button = QPushButton("Save Mobject")
+        self.save_mobject_button.clicked.connect(
+            self.communicate.save_mobject.emit)
+        self.layout().addWidget(self.save_mobject_button)
+        self.load_mobject_button = QPushButton("Load Mobject")
+        self.load_mobject_button.clicked.connect(
+            self.communicate.load_mobject.emit)
+        self.layout().addWidget(self.load_mobject_button)
+        self.mobject_picker = MobjectPicker(self)
+        self.show_mobject_picker_button = QPushButton("Show Mobject Picker")
+        self.show_mobject_picker_button.clicked.connect(
+            self.mobject_picker.show)
+        self.layout().addWidget(self.show_mobject_picker_button)
 
     def init_status_bar(self):
         self.status_bar = QStatusBar()
@@ -262,11 +287,17 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "The minimum value cannot be greater than the maximum value.")
             return
+        if name in self.controls:
+            self.communicate.print_gui.emit(
+                "A control with the same name already exists.")
+            return
         slider = SliderControl(
             self.communicate, name, (int(min_), int(max_)), int(step), int(default))
         self.controls_widget.add_controls(slider)
         self.communicate.add_value_tracker.emit(
             name, slider.value_tracker)
+        self.controls[name] = slider
+        return slider
 
     def add_text_box(self):
         dialog = QDialog(self)
@@ -288,10 +319,16 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "Please enter a name for the text box.")
             return
+        if name in self.controls:
+            self.communicate.print_gui.emit(
+                "A control with the same name already exists.")
+            return
         text_box = TextControl(self.communicate, name)
         self.controls_widget.add_controls(text_box)
         self.communicate.add_value_tracker.emit(
             name, text_box.value_tracker)
+        self.controls[name] = text_box
+        return text_box
 
     def add_line_box(self):
         dialog = QDialog(self)
@@ -313,10 +350,16 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "Please enter a name for the line box.")
             return
+        if name in self.controls:
+            self.communicate.print_gui.emit(
+                "A control with the same name already exists.")
+            return
         line_box = LineControl(self.communicate, name)
         self.controls_widget.add_controls(line_box)
         self.communicate.add_value_tracker.emit(
             name, line_box.value_tracker)
+        self.controls[name] = line_box
+        return line_box
 
     def add_color_picker(self):
         dialog = QDialog(self)
@@ -338,10 +381,15 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "Please enter a name for the color picker.")
             return
+        if name in self.controls:
+            self.communicate.print_gui.emit(
+                "A control with the same name already exists.")
+            return
         color_picker = ColorControl(self.communicate, name)
         self.controls_widget.add_controls(color_picker)
         self.communicate.add_value_tracker.emit(
             name, color_picker.value_tracker)
+        self.controls[name] = color_picker
         return color_picker
 
     def add_dropdown(self):
@@ -385,14 +433,18 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "Please enter a name for the dropdown.")
             return
-        if len(options) == 0:
+        if name in self.controls:
             self.communicate.print_gui.emit(
-                "Please add at least one option.")
+                "A control with the same name already exists.")
             return
         dropdown = DropdownControl(self.communicate, name, options)
         self.controls_widget.add_controls(dropdown)
         self.communicate.add_value_tracker.emit(
             name, dropdown.value_tracker)
+        self.communicate.add_value_tracker.emit(
+            name + "_items", dropdown.list_value_tracker)
+        self.controls[name] = dropdown
+        return dropdown
 
     def add_checkbox(self):
         dialog = QDialog(self)
@@ -418,10 +470,16 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "Please enter a name for the checkbox.")
             return
+        if name in self.controls:
+            self.communicate.print_gui.emit(
+                "A control with the same name already exists.")
+            return
         checkbox = CheckboxControl(self.communicate, name, default)
         self.controls_widget.add_controls(checkbox)
         self.communicate.add_value_tracker.emit(
             name, checkbox.value_tracker)
+        self.controls[name] = checkbox
+        return checkbox
 
     def add_spin_box(self):
         dialog = QDialog(self)
@@ -474,11 +532,17 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "The minimum value cannot be greater than the maximum value.")
             return
+        if name in self.controls:
+            self.communicate.print_gui.emit(
+                "A control with the same name already exists.")
+            return
         spin_box = SpinBoxControl(self.communicate, name, float(
             default), float(min_), float(max_))
         self.controls_widget.add_controls(spin_box)
         self.communicate.add_value_tracker.emit(
             name, spin_box.value_tracker)
+        self.controls[name] = spin_box
+        return spin_box
 
     def add_file_selector(self):
         dialog = QDialog(self)
@@ -500,10 +564,16 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "Please enter a name for the file selector.")
             return
+        if name in self.controls:
+            self.communicate.print_gui.emit(
+                "A control with the same name already exists.")
+            return
         file_selector = FileControl(self.communicate, name)
         self.controls_widget.add_controls(file_selector)
         self.communicate.add_value_tracker.emit(
             name, file_selector.value_tracker)
+        self.controls[name] = file_selector
+        return file_selector
 
     def add_position_control(self):
         dialog = QDialog(self)
@@ -552,8 +622,52 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "Please enter a z value for the position control.")
             return
+        if name in self.controls:
+            self.communicate.print_gui.emit(
+                "A control with the same name already exists.")
+            return
         position_control = PositionControl(
             self.communicate, name, np.array([float(x), float(y), float(z)]))
         self.controls_widget.add_controls(position_control)
         self.communicate.add_value_tracker.emit(
             name, position_control.value_tracker)
+        self.controls[name] = position_control
+        return position_control
+
+    def add_button(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add Button")
+        dialog.setLayout(QVBoxLayout(dialog))
+        name_label = QLabel("Enter the name of the button:")
+        dialog.layout().addWidget(name_label)
+        name_edit = QLineEdit()
+        dialog.layout().addWidget(name_edit)
+        callback_label = QLabel("Enter the callback of the button:")
+        dialog.layout().addWidget(callback_label)
+        callback_edit = CodeEdit()
+        dialog.layout().addWidget(callback_edit)
+        ok_button = QPushButton("OK")
+        dialog.layout().addWidget(ok_button)
+        ok_button.clicked.connect(
+            lambda: self.add_button_command(name_edit.text(), callback_edit.toPlainText()))
+        ok_button.clicked.connect(dialog.close)
+        dialog.exec()
+
+    def add_button_command(self, name: str, callback: str):
+        if name == "":
+            self.communicate.print_gui.emit(
+                "Please enter a name for the button.")
+            return
+        if name in self.controls:
+            self.communicate.print_gui.emit(
+                "A control with the same name already exists.")
+            return
+        button = Button(self.communicate, name, callback)
+        self.controls_widget.add_controls(button)
+        self.controls[name] = button
+        return button
+
+    def add_custom_control_command(self, name: str, control: QWidget):
+        self.controls_widget.add_controls(control)
+        self.controls[name] = control
+        return control

@@ -25,5 +25,5 @@ class TextControl(QGroupBox):
         self.value_tracker = StringValueTracker()
         self.text_edit.textChanged.connect(
             lambda: self.__communicate.update_scene.emit(
-                f"getattr(self, {self.name.__repr__()}).set_value('{self.text_edit.toPlainText().__repr__()}')"))
+                f"getattr(self, {self.name.__repr__()}).set_value({self.text_edit.toPlainText().__repr__()})"))
         self.layout().addWidget(self.text_edit)

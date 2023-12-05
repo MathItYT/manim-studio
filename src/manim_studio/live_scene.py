@@ -1,6 +1,6 @@
 from typing import Callable
 from manim import *
-from PyQt6.QtWidgets import QFileDialog
+from PyQt6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton
 from .communicate import Communicate
 from .save_mobject import save_mobject
 from .load_mobject import load_mobject
@@ -9,6 +9,7 @@ from manim_studio.value_trackers.string_value_tracker import StringValueTracker
 from manim_studio.value_trackers.int_value_tracker import IntValueTracker
 from manim_studio.value_trackers.float_value_tracker import FloatValueTracker
 from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
+from manim_studio.value_trackers.list_value_tracker import ListValueTracker
 from manim_studio.value_trackers.dot_tracker import DotTracker
 import time
 
@@ -43,6 +44,8 @@ class LiveScene(Scene):
         self.__communicate.restore_state.connect(self.__restore_state)
         self.__communicate.remove_state.connect(self.__remove_state)
         self.__communicate.add_value_tracker.connect(self.__add_value_tracker)
+        self.__communicate.save_mobject.connect(self.__save_mobject)
+        self.__communicate.load_mobject.connect(self.__load_mobject)
 
     def wait(self, duration: float = 1.0, stop_condition: Callable[[], bool] | None = None, frozen_frame: bool | None = False):
         super().wait(duration, stop_condition, frozen_frame)
@@ -185,6 +188,8 @@ from manim_studio.value_trackers.int_value_tracker import IntValueTracker
 from manim_studio.value_trackers.float_value_tracker import FloatValueTracker
 from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 from manim_studio.value_trackers.dot_tracker import DotTracker
+from manim_studio.value_trackers.list_value_tracker import ListValueTracker
+from manim_studio.load_mobject import load_mobject
 from typing import Callable
 import time
 
@@ -242,7 +247,7 @@ class Result(Scene):
             self.__current_code = None
             self.__remove_state("temp")
 
-    def __save_mobject(self, name: str) -> None:
+    def __save_mobject(self) -> None:
         """
         Save the mobject.
 
@@ -253,20 +258,38 @@ class Result(Scene):
         name
             The name of the mobject.
         """
+        dialog = QDialog()
+        dialog.setWindowTitle("Save Mobject")
+        dialog.setLayout(QVBoxLayout(dialog))
+        dialog.layout().setContentsMargins(0, 0, 0, 0)
+        dialog.label = QLabel("Enter the mobject name (without self.):")
+        dialog.layout().addWidget(dialog.label)
+        dialog.line_edit = QLineEdit()
+        dialog.layout().addWidget(dialog.line_edit)
+        dialog.button = QPushButton("Save")
+        dialog.button.clicked.connect(dialog.accept)
+        dialog.layout().addWidget(dialog.button)
+        dialog.exec()
+        if dialog.result() == QDialog.DialogCode.Rejected or dialog.line_edit.text() == "":
+            self.__communicate.print_gui.emit(
+                "No mobject name is given. The mobject was not saved."
+            )
+            return
+        name = dialog.line_edit.text()
         file_name, _ = QFileDialog.getSaveFileName(
             None, "Save Mobject", "", "Pickle File (*.pkl)"
         )
         if file_name:
             save_mobject(getattr(self, name), file_name, globals())
-            self.__communicate.show_in_status_bar.emit(
+            self.__communicate.print_gui.emit(
                 f"The mobject {name} was saved successfully."
             )
         else:
-            self.__communicate.show_in_status_bar.emit(
+            self.__communicate.print_gui.emit(
                 "No file name is given. The mobject was not saved."
             )
 
-    def __load_mobject(self, name: str) -> None:
+    def __load_mobject(self) -> None:
         """
         Load the mobject.
 
@@ -275,17 +298,34 @@ class Result(Scene):
         name
             The name of the mobject.
         """
+        dialog = QDialog()
+        dialog.setWindowTitle("Load Mobject")
+        dialog.setLayout(QVBoxLayout(dialog))
+        dialog.layout().setContentsMargins(0, 0, 0, 0)
+        dialog.label = QLabel("Enter the mobject name (without self.):")
+        dialog.layout().addWidget(dialog.label)
+        dialog.line_edit = QLineEdit()
+        dialog.layout().addWidget(dialog.line_edit)
+        dialog.button = QPushButton("Load")
+        dialog.button.clicked.connect(dialog.accept)
+        dialog.layout().addWidget(dialog.button)
+        dialog.exec()
+        if dialog.result() == QDialog.DialogCode.Rejected or dialog.line_edit.text() == "":
+            self.__communicate.print_gui.emit(
+                "No mobject name is given. The mobject was not loaded."
+            )
+            return
+        name = dialog.line_edit.text()
         file_name, _ = QFileDialog.getOpenFileName(
             None, "Load Mobject", "", "Pickle File (*.pkl)"
         )
         if file_name:
-            mob = load_mobject(file_name)
-            setattr(self, name, mob)
-            self.__communicate.show_in_status_bar.emit(
-                f"The mobject {name} was loaded successfully."
-            )
+            self.__communicate.update_scene.emit(
+                f"setattr(self, {name.__repr__()}, load_mobject({file_name.__repr__()}))")
+            self.__communicate.print_gui.emit(
+                f"The mobject {name} was loaded successfully. Add it to the scene by running:\nself.add(getattr(self, {name.__repr__()}))")  # noqa
         else:
-            self.__communicate.show_in_status_bar.emit(
+            self.__communicate.print_gui.emit(
                 "No file name is given. The mobject was not loaded."
             )
 

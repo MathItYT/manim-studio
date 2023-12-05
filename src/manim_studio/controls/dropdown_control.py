@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
     QLineEdit
 )
 from manim_studio.value_trackers.string_value_tracker import StringValueTracker
+from manim_studio.value_trackers.list_value_tracker import ListValueTracker
 from manim_studio.communicate import Communicate
 
 
@@ -27,16 +28,23 @@ class DropdownControl(QGroupBox):
         self.dropdown = QComboBox()
         self.dropdown.addItems(self.items)
         self.value_tracker = StringValueTracker(self.dropdown.currentText())
+        self.list_value_tracker = ListValueTracker(self.items)
         self.dropdown.currentTextChanged.connect(
             lambda: self.__communicate.update_scene.emit(
-                f"getattr(self, {self.name.__repr__()}).set_value('{self.dropdown.currentText().__repr__()}')"))
+                f"getattr(self, {self.name.__repr__()}).set_value({self.dropdown.currentText().__repr__()})"))
         self.add_option_button = QPushButton("Add Option")
         self.add_option_button.clicked.connect(self.add_option_command)
         self.layout().addWidget(self.dropdown)
+        self.layout().addWidget(self.add_option_button)
+        self.remove_option_button = QPushButton("Remove Option")
+        self.remove_option_button.clicked.connect(self.remove_option_command)
+        self.layout().addWidget(self.remove_option_button)
 
     def add_item(self, item: str):
         self.dropdown.addItem(item)
         self.items.append(item)
+        self.__communicate.update_scene.emit(
+            f"getattr(self, {self.name.__repr__()}_items).set_value({self.items.__repr__()})")
 
     def add_option_command(self):
         dialog = QDialog()
@@ -53,3 +61,26 @@ class DropdownControl(QGroupBox):
         dialog.button.clicked.connect(dialog.close)
         dialog.layout().addWidget(dialog.button)
         dialog.exec()
+
+    def remove_option_command(self):
+        dialog = QDialog()
+        dialog.setWindowTitle("Remove Option")
+        dialog.setLayout(QVBoxLayout(dialog))
+        dialog.layout().setContentsMargins(0, 0, 0, 0)
+        dialog.label = QLabel("Select the option to remove:")
+        dialog.layout().addWidget(dialog.label)
+        dialog.dropdown = QComboBox()
+        dialog.dropdown.addItems(self.items)
+        dialog.layout().addWidget(dialog.dropdown)
+        dialog.button = QPushButton("Remove")
+        dialog.button.clicked.connect(lambda: self.remove_item(
+            dialog.dropdown.currentText()) if dialog.dropdown.currentText() != "" else None)
+        dialog.button.clicked.connect(dialog.close)
+        dialog.layout().addWidget(dialog.button)
+        dialog.exec()
+
+    def remove_item(self, item: str):
+        self.dropdown.removeItem(self.dropdown.findText(item))
+        self.items.remove(item)
+        self.__communicate.update_scene.emit(
+            f"getattr(self, {self.name.__repr__()}_items).set_value({self.items.__repr__()})")
