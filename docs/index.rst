@@ -18,10 +18,7 @@ enabling users to preview the animations in real-time while coding, interact wit
    :maxdepth: 2
    :caption: Contents:
 
-   installation
-   getting-started
-   collaborative-work
-   contributing
+   getting_started
 
 
 Indices and tables
