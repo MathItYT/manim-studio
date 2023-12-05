@@ -2,11 +2,11 @@ from manim import ValueTracker
 
 
 class IntValueTracker(ValueTracker):
-    """A value tracker for integer values."""
+    def __init__(self, value: int = 0):
+        super().__init__(value)
 
-    def get_value(self) -> int:
-        return int(self.points[0, 0])
+    def get_value(self) -> float:
+        return int(super().get_value())
 
-    def set_value(self, value: int):
-        self.points[0, 0] = int(value)
-        return self
+    def __repr__(self) -> str:
+        return f"IntValueTracker({self.get_value()})"

@@ -1,18 +1,19 @@
-from manim import ValueTracker, Mobject, ManimColor
+from manim import ValueTracker, VMobject, rgb_to_color, color_to_rgba
 import numpy as np
 
 
-class ColorValueTracker(ValueTracker):
-    """A value tracker for color. It contains an array of 3 values and an alpha value."""
+class ColorValueTracker(ValueTracker, VMobject):
+    def __init__(self, color: np.ndarray = np.array([0, 0, 0, 1])):
+        VMobject.__init__(self)
+        self.set_value(color)
 
-    def __init__(self, value=np.array([0, 0, 0, 1]), **kwargs):
-        Mobject.__init__(self, **kwargs)
-        self.set_points(np.zeros((1, 4)))
-        self.set_value(value)
-
-    def get_value(self) -> ManimColor:
-        return ManimColor.from_rgba(self.points[0, :4]).to_hex(), self.points[0, 3]
+    def get_value(self) -> np.ndarray:
+        return self.get_color(), self.get_fill_opacity()
 
     def set_value(self, value: np.ndarray):
-        self.points[0, :4] = np.array(value)
+        self.set_fill(color=rgb_to_color((value[:3])), opacity=value[3])
         return self
+
+    def __repr__(self) -> str:
+        color = color_to_rgba(*self.get_value())
+        return f"ColorValueTracker(np.array([{color[0]}, {color[1]}, {color[2]}, {color[3]}]))"

@@ -1,14 +1,20 @@
-from .int_value_tracker import IntValueTracker
+from manim import ValueTracker, Mobject
 
 
-class BooleanValueTracker(IntValueTracker):
-    """A value tracker for boolean values."""
-
-    def __init__(self, value=False, **kwargs):
-        super().__init__(value=bool(value), **kwargs)
+class BooleanValueTracker(ValueTracker, Mobject):
+    def __init__(self, value: bool = False):
+        Mobject.__init__(self)
+        self.set_value(value)
 
     def get_value(self) -> bool:
-        return bool(super().get_value())
+        return bool(self.value)
 
     def set_value(self, value: bool):
-        return super().set_value(value)
+        self.value = value
+        return self
+
+    def increment_value(self, d_value: float):
+        pass
+
+    def __repr__(self) -> str:
+        return f"BooleanValueTracker({self.get_value()})"
