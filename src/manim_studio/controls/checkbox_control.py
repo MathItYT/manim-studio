@@ -16,4 +16,15 @@ class CheckboxControl(QCheckBox):
         self.setText(self.name)
         self.setChecked(self.default)
         self.stateChanged.connect(
-            lambda: self.__communicate.update_scene.emit(f"getattr(self, {self.name.__repr__()}).set_value({self.isChecked()})"))
+            lambda: self.__communicate.update_scene.emit(f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).set_value({self.isChecked()})"))
+
+    def to_dict(self):
+        return {
+            "class": "CheckboxControl",
+            "name": self.name,
+            "default": self.default
+        }
+
+    @classmethod
+    def from_dict(cls, communicate: Communicate, data: dict):
+        return cls(communicate, data["name"], data["default"])

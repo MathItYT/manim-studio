@@ -25,5 +25,18 @@ class TextControl(QGroupBox):
         self.value_tracker = StringValueTracker()
         self.text_edit.textChanged.connect(
             lambda: self.__communicate.update_scene.emit(
-                f"getattr(self, {self.name.__repr__()}).set_value({self.text_edit.toPlainText().__repr__()})"))
+                f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).set_value({self.text_edit.toPlainText().__repr__()})"))
         self.layout().addWidget(self.text_edit)
+
+    def to_dict(self):
+        return {
+            "class": "TextControl",
+            "name": self.name,
+            "text": self.text_edit.toPlainText()
+        }
+
+    @classmethod
+    def from_dict(cls, communicate: Communicate, data: dict):
+        text_control = cls(communicate, data["name"])
+        text_control.text_edit.setText(data["text"])
+        return text_control

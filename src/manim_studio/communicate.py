@@ -17,3 +17,5 @@ class Communicate(QObject):
     add_value_tracker = pyqtSignal(str, Mobject)
     save_mobject = pyqtSignal()
     load_mobject = pyqtSignal()
+    save_project = pyqtSignal()
+    load_project = pyqtSignal(str)

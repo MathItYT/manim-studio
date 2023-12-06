@@ -31,7 +31,7 @@ class DropdownControl(QGroupBox):
         self.list_value_tracker = ListValueTracker(self.items)
         self.dropdown.currentTextChanged.connect(
             lambda: self.__communicate.update_scene.emit(
-                f"getattr(self, {self.name.__repr__()}).set_value({self.dropdown.currentText().__repr__()})"))
+                f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).set_value({self.dropdown.currentText().__repr__()})"))
         self.add_option_button = QPushButton("Add Option")
         self.add_option_button.clicked.connect(self.add_option_command)
         self.layout().addWidget(self.dropdown)
@@ -44,7 +44,7 @@ class DropdownControl(QGroupBox):
         self.dropdown.addItem(item)
         self.items.append(item)
         self.__communicate.update_scene.emit(
-            f"getattr(self, {self.name.__repr__()}_items).set_value({self.items.__repr__()})")
+            f"if hasattr(self, {self.name.__repr__()}_items): getattr(self, {self.name.__repr__()}_items).set_value({self.items.__repr__()})")
 
     def add_option_command(self):
         dialog = QDialog()
@@ -83,4 +83,18 @@ class DropdownControl(QGroupBox):
         self.dropdown.removeItem(self.dropdown.findText(item))
         self.items.remove(item)
         self.__communicate.update_scene.emit(
-            f"getattr(self, {self.name.__repr__()}_items).set_value({self.items.__repr__()})")
+            f"if hasattr(self, {self.name.__repr__()}_items): getattr(self, {self.name.__repr__()}_items).set_value({self.items.__repr__()})")
+
+    def to_dict(self):
+        return {
+            "class": "DropdownControl",
+            "name": self.name,
+            "items": self.items,
+            "current": self.dropdown.currentText()
+        }
+
+    @classmethod
+    def from_dict(cls, communicate: Communicate, data: dict):
+        dropdown_control = cls(communicate, data["name"], data["items"])
+        dropdown_control.dropdown.setCurrentText(data["current"])
+        return dropdown_control

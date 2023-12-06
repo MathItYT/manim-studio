@@ -44,10 +44,25 @@ class PositionControl(QGroupBox):
         self.value_tracker = DotTracker(self.default)
         self.x_spin_box.valueChanged.connect(
             lambda: self.__communicate.update_scene.emit(
-                f"getattr(self, {self.name.__repr__()}).move_to(np.array([{self.x_spin_box.value()}, {self.y_spin_box.value()}, {self.z_spin_box.value()}]))"))
+                f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).move_to(np.array([{self.x_spin_box.value()}, {self.y_spin_box.value()}, {self.z_spin_box.value()}]))"))
         self.y_spin_box.valueChanged.connect(
             lambda: self.__communicate.update_scene.emit(
-                f"getattr(self, {self.name.__repr__()}).move_to(np.array([{self.x_spin_box.value()}, {self.y_spin_box.value()}, {self.z_spin_box.value()}]))"))
+                f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).move_to(np.array([{self.x_spin_box.value()}, {self.y_spin_box.value()}, {self.z_spin_box.value()}]))"))
         self.z_spin_box.valueChanged.connect(
             lambda: self.__communicate.update_scene.emit(
-                f"getattr(self, {self.name.__repr__()}).move_to(np.array([{self.x_spin_box.value()}, {self.y_spin_box.value()}, {self.z_spin_box.value()}]))"))
+                f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).move_to(np.array([{self.x_spin_box.value()}, {self.y_spin_box.value()}, {self.z_spin_box.value()}]))"))
+
+    def to_dict(self):
+        return {
+            "class": "PositionControl",
+            "name": self.name,
+            "position": np.ndarray([self.x_spin_box.value(), self.y_spin_box.value(), self.z_spin_box.value()])
+        }
+
+    @classmethod
+    def from_dict(cls, communicate: Communicate, data: dict):
+        position_control = cls(communicate, data["name"], data["position"])
+        position_control.x_spin_box.setValue(data["position"][0])
+        position_control.y_spin_box.setValue(data["position"][1])
+        position_control.z_spin_box.setValue(data["position"][2])
+        return position_control

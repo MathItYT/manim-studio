@@ -42,12 +42,26 @@ class FileControl(QGroupBox):
         self.file_name = file_name
         self.file_name_label.setText("Current File: " + file_name)
         self.__communicate.update_scene.emit(
-            f"getattr(self, {self.name.__repr__()}).set_value({file_name.__repr__()})")
+            f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).set_value({file_name.__repr__()})")
         self.clear_button.setEnabled(True)
 
     def clear_file(self):
         self.file_name = ""
         self.__communicate.update_scene.emit(
-            f"getattr(self, {self.name.__repr__()}).set_value('')")
+            f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).set_value('')")
         self.clear_button.setEnabled(False)
         self.file_name_label.setText("Current File: ")
+
+    def to_dict(self):
+        return {
+            "class": "FileControl",
+            "name": self.name,
+            "file_name": self.file_name
+        }
+
+    @classmethod
+    def from_dict(cls, communicate: Communicate, dict: dict):
+        instance = cls(communicate, dict["name"])
+        instance.select_file_command(
+            dict["file_name"]) if dict["file_name"] != "" else instance.clear_file()
+        return instance

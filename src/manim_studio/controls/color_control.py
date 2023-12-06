@@ -34,4 +34,18 @@ class ColorControl(QGroupBox):
 
     def change_color_command(self, color: QColor):
         self.__communicate.update_scene.emit(
-            f"getattr(self, {self.name.__repr__()}).set_value(np.array([{color.red() / 255}, {color.green() / 255}, {color.blue() / 255}, {color.alpha() / 255}]))")
+            f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).set_value(np.array([{color.red() / 255}, {color.green() / 255}, {color.blue() / 255}, {color.alpha() / 255}]))")
+
+    def to_dict(self):
+        return {
+            "class": "ColorControl",
+            "name": self.name,
+            "value": self.color_picker.currentColor().getRgbF()
+        }
+
+    @classmethod
+    def from_dict(cls, communicate: Communicate, data: dict):
+        instance = cls(communicate, data["name"])
+        instance.color_picker.setCurrentColor(
+            QColor.fromRgbF(*data["value"]))
+        return instance

@@ -28,6 +28,7 @@ def main():
     parser.add_argument("--write_to_movie", "-w",
                         action="store_true", default=False)
     parser.add_argument("--file_name", "-f", type=str, default="none")
+    parser.add_argument("--from_project", "-p", type=str, default="")
     args = parser.parse_args()
     if args.file_name != "none":
         module = import_from_file(args.file_name)
@@ -38,19 +39,19 @@ def main():
     app = QApplication([])
     size = app.primaryScreen().size()
     size = (size.width(), size.height())
-    inherits_dialog = InheritsDialog(module)
+    inherits_dialog = InheritsDialog(module, args.from_project)
     inherits_dialog.exec()
     communicate = Communicate()
     controls_widget = ControlsWidget()
-    preview_widget = PreviewWidget(communicate, size)
     scene = inherits_dialog.get_scene(communicate)
     if scene is None:
         return
-    editor_widget = EditorWidget(communicate, controls_widget, scene)
+    editor_widget = EditorWidget(
+        communicate, controls_widget, scene, args.from_project)
     render_thread = RenderThread(scene)
+    preview_widget = PreviewWidget(communicate, size, render_thread)
     preview_widget.show()
     editor_widget.show()
-    render_thread.start()
     controls_widget.show()
     sys.exit(app.exec())
 

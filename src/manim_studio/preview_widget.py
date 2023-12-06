@@ -7,21 +7,24 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QImage
 from .communicate import Communicate
 from manim import config
+from .render_thread import RenderThread
 import numpy as np
 
 
 class PreviewWidget(QWidget):
-    def __init__(self, communicate: Communicate, screen_size: tuple[int, int]):
+    def __init__(self, communicate: Communicate, screen_size: tuple[int, int], render_thread: RenderThread):
         super().__init__()
         self.setWindowTitle("Preview")
         self.communicate = communicate
         self.w, self.h = screen_size
         self.communicate.update_image.connect(self.update_image)
+        self.render_thread = render_thread
         self.init_ui()
 
     def init_ui(self):
         self.setLayout(QVBoxLayout(self))
         self.init_preview_label()
+        self.render_thread.start()
 
     def init_preview_label(self):
         self.preview_label = QLabel()

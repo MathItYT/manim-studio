@@ -30,5 +30,20 @@ class SpinBoxControl(QGroupBox):
         self.value_tracker = FloatValueTracker(self.default)
         self.spin_box.valueChanged.connect(
             lambda: self.__communicate.update_scene.emit(
-                f"getattr(self, {self.name.__repr__()}).set_value({self.spin_box.value()})"))
+                f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).set_value({self.spin_box.value()})"))
         self.layout().addWidget(self.spin_box)
+
+    def to_dict(self):
+        return {
+            "class": "SpinBoxControl",
+            "name": self.name,
+            "float_value": self.spin_box.value(),
+            "min": self.min,
+            "max": self.max
+        }
+
+    @classmethod
+    def from_dict(cls, communicate: Communicate, data: dict):
+        spin_box_control = cls(
+            communicate, data["name"], data["float_value"], data["min"], data["max"])
+        return spin_box_control

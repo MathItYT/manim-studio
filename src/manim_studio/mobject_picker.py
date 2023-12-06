@@ -74,9 +74,10 @@ class EditVMobjectsDropdown(QGroupBox):
 
     def add_vmobject(self):
         self.editor.communicate.update_scene.emit(
-            f"getattr(self, {self.name.__repr__()}).add(getattr(self, {self.dropdown.currentText().__repr__()}))")
-        self.update_current_vmobjects_label(getattr(
-            self.editor.scene, self.name).submobjects + [getattr(self.editor.scene, self.dropdown.currentText())])
+            f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).add(getattr(self, {self.dropdown.currentText().__repr__()}))")
+        if hasattr(self.editor.scene, self.name):
+            self.update_current_vmobjects_label(getattr(
+                self.editor.scene, self.name).submobjects + [getattr(self.editor.scene, self.dropdown.currentText())])
 
     def update_current_vmobjects_label(self, submobjects: list[VMobject]):
         names = [self.get_name(vmob) for vmob in submobjects]
@@ -94,14 +95,29 @@ class EditVMobjectsDropdown(QGroupBox):
 
     def remove_vmobject(self):
         self.editor.communicate.update_scene.emit(
-            f"getattr(self, {self.name.__repr__()}).remove(getattr(self, {self.dropdown.currentText().__repr__()}))")
+            f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).remove(getattr(self, {self.dropdown.currentText().__repr__()}))")
         self.update_current_vmobjects_label([vmob for vmob in getattr(
             self.editor.scene, self.name).submobjects if vmob is not getattr(self.editor.scene, self.dropdown.currentText())])
 
     def clear_vmobjects(self):
         self.editor.communicate.update_scene.emit(
-            f"getattr(self, {self.name.__repr__()}).submobjects.clear()")
+            f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).submobjects.clear()")
         self.update_current_vmobjects_label([])
+
+    def to_dict(self):
+        return {
+            "class": "EditVMobjectsDropdown",
+            "name": self.name,
+            "dropdown": self.dropdown.currentText(),
+            "current_vmobjects_label": self.current_vmobjects_label.text()
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict, editor):
+        obj = cls(d["name"], editor)
+        obj.dropdown.setCurrentText(d["dropdown"])
+        obj.current_vmobjects_label.setText(d["current_vmobjects_label"])
+        return obj
 
 
 def get_duck_image():

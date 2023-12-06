@@ -15,13 +15,13 @@ import time
 
 
 class LiveScene(Scene):
-    def __init__(self, communicate: Communicate, mro_without_live_scene: list[type[Scene]], **kwargs):
+    def __init__(self, communicate: Communicate, mro_without_live_scene: list[type[Scene]], project: str = "", **kwargs):
         self.__communicate = communicate
         super().__init__(**kwargs)
         self.__states = {}
         self.__codes = {}
         self.__finished = False
-        self.__current_code = None
+        self.__current_queue = []
         self.__starting = True
         self.__mro_without_live_scene = list(
             map(lambda x: x.__name__, mro_without_live_scene))
@@ -38,6 +38,17 @@ class LiveScene(Scene):
         self.__communicate.add_value_tracker.connect(self.__add_value_tracker)
         self.__communicate.save_mobject.connect(self.__save_mobject)
         self.__communicate.load_mobject.connect(self.__load_mobject)
+        self.__communicate.save_project.connect(self.__save_project)
+        self.__communicate.load_project.connect(self.__load_project)
+        self.__project = project
+
+    def __load_project(self, project: str) -> None:
+        with open(project, "r") as f:
+            codes = f.read().split("\n---\n")
+        if len(codes) < 3:
+            return
+        for code in codes[2:]:
+            self.__communicate.update_scene.emit(code)
 
     def wait(self, duration: float = 1.0, stop_condition: Callable[[], bool] | None = None, frozen_frame: bool | None = False):
         super().wait(duration, stop_condition, frozen_frame)
@@ -68,13 +79,13 @@ class LiveScene(Scene):
         """
         if name in self.__states:
             raise ValueError(f"The state {name} already exists.")
-        if hasattr(self, "_LiveScene__current_state"):
+        if hasattr(self, f"_LiveScene__current_state"):
             dct = self.__dict__.copy()
-            dct.pop("_LiveScene__states")
+            dct.pop(f"_LiveScene__states")
             self.__states[self.__current_state] = (
                 dct, globals().copy())
         dct = self.__dict__.copy()
-        dct.pop("_LiveScene__states")
+        dct.pop(f"_LiveScene__states")
         self.__states[name] = (dct, globals().copy())
         self.__codes[name] = []
         if name != "temp":
@@ -100,7 +111,7 @@ class LiveScene(Scene):
         if name not in self.__states:
             raise ValueError(f"The state {name} does not exist.")
         dct = self.__dict__.copy()
-        dct.pop("_LiveScene__states")
+        dct.pop(f"_LiveScene__states")
         self.__states[self.__current_state] = (
             dct, globals().copy())
         for key in globals().copy():
@@ -108,11 +119,11 @@ class LiveScene(Scene):
                 del globals()[key]
         globals().update(self.__states[name][1])
         for key in self.__states[name][0].copy():
-            if key not in self.__dict__ and key != "_LiveScene__states":
+            if key not in self.__dict__ and key != f"_LiveScene__states":
                 del self.__states[name][0][key]
         self.__dict__.update(self.__states[name][0])
         dct = self.__dict__.copy()
-        dct.pop("_LiveScene__states")
+        dct.pop(f"_LiveScene__states")
         self.__states[name] = (dct, globals().copy())
         self.__communicate.update_scene.emit("")
         if name != "temp":
@@ -164,6 +175,32 @@ class LiveScene(Scene):
         """
         self.__codes[state].append(code)
 
+    def __save_project(self) -> None:
+        """
+        Save the current project.
+
+        Parameters
+        ----------
+        state
+            The name of the state.
+        """
+        file_name, _ = QFileDialog.getSaveFileName(
+            None, "Save Project", "", "No Format (*.)"
+        )
+        if file_name:
+            with open(file_name, "w") as f:
+                f.write(
+                    ",".join([base.__name__ for base in self.__class__.__bases__]))
+                f.write("\n---\n" + self.__class__.__name__ + "\n---\n")
+                f.write("\n---\n".join(self.__codes[self.__current_state]))
+            self.__communicate.show_in_status_bar.emit(
+                f"The project was saved successfully."
+            )
+            self.__communicate.print_gui.emit(
+                f"The project was saved successfully."
+            )
+        self.__file_name = file_name
+
     def __get_code(self, state: str) -> str:
         """
         Get the code of the state.
@@ -198,9 +235,11 @@ class Result({}):
         return CODE.format(','.join(self.__mro_without_live_scene), "\n        ".join(line for lines in self.__codes[state] for line in lines.split("\n")))
 
     def construct(self):
+        if self.__project:
+            self.__communicate.load_project.emit(self.__project)
         while not self.__finished:
-            while self.__current_code is None:
-                self.wait_until(lambda: self.__current_code is not None)
+            while not self.__current_queue:
+                self.wait_until(lambda: bool(self.__current_queue))
             self.__run_current_code()
 
     def __update_scene(self, code: str) -> None:
@@ -212,32 +251,27 @@ class Result({}):
         code
             The code to update the scene.
         """
-        if self.__current_code is not None:
-            self.__communicate.show_in_status_bar.emit(
-                "Waiting for the current code to finish running..."
-            )
-        while self.__current_code is not None:
-            time.sleep(0)
-        self.__communicate.show_in_status_bar.emit("")
-        self.__current_code = code
+        self.__current_queue.append(code)
 
     def __run_current_code(self) -> None:
         """
         Run the current code.
         """
-        self.__save_state("temp")
-        try:
-            exec(self.__current_code, globals())
-        except EndSceneEarlyException:
-            self.__finished = True
-        except Exception as e:
-            self.__communicate.print_gui.emit(f"{e.__class__.__name__}: {e}")
-            self.__restore_state("temp")
-        else:
-            self.__save_code(self.__current_code, self.__current_state)
-        finally:
-            self.__current_code = None
-            self.__remove_state("temp")
+        while self.__current_queue:
+            self.__save_state("temp")
+            code = self.__current_queue.pop(0)
+            try:
+                exec(code, globals())
+            except EndSceneEarlyException:
+                self.__finished = True
+            except Exception as e:
+                self.__communicate.print_gui.emit(
+                    f"{e.__class__.__name__}: {e}")
+                self.__restore_state("temp")
+            else:
+                self.__save_code(code, self.__current_state)
+            finally:
+                self.__remove_state("temp")
 
     def __save_mobject(self) -> None:
         """

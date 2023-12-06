@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="Welcome to Manim Studio’s documentation!" href="index.html" />
 
     <link rel="shortcut icon" href="_static/favicon.ico"/><!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
-        <title>Getting Started - Manim Studio 0.6.0</title>
+        <title>Getting Started - Manim Studio 0.6.1</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
@@ -123,7 +123,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">Manim Studio 0.6.0</div></a>
+      <a href="index.html"><div class="brand">Manim Studio 0.6.1</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -134,7 +134,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -149,7 +149,7 @@
     <img class="sidebar-logo" src="_static/transparent-light.png" alt="Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">Manim Studio 0.6.0</span>
+  <span class="sidebar-brand-text">Manim Studio 0.6.1</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -188,7 +188,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -196,7 +196,199 @@
         <article role="main">
           <section id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">#</a></h1>
-<p>🚧Documentation in construction🚧</p>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h2>
+<p>First of all, you will need to install Manim. You can check its documentation [here](<a class="reference external" href="https://docs.manim.community/en/stable/installation.html">https://docs.manim.community/en/stable/installation.html</a>) and follow the instructions for your operating system there.
+Secondly, you can install Manim Studio using <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<p><strong>Windows</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>manim-studio
+</pre></div>
+</div>
+<p><strong>MacOS/Linux</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3<span class="w"> </span>install<span class="w"> </span>manim-studio
+</pre></div>
+</div>
+</section>
+<section id="cli-usage">
+<h2>CLI Usage<a class="headerlink" href="#cli-usage" title="Permalink to this heading">#</a></h2>
+<p>Once you have installed Manim Studio, you can use it by running the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>manim-studio
+</pre></div>
+</div>
+<p>This will open the Manim Studio window in a new project. You can also open a specific project by running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>manim-studio<span class="w"> </span>--from_project<span class="w"> </span>&lt;path_to_project&gt;
+</pre></div>
+</div>
+<p>You can also include scenes made inside Python files in your project. To do so, you can run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>manim-studio<span class="w"> </span>--file_name<span class="w"> </span>&lt;path_to_file&gt;
+</pre></div>
+</div>
+<p>If you want to do both, you can run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>manim-studio<span class="w"> </span>--from_project<span class="w"> </span>&lt;path_to_project&gt;<span class="w"> </span>--file_name<span class="w"> </span>&lt;path_to_file&gt;
+</pre></div>
+</div>
+<p>You can also run Manim Studio from the command line by running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>manim_studio
+</pre></div>
+</div>
+<p>And you can include the previous arguments as well to do something similar to the previous examples.</p>
+</section>
+<section id="new-project">
+<h2>New Project<a class="headerlink" href="#new-project" title="Permalink to this heading">#</a></h2>
+<p>When you’re creating a new project, you will be prompted with a window like this:</p>
+<figure class="align-center" id="id1">
+<img alt="_images/new_project_first.png" src="_images/new_project_first.png" />
+<figcaption>
+<p><span class="caption-text">A prompt to select the kind of scene you want to work with and the project name.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<p>You can select among many options Manim offers (or none if you only want to have the basic features), but also you can select the ones from a Python file using <code class="docutils literal notranslate"><span class="pre">--file_name</span></code>. You can also select the project name, which will be the scene’s name.</p>
+</section>
+<section id="existing-project">
+<h2>Existing Project<a class="headerlink" href="#existing-project" title="Permalink to this heading">#</a></h2>
+<p>When you’re opening an existing project with the file name specified in the command line, you will be prompted with a window like this:</p>
+<figure class="align-center" id="id2">
+<img alt="_images/existing_project_first.png" src="_images/existing_project_first.png" />
+<figcaption>
+<p><span class="caption-text">You must click the <code class="docutils literal notranslate"><span class="pre">OK</span></code> button to continue. If you close the window, the project will not be opened.</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="working-with-manim-studio">
+<h2>Working with Manim Studio<a class="headerlink" href="#working-with-manim-studio" title="Permalink to this heading">#</a></h2>
+<p>Once you have selected your scenes to work with if you’re creating a new project or you have opened an existing one, it will show three windows like these:</p>
+<figure class="align-center" id="id3">
+<img alt="_images/working_with_manim_studio.png" src="_images/working_with_manim_studio.png" />
+<figcaption>
+<p><span class="caption-text">The three windows you will see when you’re working with Manim Studio. One is full-screen and black, which corresponds to the real-time preview of the scene, the left one that is not full-screen is the editor, and the right one is the control panel.</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<p>There’re many features that currently Manim Studio offers, but many others are still in development. By the moment,
+you may need some basic knowledge of Python to work with Manim Studio, but in the future, we will try to make it as
+user-friendly as possible, to use a minimal scripting if you need to automate some tasks.</p>
+<p>The code editor is the place where you will write your code, open the mobject picker to add Manim objects to your scene,
+you have in the menu bar a section called <code class="docutils literal notranslate"><span class="pre">Controls</span></code> where you can add controls to your control panel, etc.</p>
+<figure class="align-center" id="id4">
+<img alt="_images/controls.png" src="_images/controls.png" />
+<figcaption>
+<p><span class="caption-text">The controls section in the menu bar. You can add any of these controls to your control panel.</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<p>You can access the values of the controls in your scene with any of these codes:</p>
+<div class="table-wrapper colwidths-given docutils container" id="id5">
+<table class="docutils align-default" id="id5">
+<caption><span class="caption-text">Title</span><a class="headerlink" href="#id5" title="Permalink to this table">#</a></caption>
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Control type</p></th>
+<th class="head"><p>Code</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Slider</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">self.print_gui(self.&lt;control-name&gt;.get_value())</span></code></p></td>
+<td><p>Prompts the value of the slider in a GUI window. &lt;control-name&gt; is the value that you gave to the control when you added it to the control panel.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Checkbox</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">self.print_gui(self.&lt;control-name&gt;.get_value())</span></code></p></td>
+<td><p>Prompts the value of the checkbox in a GUI window. &lt;control-name&gt; is the value that you gave to the control when you added it to the control panel.</p></td>
+</tr>
+<tr class="row-even"><td><p>Textbox</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">self.print_gui(self.&lt;control-name&gt;.get_value())</span></code></p></td>
+<td><p>Prompts the value of the textbox in a GUI window. &lt;control-name&gt; is the value that you gave to the control when you added it to the control panel.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Dropdown</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">self.print_gui(self.&lt;control-name&gt;.get_value())</span></code> and <code class="docutils literal notranslate"><span class="pre">self.print_gui(self.&lt;control-name&gt;_items.get_value())</span></code></p></td>
+<td><p>The first one prompts the value of the current text shown in the dropdown in a GUI window. The second one prompts the list of items in the dropdown in a GUI window. &lt;control-name&gt; is the value that you gave to the control when you added it to the control panel.</p></td>
+</tr>
+<tr class="row-even"><td><p>Color Picker</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">self.print_gui(self.&lt;control-name&gt;.get_value())</span></code></p></td>
+<td><p>Prompts the value of the color picker in a GUI window. &lt;control-name&gt; is the value that you gave to the control when you added it to the control panel.</p></td>
+</tr>
+<tr class="row-odd"><td><p>File Chooser</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">self.print_gui(self.&lt;control-name&gt;.get_value())</span></code></p></td>
+<td><p>Prompts the value of the file name chosen in the file chooser in a GUI window. &lt;control-name&gt; is the value that you gave to the control when you added it to the control panel.</p></td>
+</tr>
+<tr class="row-even"><td><p>Spin Box</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">self.print_gui(self.&lt;control-name&gt;.get_value())</span></code></p></td>
+<td><p>Prompts the value of the spin box in a GUI window. &lt;control-name&gt; is the value that you gave to the control when you added it to the control panel.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Single-line textbox</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">self.print_gui(self.&lt;control-name&gt;.get_value())</span></code></p></td>
+<td><p>Prompts the value of the single-line textbox in a GUI window. &lt;control-name&gt; is the value that you gave to the control when you added it to the control panel.</p></td>
+</tr>
+<tr class="row-even"><td><p>Position Control</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">self.print_gui(self.&lt;control-name&gt;.get_value())</span></code></p></td>
+<td><p>Prompts the value of the position control in a GUI window. &lt;control-name&gt; is the value that you gave to the control when you added it to the control panel.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Button</p></td>
+<td><p>It has no value, so you can’t prompt anything.</p></td>
+<td><p>It has no value, so you can’t prompt anything.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>You also have a Mobject Picker, which is a window where you can add Manim objects to your scene. We still only support a few of them, but we will add more in the future.</p>
+<figure class="align-center" id="id6">
+<img alt="_images/mobject_picker.png" src="_images/mobject_picker.png" />
+<figcaption>
+<p><span class="caption-text">The Mobject Picker window. You can add any of these mobjects to your scene.</span><a class="headerlink" href="#id6" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<p>You can click any of the images representing the mobject type you want to add to your scene, and it will prompt you for a name for the mobject. Then, you can click the <code class="docutils literal notranslate"><span class="pre">Add</span></code> button, and it will add the mobject to your scene.</p>
+<figure class="align-center" id="id7">
+<img alt="_images/mobject_picker_prompting.png" src="_images/mobject_picker_prompting.png" />
+<figcaption>
+<p><span class="caption-text">The Mobject Picker window prompting for a name for the mobject.</span><a class="headerlink" href="#id7" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<p>When you click <code class="docutils literal notranslate"><span class="pre">Add</span></code>, it won’t immediately show the mobject in your screen, but you can add it by clicking the <code class="docutils literal notranslate"><span class="pre">Add</span> <span class="pre">to</span> <span class="pre">Scene</span></code> button in the control panel.</p>
+<figure class="align-center" id="id8">
+<img alt="_images/mobject_picker_after_prompting.png" src="_images/mobject_picker_after_prompting.png" />
+<figcaption>
+<p><span class="caption-text">The Mobject Picker window after prompting for a name for the mobject. It’s the control panel with new controls added.
+You need to click the <code class="docutils literal notranslate"><span class="pre">Add</span> <span class="pre">to</span> <span class="pre">Scene</span></code> button to show the mobject in your screen. The changes you make to the controls
+won’t be applied until you click <code class="docutils literal notranslate"><span class="pre">&lt;mobject-name&gt;_update</span></code>, which is a button that will be added to the control panel
+when you add a mobject to Manim Studio.</span><a class="headerlink" href="#id8" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<p>You can also add a mobject to your scene by writing the code in the editor. For example, if you want to add a red circle to your scene, you can write:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">circle</span> <span class="o">=</span> <span class="n">Circle</span><span class="p">()</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">circle</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And then, click <code class="docutils literal notranslate"><span class="pre">Run</span> <span class="pre">(Ctrl</span> <span class="pre">+</span> <span class="pre">Return)</span></code>. It will add the circle to your scene, but if you want to control it, you have to either write code or add controls to the control panel manually and setup the code to control the mobject via the control panel.</p>
+<p>You also can export to a Python file the entire code you have written in the editor by clicking the <code class="docutils literal notranslate"><span class="pre">Save</span> <span class="pre">to</span> <span class="pre">Python</span> <span class="pre">Manim</span> <span class="pre">File</span></code> button in the <code class="docutils literal notranslate"><span class="pre">File</span></code> menu in the editor, which will prompt you for a file name and then save the code to a Python file with the name you specified. It’s not Manim Studio code, but you can render it with Manim CLI (see <a class="reference external" href="https://docs.manim.community/en/stable/guides/configuration.html">https://docs.manim.community/en/stable/guides/configuration.html</a> for more information about how to use the Manim CLI).</p>
+<figure class="align-center" id="id9">
+<img alt="_images/file_menu.png" src="_images/file_menu.png" />
+<figcaption>
+<p><span class="caption-text">The options you have in the <code class="docutils literal notranslate"><span class="pre">File</span></code> menu in the editor.</span><a class="headerlink" href="#id9" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<p>If you want to continue your Manim Studio job later, you also can save the project by clicking the <code class="docutils literal notranslate"><span class="pre">Save</span> <span class="pre">Manim</span> <span class="pre">Studio</span> <span class="pre">Project</span></code> button in the <code class="docutils literal notranslate"><span class="pre">File</span></code> menu in the editor, which will prompt you for a file name and then save the project to a file without format, and if you have controls in your control panel, it will save a Pickle file that Manim Studio will use internally to load your project.</p>
+<p>You can load a Manim Studio project using the Manim Studio CLI by running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>manim-studio<span class="w"> </span>--from_project<span class="w"> </span>&lt;path_to_project&gt;
+</pre></div>
+</div>
+<p>You can finish definitively your Manim Studio job by clicking the <code class="docutils literal notranslate"><span class="pre">Finish</span> <span class="pre">(Ctrl+Q)</span></code>, which will show a message saying <code class="docutils literal notranslate"><span class="pre">Finished</span></code> in the status bar. Remember that you must close the windows manually!</p>
+</section>
+<section id="other-interesting-features">
+<h2>Other interesting features<a class="headerlink" href="#other-interesting-features" title="Permalink to this heading">#</a></h2>
+<p>You can also save mobjects to a Pickle file by clicking the <code class="docutils literal notranslate"><span class="pre">Save</span> <span class="pre">Mobject</span></code> button in the editor, which will prompt you for the mobject name (if you added it via code, it’s an attribute of <code class="docutils literal notranslate"><span class="pre">self</span></code>) and then save the mobject to a Pickle file. You can load it later by clicking the <code class="docutils literal notranslate"><span class="pre">Load</span> <span class="pre">Mobject</span></code> button in the editor, which will prompt you for the Pickle file name and then for the name, which will be saved as an attribute of <code class="docutils literal notranslate"><span class="pre">self</span></code>.
+You can load mobjects in Manim too! You must import <code class="docutils literal notranslate"><span class="pre">load_mobject</span></code> from <code class="docutils literal notranslate"><span class="pre">manim_studio.load_mobject</span></code> and then use it like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mobject</span> <span class="o">=</span> <span class="n">load_mobject</span><span class="p">(</span><span class="s2">&quot;&lt;path_to_pickle_file&gt;&quot;</span><span class="p">)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">mobject</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can also use <code class="docutils literal notranslate"><span class="pre">States</span></code> stuff to do your jobs separately without opening new windows. You can add a new state, remove one or switch from one state to another to continue one job in its own way. Notice that states aren’t included when saving Manim Studio projects, so you must save them separately.</p>
+<p>All of this is available in the <code class="docutils literal notranslate"><span class="pre">States</span></code> menu in the editor.</p>
+<p>In the future, we will add more features to Manim Studio, but for now, this is all we have. We hope you enjoy it!</p>
+</section>
 </section>
 
         </article>
@@ -234,13 +426,37 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Getting Started</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#cli-usage">CLI Usage</a></li>
+<li><a class="reference internal" href="#new-project">New Project</a></li>
+<li><a class="reference internal" href="#existing-project">Existing Project</a></li>
+<li><a class="reference internal" href="#working-with-manim-studio">Working with Manim Studio</a></li>
+<li><a class="reference internal" href="#other-interesting-features">Other interesting features</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
   </div>
-</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=add265a1"></script>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=09aae1b8"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/scripts/furo.js?v=32e29ea5"></script>

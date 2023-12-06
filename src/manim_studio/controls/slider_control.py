@@ -44,5 +44,21 @@ class SliderControl(QGroupBox):
         self.slider.valueChanged.connect(lambda: self.value_label.setText(
             f"Value: {self.slider.value()}"))
         self.slider.valueChanged.connect(lambda: self.__communicate.update_scene.emit(
-            f"getattr(self, {self.name.__repr__()}).set_value({self.slider.value()})"))
+            f"if hasattr(self, {self.name.__repr__()}): getattr(self, {self.name.__repr__()}).set_value({self.slider.value()})"))
         self.layout().addWidget(self.slider)
+
+    def to_dict(self):
+        return {
+            "class": "SliderControl",
+            "name": self.name,
+            "value": self.slider.value(),
+            "range": self.range,
+            "step": self.step
+        }
+
+    @classmethod
+    def from_dict(cls, communicate: Communicate, data: dict):
+        slider_control = cls(
+            communicate, data["name"], data["range"], data["step"], data["value"])
+        slider_control.slider.setValue(data["value"])
+        return slider_control
