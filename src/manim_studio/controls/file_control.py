@@ -13,6 +13,7 @@ class FileControl(QGroupBox):
     def __init__(self, communicate: Communicate, name: str):
         super().__init__()
         self.name = name
+        self.file_name = ""
         self.__communicate = communicate
         self.init_ui()
 
@@ -38,12 +39,14 @@ class FileControl(QGroupBox):
             self.select_file_command(file_name)
 
     def select_file_command(self, file_name: str):
+        self.file_name = file_name
         self.file_name_label.setText("Current File: " + file_name)
         self.__communicate.update_scene.emit(
             f"getattr(self, {self.name.__repr__()}).set_value({file_name.__repr__()})")
         self.clear_button.setEnabled(True)
 
     def clear_file(self):
+        self.file_name = ""
         self.__communicate.update_scene.emit(
             f"getattr(self, {self.name.__repr__()}).set_value('')")
         self.clear_button.setEnabled(False)

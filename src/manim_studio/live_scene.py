@@ -14,25 +14,17 @@ from manim_studio.value_trackers.dot_tracker import DotTracker
 import time
 
 
-class CairoLiveRenderer(CairoRenderer):
-    def __init__(self, communicate: Communicate, *args, **kwargs):
-        self.__communicate = communicate
-        super().__init__(*args, **kwargs)
-
-    def render(self, scene, time, moving_mobjects):
-        super().render(scene, time, moving_mobjects)
-        self.__communicate.update_image.emit(self.get_frame())
-
-
 class LiveScene(Scene):
-    def __init__(self, communicate: Communicate, **kwargs):
+    def __init__(self, communicate: Communicate, mro_without_live_scene: list[type[Scene]], **kwargs):
         self.__communicate = communicate
-        super().__init__(renderer=CairoLiveRenderer(communicate), **kwargs)
+        super().__init__(**kwargs)
         self.__states = {}
         self.__codes = {}
         self.__finished = False
         self.__current_code = None
         self.__starting = True
+        self.__mro_without_live_scene = list(
+            map(lambda x: x.__name__, mro_without_live_scene))
         self.__value_trackers = {}
         globals()["self"] = self
         del globals()["console"]
@@ -194,7 +186,7 @@ from typing import Callable
 import time
 
 
-class Result(Scene):
+class Result({}):
     def construct(self):
         {}
     
@@ -202,8 +194,8 @@ class Result(Scene):
         print(text)
 """
         if not self.__codes[state] or all(code.strip() == "" for code in self.__codes[state]):
-            return CODE.format("pass")
-        return CODE.format("\n        ".join(line for lines in self.__codes[state] for line in lines.split("\n")))
+            return CODE.format(",".join(self.__mro_without_live_scene), "pass")
+        return CODE.format(','.join(self.__mro_without_live_scene), "\n        ".join(line for lines in self.__codes[state] for line in lines.split("\n")))
 
     def construct(self):
         while not self.__finished:

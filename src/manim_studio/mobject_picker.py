@@ -3,12 +3,12 @@ from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QGridLayout,
-    QGridLayout,
     QPushButton,
     QLabel,
     QDialog,
     QLineEdit,
-    QComboBox
+    QComboBox,
+    QGroupBox
 )
 from PyQt6.QtCore import QSize
 from PyQt6.QtGui import QImage, QPixmap, QIcon
@@ -33,6 +33,75 @@ from pathlib import Path
 import numpy as np
 from manimpango import list_fonts
 import sys
+
+
+class RefreshDropdownVGroupButton(QPushButton):
+    pass
+
+
+class EditVMobjectsDropdown(QGroupBox):
+    def __init__(self, name: str, editor):
+        super().__init__()
+        self.name = name
+        self.editor = editor
+        self.init_ui()
+
+    def init_ui(self):
+        self.setTitle("Edit VMobjects")
+        self.setLayout(QVBoxLayout(self))
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(0)
+        self.dropdown = QComboBox()
+        self.dropdown.addItems([vmob for vmob in vars(self.editor.scene).keys(
+        ) if isinstance(vars(self.editor.scene)[vmob], VMobject) and vmob != self.name])
+        self.layout().addWidget(self.dropdown)
+        self.add_vmobject_button = QPushButton("Add VMobject")
+        self.add_vmobject_button.clicked.connect(self.add_vmobject)
+        self.layout().addWidget(self.add_vmobject_button)
+        self.remove_vmobject_button = QPushButton("Remove VMobject")
+        self.remove_vmobject_button.clicked.connect(self.remove_vmobject)
+        self.layout().addWidget(self.remove_vmobject_button)
+        self.clear_vmobjects_button = QPushButton("Clear VMobjects")
+        self.clear_vmobjects_button.clicked.connect(self.clear_vmobjects)
+        self.layout().addWidget(self.clear_vmobjects_button)
+        self.current_vmobjects_label = QLabel("Current VMobjects in VGroup: ")
+        self.layout().addWidget(self.current_vmobjects_label)
+        self.refresh_vmobjects_button = QPushButton("Refresh VMobjects")
+        self.refresh_vmobjects_button.clicked.connect(
+            lambda: self.update_current_vmobjects_label(
+                getattr(self.editor.scene, self.name).submobjects))
+        self.layout().addWidget(self.refresh_vmobjects_button)
+
+    def add_vmobject(self):
+        self.editor.communicate.update_scene.emit(
+            f"getattr(self, {self.name.__repr__()}).add(getattr(self, {self.dropdown.currentText().__repr__()}))")
+        self.update_current_vmobjects_label(getattr(
+            self.editor.scene, self.name).submobjects + [getattr(self.editor.scene, self.dropdown.currentText())])
+
+    def update_current_vmobjects_label(self, submobjects: list[VMobject]):
+        names = [self.get_name(vmob) for vmob in submobjects]
+        self.current_vmobjects_label.setText(
+            "Current VMobjects in VGroup: " + ", ".join(names))
+        self.dropdown.clear()
+        self.dropdown.addItems([vmob for vmob in vars(self.editor.scene).keys(
+        ) if isinstance(vars(self.editor.scene)[vmob], VMobject) and vmob != self.name])
+
+    def get_name(self, vmob: VMobject):
+        for name, value in vars(self.editor.scene).items():
+            if value is vmob:
+                return name
+        return f"Unknown {type(vmob).__name__}"
+
+    def remove_vmobject(self):
+        self.editor.communicate.update_scene.emit(
+            f"getattr(self, {self.name.__repr__()}).remove(getattr(self, {self.dropdown.currentText().__repr__()}))")
+        self.update_current_vmobjects_label([vmob for vmob in getattr(
+            self.editor.scene, self.name).submobjects if vmob is not getattr(self.editor.scene, self.dropdown.currentText())])
+
+    def clear_vmobjects(self):
+        self.editor.communicate.update_scene.emit(
+            f"getattr(self, {self.name.__repr__()}).submobjects.clear()")
+        self.update_current_vmobjects_label([])
 
 
 def get_duck_image():
@@ -494,10 +563,6 @@ self.remove(getattr(self, {name.__repr__()}))
             self.editor.communicate.print_gui.emit(
                 f"Control with name {name}_vmobjects_edit already exists")
             return
-        if f"{name}_update_dropdown" in self.editor.controls:
-            self.editor.communicate.print_gui.emit(
-                f"Control with name {name}_update_dropdown already exists")
-            return
         if f"{name}_add_to_scene" in self.editor.controls:
             self.editor.communicate.print_gui.emit(
                 f"Control with name {name}_add_to_scene already exists")
@@ -510,70 +575,11 @@ self.remove(getattr(self, {name.__repr__()}))
             f"setattr(self, {name.__repr__()}, VGroup())")
         self.editor.communicate.print_gui.emit(
             f"Added VGroup with name {name}.\nTo see on screen, press 'Add to Scene' button.\nTo remove, press 'Remove from Scene' button.")
-        vmobjects_edit = self.editor.add_dropdown_command(
-            f"{name}_vmobjects_edit", [])
-        vmobjects_edit.add_option_button.setText("Add VMobject to VGroup")
-        vmobjects_edit.remove_option_button.setText(
-            "Remove VMobject from VGroup")
-        vmobjects_edit.add_option_button.clicked.disconnect()
-        vmobjects_edit.add_option_button.clicked.connect(
-            lambda: self.add_vmobject_to_vgroup_command(name))
-        vmobjects_edit.remove_option_button.clicked.disconnect()
-        vmobjects_edit.remove_option_button.clicked.connect(
-            lambda: self.remove_vmobject_from_vgroup_command(name))
-        update_dropdown_button = QPushButton("Refresh Dropdown")
-        update_dropdown_button.clicked.connect(
-            lambda: self.update_dropdown_command(name))
         self.editor.add_custom_control_command(
-            f"{name}_update_dropdown", update_dropdown_button)
+            f"{name}_vmobjects_edit", EditVMobjectsDropdown(name, self.editor))
         self.editor.add_button_command(f"{name}_add_to_scene", f"""
 self.add(getattr(self, {name.__repr__()}))
 """.strip())
         self.editor.add_button_command(f"{name}_remove_from_scene", f"""
 self.remove(getattr(self, {name.__repr__()}))
 """.strip())
-
-    def add_vmobject_to_vgroup_command(self, name: str):
-        dialog = QDialog()
-        dialog.setWindowTitle("Add VMobject to VGroup")
-        dialog.setLayout(QVBoxLayout(dialog))
-        dialog.layout().setContentsMargins(0, 0, 0, 0)
-        dialog.label = QLabel("Select the VMobject to add:")
-        dialog.layout().addWidget(dialog.label)
-        dialog.dropdown = QComboBox()
-        dialog.dropdown.addItems([vmob for vmob in dir(self.editor.scene) if isinstance(
-            getattr(self.editor.scene, vmob), VMobject) and getattr(self.editor.scene, vmob) != getattr(self.editor.scene, name)])
-        dialog.layout().addWidget(dialog.dropdown)
-        dialog.button = QPushButton("Add")
-        dialog.button.clicked.connect(lambda: self.add_vmobject_to_vgroup(
-            name, dialog.dropdown.currentText()))
-        dialog.button.clicked.connect(dialog.close)
-        dialog.layout().addWidget(dialog.button)
-        dialog.exec()
-
-    def add_vmobject_to_vgroup(self, name: str, vmobject_name: str):
-        self.editor.communicate.update_scene.emit(
-            f"getattr(self, {name.__repr__()}).add(getattr(self, {vmobject_name.__repr__()}))")
-        self.editor.communicate.print_gui.emit(
-            f"VMobject {vmobject_name} added to VGroup {name}")
-        self.update_dropdown_command(name)
-
-    def remove_vmobject_from_vgroup_command(self, name: str):
-        to_remove = self.editor.controls[f"{name}_vmobjects_edit"].dropdown.currentText()  # noqa
-        self.editor.communicate.update_scene.emit(
-            f"getattr(self, {name.__repr__()}).remove(getattr(self, {to_remove.__repr__()}))")
-        self.update_dropdown_command(name)
-
-    def update_dropdown_command(self, name: str):
-        self.editor.controls[f"{name}_vmobjects_edit"].dropdown.clear()
-        submobjects = getattr(self.editor.scene, name).submobjects
-        names = []
-        for submobject in submobjects:
-            if submobject in [vmob for vmob in vars(self.editor.scene).values() if isinstance(vmob, VMobject)]:
-                for key, value in [(k, v) for k, v in vars(self.editor.scene).items() if isinstance(v, VMobject)]:
-                    if value == submobject:
-                        names.append(key)
-                        break
-            else:
-                names.append(f"Unknown {type(submobject).__name__}")
-        self.editor.controls[f"{name}_vmobjects_edit"].dropdown.addItems(names)
