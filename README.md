@@ -11,7 +11,7 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
 - [x] Work with Manim Mobject using the GUI.
 - [x] Export to a Python file the code of the animation.
 - [x] A live cell to interactively insert code into the scene.
-- [ ] Create animations with the GUI.
+- [x] Create animations with the GUI.
 - [ ] Create animations with AI.
 - [ ] Collaborate with other people in the same project.
 
