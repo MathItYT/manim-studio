@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QPushButton,
     QDoubleSpinBox,
+    QHBoxLayout
 )
 from PyQt6.QtGui import QMovie
 from manim import (
@@ -68,11 +69,33 @@ class AnimationWidget(QGroupBox):
                 [mob for mob in dir(self.animation_picker.editor.scene) if isinstance(getattr(self.animation_picker.editor.scene, mob), self.get_animation_mobject_type())])
             dialog.layout().addWidget(dialog.combo_box_2)
         if self.animation_name == "ScaleInPlace":
+            dialog.scale_factor_label = QLabel("Scale Factor:")
+            dialog.layout().addWidget(dialog.scale_factor_label)
             dialog.scale_factor = QDoubleSpinBox()
             dialog.scale_factor.setRange(-sys.float_info.max,
                                          sys.float_info.max)
             dialog.scale_factor.setValue(2)
             dialog.layout().addWidget(dialog.scale_factor)
+        if self.animation_name == "animated_move_to":
+            dialog.position_group_box = QGroupBox()
+            dialog.position_group_box.setLayout(
+                QHBoxLayout(dialog.position_group_box))
+            dialog.position_group_box.layout().setContentsMargins(0, 0, 0, 0)
+            dialog.position_group_box.layout().setSpacing(0)
+            dialog.position_group_box.layout().addWidget(QLabel("Position:"))
+            dialog.x_spin_box = QDoubleSpinBox()
+            dialog.x_spin_box.setRange(-sys.float_info.max, sys.float_info.max)
+            dialog.x_spin_box.setValue(0)
+            dialog.position_group_box.layout().addWidget(dialog.x_spin_box)
+            dialog.y_spin_box = QDoubleSpinBox()
+            dialog.y_spin_box.setRange(-sys.float_info.max, sys.float_info.max)
+            dialog.y_spin_box.setValue(0)
+            dialog.position_group_box.layout().addWidget(dialog.y_spin_box)
+            dialog.z_spin_box = QDoubleSpinBox()
+            dialog.z_spin_box.setRange(-sys.float_info.max, sys.float_info.max)
+            dialog.z_spin_box.setValue(0)
+            dialog.position_group_box.layout().addWidget(dialog.z_spin_box)
+            dialog.layout().addWidget(dialog.position_group_box)
         dialog.ok_button = QPushButton("OK")
         dialog.ok_button.clicked.connect(dialog.accept)
         dialog.layout().addWidget(dialog.ok_button)
@@ -88,7 +111,7 @@ class AnimationWidget(QGroupBox):
                 f"self.play({self.animation_name}(getattr(self, {dialog.combo_box.currentText().__repr__()}), getattr(self, {dialog.combo_box_2.currentText().__repr__()})))")
         elif self.animation_name == "animated_move_to":
             self.animation_picker.editor.communicate.update_scene.emit(
-                f"self.play(getattr(self, {dialog.combo_box.currentText().__repr__()}).animate.move_to(RIGHT))")
+                f"self.play(getattr(self, {dialog.combo_box.currentText().__repr__()}).animate.move_to(np.array([{dialog.x_spin_box.value()}, {dialog.y_spin_box.value()}, {dialog.z_spin_box.value()}])))")
         elif self.animation_name == "ScaleInPlace":
             self.animation_picker.editor.communicate.update_scene.emit(
                 f"self.play(ScaleInPlace(getattr(self, {dialog.combo_box.currentText().__repr__()}), {dialog.scale_factor.value()}))")
