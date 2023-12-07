@@ -27,6 +27,7 @@ from manim_studio.controls.button import Button
 from manim_studio.controls_widget import ControlsWidget
 from manim_studio.live_scene import LiveScene
 from manim_studio.mobject_picker import MobjectPicker, RefreshDropdownVGroupButton
+from manim_studio.animation_picker import AnimationPicker
 import numpy as np
 import time
 import dill as pickle
@@ -170,6 +171,12 @@ class EditorWidget(QWidget):
         self.show_mobject_picker_button.clicked.connect(
             self.mobject_picker.show)
         self.layout().addWidget(self.show_mobject_picker_button)
+        self.show_animation_picker_button = QPushButton(
+            "Show Animation Picker")
+        self.animation_picker = AnimationPicker(self)
+        self.show_animation_picker_button.clicked.connect(
+            self.animation_picker.show)
+        self.layout().addWidget(self.show_animation_picker_button)
 
     def init_status_bar(self):
         self.status_bar = QStatusBar()

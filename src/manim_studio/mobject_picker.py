@@ -232,6 +232,10 @@ class MobjectPicker(QScrollArea):
         if name is None:
             self.editor.communicate.print_gui.emit("No name entered")
             return
+        if hasattr(self.editor.scene, name):
+            self.editor.communicate.print_gui.emit(
+                f"Attribute with name {name} already exists")
+            return
         if f"{name}_edit" in self.editor.controls:
             self.editor.communicate.print_gui.emit(
                 f"Control with name {name}_edit already exists")
@@ -283,6 +287,10 @@ self.remove(getattr(self, {name.__repr__()}))
         if name is None:
             self.editor.communicate.print_gui.emit("No name entered")
             return
+        if hasattr(self.editor.scene, name):
+            self.editor.communicate.print_gui.emit(
+                f"Attribute with name {name} already exists")
+            return
         if f"{name}_edit" in self.editor.controls:
             self.editor.communicate.print_gui.emit(
                 f"Control with name {name}_edit already exists")
@@ -323,6 +331,10 @@ self.remove(getattr(self, {name.__repr__()}))
         name = self.exec_name_dialog()
         if name is None:
             self.editor.communicate.print_gui.emit("No name entered")
+            return
+        if hasattr(self.editor.scene, name):
+            self.editor.communicate.print_gui.emit(
+                f"Attribute with name {name} already exists")
             return
         if f"{name}_edit" in self.editor.controls:
             self.editor.communicate.print_gui.emit(
@@ -365,6 +377,10 @@ self.remove(getattr(self, {name.__repr__()}))
         if name is None:
             self.editor.communicate.print_gui.emit("No name entered")
             return
+        if hasattr(self.editor.scene, name):
+            self.editor.communicate.print_gui.emit(
+                f"Attribute with name {name} already exists")
+            return
         if f"{name}_radius_edit" in self.editor.controls:
             self.editor.communicate.print_gui.emit(
                 f"Control with name {name}_radius_edit already exists")
@@ -402,6 +418,10 @@ self.remove(getattr(self, {name.__repr__()}))
         name = self.exec_name_dialog()
         if name is None:
             self.editor.communicate.print_gui.emit("No name entered")
+            return
+        if hasattr(self.editor.scene, name):
+            self.editor.communicate.print_gui.emit(
+                f"Attribute with name {name} already exists")
             return
         if f"{name}_path_edit" in self.editor.controls:
             self.editor.communicate.print_gui.emit(
@@ -448,6 +468,10 @@ self.remove(getattr(self, {name.__repr__()}))
         if name is None:
             self.editor.communicate.print_gui.emit("No name entered")
             return
+        if hasattr(self.editor.scene, name):
+            self.editor.communicate.print_gui.emit(
+                f"Attribute with name {name} already exists")
+            return
         if f"{name}_side_length_edit" in self.editor.controls:
             self.editor.communicate.print_gui.emit(
                 f"Control with name {name}_side_length_edit already exists")
@@ -485,6 +509,10 @@ self.remove(getattr(self, {name.__repr__()}))
         name = self.exec_name_dialog()
         if name is None:
             self.editor.communicate.print_gui.emit("No name entered")
+            return
+        if hasattr(self.editor.scene, name):
+            self.editor.communicate.print_gui.emit(
+                f"Attribute with name {name} already exists")
             return
         if f"{name}_width_edit" in self.editor.controls:
             self.editor.communicate.print_gui.emit(
@@ -530,6 +558,10 @@ self.remove(getattr(self, {name.__repr__()}))
         if name is None:
             self.editor.communicate.print_gui.emit("No name entered")
             return
+        if hasattr(self.editor.scene, name):
+            self.editor.communicate.print_gui.emit(
+                f"Attribute with name {name} already exists")
+            return
         if f"{name}_path_edit" in self.editor.controls:
             self.editor.communicate.print_gui.emit(
                 f"Control with name {name}_path_edit already exists")
@@ -574,6 +606,10 @@ self.remove(getattr(self, {name.__repr__()}))
         name = self.exec_name_dialog()
         if name is None:
             self.editor.communicate.print_gui.emit("No name entered")
+            return
+        if hasattr(self.editor.scene, name):
+            self.editor.communicate.print_gui.emit(
+                f"Attribute with name {name} already exists")
             return
         if f"{name}_vmobjects_edit" in self.editor.controls:
             self.editor.communicate.print_gui.emit(

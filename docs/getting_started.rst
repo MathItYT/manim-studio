@@ -167,6 +167,13 @@ You can also add a mobject to your scene by writing the code in the editor. For 
 
 And then, click ``Run (Ctrl + Return)``. It will add the circle to your scene, but if you want to control it, you have to either write code or add controls to the control panel manually and setup the code to control the mobject via the control panel.
 
+Also we have an animation picker, which is a window where you can choose an animation for a mobject you have added via mobject picker or code by setting the attribute. We still only support a few of them, but we will add more in the future.
+
+.. figure:: _static/images/animation_picker.png
+    :align: center
+
+    The Animation Picker window. You can add any of these animations to your scene.
+
 You also can export to a Python file the entire code you have written in the editor by clicking the ``Save to Python Manim File`` button in the ``File`` menu in the editor, which will prompt you for a file name and then save the code to a Python file with the name you specified. It's not Manim Studio code, but you can render it with Manim CLI (see https://docs.manim.community/en/stable/guides/configuration.html for more information about how to use the Manim CLI).
 
 .. figure:: _static/images/file_menu.png

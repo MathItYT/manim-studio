@@ -29,13 +29,23 @@ def main():
                         action="store_true", default=False)
     parser.add_argument("--file_name", "-f", type=str, default="none")
     parser.add_argument("--from_project", "-p", type=str, default="")
+    parser.add_argument("--resolution", "-r", type=str, default="1920x1080")
     args = parser.parse_args()
     if args.file_name != "none":
         module = import_from_file(args.file_name)
     else:
         module = None
     config.write_to_movie = args.write_to_movie
-    config.write_to_movie = False
+    config.disable_caching = True
+    width, height = args.resolution.split("x")
+    config.pixel_width, config.pixel_height = int(width), int(height)
+    max_dimension = max(config.pixel_width, config.pixel_height)
+    if max_dimension == config.pixel_width:
+        config.frame_width = int(config.pixel_width / config.pixel_height * 8)
+        config.frame_height = 8
+    else:
+        config.frame_height = int(config.pixel_height / config.pixel_width * 8)
+        config.frame_width = 8
     app = QApplication([])
     size = app.primaryScreen().size()
     size = (size.width(), size.height())
