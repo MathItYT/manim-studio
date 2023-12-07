@@ -330,9 +330,8 @@ class EditorWidget(QWidget):
         slider = SliderControl(
             self.communicate, name, (int(min_), int(max_)), int(step), int(default))
         self.controls_widget.add_controls(slider)
-        if not self.from_project:
-            self.communicate.add_value_tracker.emit(
-                name, slider.value_tracker)
+        self.communicate.add_value_tracker.emit(
+            name, slider.value_tracker)
         self.controls[name] = slider
         return slider
 
@@ -362,9 +361,8 @@ class EditorWidget(QWidget):
             return
         text_box = TextControl(self.communicate, name)
         self.controls_widget.add_controls(text_box)
-        if not self.from_project:
-            self.communicate.add_value_tracker.emit(
-                name, text_box.value_tracker)
+        self.communicate.add_value_tracker.emit(
+            name, text_box.value_tracker)
         self.controls[name] = text_box
         return text_box
 
@@ -394,9 +392,8 @@ class EditorWidget(QWidget):
             return
         line_box = LineControl(self.communicate, name)
         self.controls_widget.add_controls(line_box)
-        if not self.from_project:
-            self.communicate.add_value_tracker.emit(
-                name, line_box.value_tracker)
+        self.communicate.add_value_tracker.emit(
+            name, line_box.value_tracker)
         self.controls[name] = line_box
         return line_box
 
@@ -426,9 +423,8 @@ class EditorWidget(QWidget):
             return
         color_picker = ColorControl(self.communicate, name)
         self.controls_widget.add_controls(color_picker)
-        if not self.from_project:
-            self.communicate.add_value_tracker.emit(
-                name, color_picker.value_tracker)
+        self.communicate.add_value_tracker.emit(
+            name, color_picker.value_tracker)
         self.controls[name] = color_picker
         return color_picker
 
@@ -479,11 +475,10 @@ class EditorWidget(QWidget):
             return
         dropdown = DropdownControl(self.communicate, name, options)
         self.controls_widget.add_controls(dropdown)
-        if not self.from_project:
-            self.communicate.add_value_tracker.emit(
-                name, dropdown.value_tracker)
-            self.communicate.add_value_tracker.emit(
-                name + "_items", dropdown.list_value_tracker)
+        self.communicate.add_value_tracker.emit(
+            name, dropdown.value_tracker)
+        self.communicate.add_value_tracker.emit(
+            name + "_items", dropdown.list_value_tracker)
         self.controls[name] = dropdown
         return dropdown
 
@@ -517,9 +512,8 @@ class EditorWidget(QWidget):
             return
         checkbox = CheckboxControl(self.communicate, name, default)
         self.controls_widget.add_controls(checkbox)
-        if not self.from_project:
-            self.communicate.add_value_tracker.emit(
-                name, checkbox.value_tracker)
+        self.communicate.add_value_tracker.emit(
+            name, checkbox.value_tracker)
         self.controls[name] = checkbox
         return checkbox
 
@@ -581,9 +575,8 @@ class EditorWidget(QWidget):
         spin_box = SpinBoxControl(self.communicate, name, float(
             default), float(min_), float(max_))
         self.controls_widget.add_controls(spin_box)
-        if not self.from_project:
-            self.communicate.add_value_tracker.emit(
-                name, spin_box.value_tracker)
+        self.communicate.add_value_tracker.emit(
+            name, spin_box.value_tracker)
         self.controls[name] = spin_box
         return spin_box
 
@@ -613,9 +606,8 @@ class EditorWidget(QWidget):
             return
         file_selector = FileControl(self.communicate, name)
         self.controls_widget.add_controls(file_selector)
-        if not self.from_project:
-            self.communicate.add_value_tracker.emit(
-                name, file_selector.value_tracker)
+        self.communicate.add_value_tracker.emit(
+            name, file_selector.value_tracker)
         self.controls[name] = file_selector
         return file_selector
 
@@ -673,9 +665,8 @@ class EditorWidget(QWidget):
         position_control = PositionControl(
             self.communicate, name, np.array([float(x), float(y), float(z)]))
         self.controls_widget.add_controls(position_control)
-        if not self.from_project:
-            self.communicate.add_value_tracker.emit(
-                name, position_control.value_tracker)
+        self.communicate.add_value_tracker.emit(
+            name, position_control.value_tracker)
         self.controls[name] = position_control
         return position_control
 

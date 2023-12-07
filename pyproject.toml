@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manim-studio"
-version = "0.6.2.post0"
+version = "0.6.2.post1"
 description = "A GUI to easier make Manim animations"
 authors = ["MathLike"]
 readme = "README.md"
