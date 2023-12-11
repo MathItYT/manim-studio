@@ -1,4 +1,5 @@
 from typing import Callable
+from types import ModuleType
 from manim import *
 from PyQt6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton
 from .communicate import Communicate
@@ -11,11 +12,20 @@ from manim_studio.value_trackers.float_value_tracker import FloatValueTracker
 from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 from manim_studio.value_trackers.list_value_tracker import ListValueTracker
 from manim_studio.value_trackers.dot_tracker import DotTracker
+from manim_studio.control_mobjects.manim_slider import ManimSlider
 import time
 
 
 class LiveScene(Scene):
-    def __init__(self, communicate: Communicate, mro_without_live_scene: list[type[Scene]], project: str = "", **kwargs):
+    def __init__(
+        self,
+        communicate: Communicate,
+        mro_without_live_scene: list[type[Scene]],
+        project: str = "",
+        module: ModuleType | None = None,
+        consider_manim_studio_time: bool = False,
+        **kwargs
+    ):
         self.__communicate = communicate
         super().__init__(**kwargs)
         self.__states = {}
@@ -23,9 +33,11 @@ class LiveScene(Scene):
         self.__finished = False
         self.__current_queue = []
         self.__starting = True
+        self.__consider_manim_studio_time = consider_manim_studio_time
         self.__mro_without_live_scene = list(
             map(lambda x: x.__name__, mro_without_live_scene))
         self.__value_trackers = {}
+        globals().update(module.__dict__)
         globals()["self"] = self
         del globals()["console"]
         del globals()["error_console"]
@@ -219,6 +231,7 @@ from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 from manim_studio.value_trackers.dot_tracker import DotTracker
 from manim_studio.value_trackers.list_value_tracker import ListValueTracker
 from manim_studio.load_mobject import load_mobject
+from manim_studio.control_mobjects.manim_slider import ManimSlider
 from typing import Callable
 import time
 
@@ -238,8 +251,17 @@ class Result({}):
         if self.__project:
             self.__communicate.load_project.emit(self.__project)
         while not self.__finished:
+            if self.__consider_manim_studio_time:
+                self.__current_animation_start_time = self.renderer.time
             while not self.__current_queue:
                 self.wait_until(lambda: bool(self.__current_queue))
+            if self.__consider_manim_studio_time:
+                frames_passed = self.renderer.time - \
+                    self.__current_animation_start_time
+                frames_passed = round(
+                    frames_passed * self.camera.frame_rate)
+                self.__codes[self.__current_state].append(
+                    f"self.wait({frames_passed} / self.camera.frame_rate)")
             self.__run_current_code()
 
     def __update_scene(self, code: str) -> None:
@@ -269,6 +291,7 @@ class Result({}):
                     f"{e.__class__.__name__}: {e}")
                 self.__restore_state("temp")
             else:
+
                 self.__save_code(code, self.__current_state)
             finally:
                 self.__remove_state("temp")

@@ -19,3 +19,6 @@ class Communicate(QObject):
     load_mobject = pyqtSignal()
     save_project = pyqtSignal()
     load_project = pyqtSignal(str)
+    enable_interact = pyqtSignal(bool)
+    add_to_interactive_mobjects = pyqtSignal(str)
+    remove_from_interactive_mobjects = pyqtSignal(str)

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manim-studio"
-version = "0.6.2.post1"
+version = "0.6.3"
 description = "A GUI to easier make Manim animations"
 authors = ["MathLike"]
 readme = "README.md"
@@ -13,14 +13,12 @@ documentation = "https://mathityt.github.io/manim-studio/"
 "Bug Tracker" = "https://github.com/MathItYT/manim-studio/issues"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.13"
-manim = ">=0.18.0"
+python = ">=3.9,<3.13"
+manim = { git = "https://github.com/ManimCommunity/manim" }
 PyQt6 = ">=6.6.0"
 PyQt6-QScintilla = ">=2.14.1"
 dill = ">=0.3.7"
-pyngrok = ">=7.0.1"
 setuptools = ">=68.2.2"
-openai = {version = ">=1.3.3", optional = true}
 
 [tool.poetry.dev-dependencies]
 furo = ">=2023.9.10"
@@ -28,9 +26,6 @@ sphinxcontrib-video = ">=0.2.0"
 
 [tool.poetry.scripts]
 manim-studio = "manim_studio.__main__:main"
-
-[tool.poetry.extras]
-ai = ["openai"]
 
 [tool.poetry.plugins."manim.plugins"]
 "manim_studio" = "manim_studio"

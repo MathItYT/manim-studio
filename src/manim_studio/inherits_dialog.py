@@ -19,13 +19,14 @@ class PythonicValidator(QValidator):
 
 
 class InheritsDialog(QDialog):
-    def __init__(self, module, project_path: str):
+    def __init__(self, module, project_path: str, consider_manim_studio_time: bool):
         super().__init__()
         self.setWindowTitle("Choose your kinds of scenes")
         self.setLayout(QVBoxLayout())
         self.setModal(True)
         self.module = module or manim
         self.project_path = project_path
+        self.consider_manim_studio_time = consider_manim_studio_time
         self.initUI()
 
     def initUI(self):
@@ -85,4 +86,4 @@ class InheritsDialog(QDialog):
         mro = right_mro.copy()
         mro_without_live_scene = [scene_type for scene_type in mro if not issubclass(
             scene_type, LiveScene)] or [Scene]
-        return type(self.scene_name.text(), tuple(mro), {"communicate": communicate})(communicate=communicate, mro_without_live_scene=mro_without_live_scene)
+        return type(self.scene_name.text(), tuple(mro), {"communicate": communicate})(communicate=communicate, mro_without_live_scene=mro_without_live_scene, module=self.module, consider_manim_studio_time=self.consider_manim_studio_time)

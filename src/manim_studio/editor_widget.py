@@ -10,10 +10,11 @@ from PyQt6.QtWidgets import (
     QLabel,
     QLineEdit,
     QComboBox,
-    QCheckBox,
-    QTextEdit
+    QTextEdit,
+    QCheckBox
 )
-from PyQt6.QtGui import QIntValidator, QDoubleValidator
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIntValidator, QDoubleValidator, QKeyEvent
 from manim_studio.controls.slider_control import SliderControl
 from manim_studio.controls.text_control import TextControl
 from manim_studio.controls.line_control import LineControl
@@ -31,10 +32,75 @@ from manim_studio.animation_picker import AnimationPicker
 import numpy as np
 import time
 import dill as pickle
+from manim import Mobject
+
+
+class InteractiveMobjectsControl(QWidget):
+    def __init__(self, communicate: Communicate, editor_widget: QWidget):
+        super().__init__()
+        self.communicate = communicate
+        self.editor_widget = editor_widget
+        self.init_ui()
+
+    def init_ui(self):
+        self.interactive_mobjects = []
+        self.setLayout(QVBoxLayout(self))
+        self.label = QLabel(
+            "Select a mobject to make it interactive (or disable interactivity):")
+        self.layout().addWidget(self.label)
+        self.dropdown = QComboBox()
+        self.layout().addWidget(self.dropdown)
+        self.dropdown.addItems(
+            [mob for mob in dir(self.editor_widget.scene) if isinstance(getattr(self.editor_widget.scene, mob), Mobject)])
+        self.refresh_button = QPushButton("Refresh Mobject list")
+        self.layout().addWidget(self.refresh_button)
+        self.refresh_button.clicked.connect(self.refresh)
+        self.add_to_interactive_mobjects_button = QPushButton(
+            "Add to interactive mobjects")
+        self.layout().addWidget(self.add_to_interactive_mobjects_button)
+        self.add_to_interactive_mobjects_button.clicked.connect(
+            self.add_to_interactive_mobjects)
+        self.remove_from_interactive_mobjects_button = QPushButton(
+            "Remove from interactive mobjects")
+        self.layout().addWidget(self.remove_from_interactive_mobjects_button)
+        self.remove_from_interactive_mobjects_button.clicked.connect(
+            self.remove_from_interactive_mobjects)
+        self.current_interactive_mobjects_label = QLabel(
+            "Current interactive mobjects:")
+        self.layout().addWidget(self.current_interactive_mobjects_label)
+
+    def refresh(self):
+        self.dropdown.clear()
+        self.dropdown.addItems(
+            [mob for mob in dir(self.editor_widget.scene) if isinstance(getattr(self.editor_widget.scene, mob), Mobject)])
+
+    def add_to_interactive_mobjects(self):
+        self.communicate.add_to_interactive_mobjects.emit(
+            self.dropdown.currentText())
+        if self.dropdown.currentText() not in self.interactive_mobjects:
+            self.interactive_mobjects.append(self.dropdown.currentText())
+        self.current_interactive_mobjects_label.setText(
+            "Current interactive mobjects:\n" + "\n".join(self.interactive_mobjects))
+
+    def remove_from_interactive_mobjects(self):
+        self.communicate.remove_from_interactive_mobjects.emit(
+            self.dropdown.currentText())
+        if self.dropdown.currentText() in self.interactive_mobjects:
+            self.interactive_mobjects.remove(self.dropdown.currentText())
+        self.current_interactive_mobjects_label.setText(
+            "Current interactive mobjects:\n" +
+            "\n".join(self.interactive_mobjects)
+            if self.interactive_mobjects else "Current interactive mobjects:")
 
 
 class EditorWidget(QWidget):
-    def __init__(self, communicate: Communicate, controls_widget: ControlsWidget, scene: LiveScene, from_project: str):
+    def __init__(
+        self,
+        communicate: Communicate,
+        controls_widget: ControlsWidget,
+        scene: LiveScene,
+        from_project: str
+    ):
         super().__init__()
         self.setWindowTitle("Manim Studio Editor")
         self.controls_widget = controls_widget
@@ -56,7 +122,8 @@ class EditorWidget(QWidget):
             self.scene, f"_LiveScene__file_name")
         if not file_name:
             return
-        controls = [control.to_dict() for control in self.controls.values()]
+        controls = [control.to_dict() for control in self.controls.values(
+        ) if not isinstance(control, InteractiveMobjectsControl)]
         with open(file_name + "_controls.pkl", "wb") as f:
             pickle.dump(controls, f)
 
@@ -177,6 +244,18 @@ class EditorWidget(QWidget):
         self.show_animation_picker_button.clicked.connect(
             self.animation_picker.show)
         self.layout().addWidget(self.show_animation_picker_button)
+        self.interactive_preview_window_checkbox = QCheckBox(
+            "Enable Interactive Preview Window")
+        self.interactive_preview_window_checkbox.setChecked(False)
+        self.interactive_preview_window_checkbox.stateChanged.connect(
+            lambda: self.interact(self.interactive_preview_window_checkbox.isChecked()))
+        self.layout().addWidget(self.interactive_preview_window_checkbox)
+
+    def interact(self, enable: bool):
+        self.communicate.enable_interact.emit(enable)
+        if self.controls.get("interactive_mobject_dropdown") is None:
+            self.add_custom_control_command("interactive_mobject_dropdown", InteractiveMobjectsControl(
+                self.communicate, self))
 
     def init_status_bar(self):
         self.status_bar = QStatusBar()
@@ -327,6 +406,14 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "A control with the same name already exists.")
             return
+        if name == "interactive_mobject_dropdown":
+            self.communicate.print_gui.emit(
+                "Cannot add a slider with the name 'interactive_mobject_dropdown'. It's reserved for internal use.")
+            return
+        if name == "mouse":
+            self.communicate.print_gui.emit(
+                "Cannot add a slider with the name 'mouse'. It's reserved for internal use.")
+            return
         slider = SliderControl(
             self.communicate, name, (int(min_), int(max_)), int(step), int(default))
         self.controls_widget.add_controls(slider)
@@ -359,6 +446,14 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "A control with the same name already exists.")
             return
+        if name == "interactive_mobject_dropdown":
+            self.communicate.print_gui.emit(
+                "Cannot add a text box with the name 'interactive_mobject_dropdown'. It's reserved for internal use.")
+            return
+        if name == "mouse":
+            self.communicate.print_gui.emit(
+                "Cannot add a text box with the name 'mouse'. It's reserved for internal use.")
+            return
         text_box = TextControl(self.communicate, name)
         self.controls_widget.add_controls(text_box)
         self.communicate.add_value_tracker.emit(
@@ -390,6 +485,14 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "A control with the same name already exists.")
             return
+        if name == "interactive_mobject_dropdown":
+            self.communicate.print_gui.emit(
+                "Cannot add a line box with the name 'interactive_mobject_dropdown'. It's reserved for internal use.")
+            return
+        if name == "mouse":
+            self.communicate.print_gui.emit(
+                "Cannot add a line box with the name 'mouse'. It's reserved for internal use.")
+            return
         line_box = LineControl(self.communicate, name)
         self.controls_widget.add_controls(line_box)
         self.communicate.add_value_tracker.emit(
@@ -420,6 +523,14 @@ class EditorWidget(QWidget):
         if name in self.controls:
             self.communicate.print_gui.emit(
                 "A control with the same name already exists.")
+            return
+        if name == "interactive_mobject_dropdown":
+            self.communicate.print_gui.emit(
+                "Cannot add a color picker with the name 'interactive_mobject_dropdown'. It's reserved for internal use.")
+            return
+        if name == "mouse":
+            self.communicate.print_gui.emit(
+                "Cannot add a color picker with the name 'mouse'. It's reserved for internal use.")
             return
         color_picker = ColorControl(self.communicate, name)
         self.controls_widget.add_controls(color_picker)
@@ -473,6 +584,14 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "A control with the same name already exists.")
             return
+        if name == "interactive_mobject_dropdown":
+            self.communicate.print_gui.emit(
+                "Cannot add a dropdown with the name 'interactive_mobject_dropdown'. It's reserved for internal use.")
+            return
+        if name == "mouse":
+            self.communicate.print_gui.emit(
+                "Cannot add a dropdown with the name 'mouse'. It's reserved for internal use.")
+            return
         dropdown = DropdownControl(self.communicate, name, options)
         self.controls_widget.add_controls(dropdown)
         self.communicate.add_value_tracker.emit(
@@ -509,6 +628,14 @@ class EditorWidget(QWidget):
         if name in self.controls:
             self.communicate.print_gui.emit(
                 "A control with the same name already exists.")
+            return
+        if name == "interactive_mobject_dropdown":
+            self.communicate.print_gui.emit(
+                "Cannot add a checkbox with the name 'interactive_mobject_dropdown'. It's reserved for internal use.")
+            return
+        if name == "mouse":
+            self.communicate.print_gui.emit(
+                "Cannot add a checkbox with the name 'mouse'. It's reserved for internal use.")
             return
         checkbox = CheckboxControl(self.communicate, name, default)
         self.controls_widget.add_controls(checkbox)
@@ -564,6 +691,14 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "Please enter a default value for the spin box.")
             return
+        if name == "interactive_mobject_dropdown":
+            self.communicate.print_gui.emit(
+                "Cannot add a spin box with the name 'interactive_mobject_dropdown'. It's reserved for internal use.")
+            return
+        if name == "mouse":
+            self.communicate.print_gui.emit(
+                "Cannot add a spin box with the name 'mouse'. It's reserved for internal use.")
+            return
         if float(min_) > float(max_):
             self.communicate.print_gui.emit(
                 "The minimum value cannot be greater than the maximum value.")
@@ -603,6 +738,14 @@ class EditorWidget(QWidget):
         if name in self.controls:
             self.communicate.print_gui.emit(
                 "A control with the same name already exists.")
+            return
+        if name == "interactive_mobject_dropdown":
+            self.communicate.print_gui.emit(
+                "Cannot add a file selector with the name 'interactive_mobject_dropdown'. It's reserved for internal use.")
+            return
+        if name == "mouse":
+            self.communicate.print_gui.emit(
+                "Cannot add a file selector with the name 'mouse'. It's reserved for internal use.")
             return
         file_selector = FileControl(self.communicate, name)
         self.controls_widget.add_controls(file_selector)
@@ -662,6 +805,14 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "A control with the same name already exists.")
             return
+        if name == "mouse":
+            self.communicate.print_gui.emit(
+                "Cannot add a position control with the name 'mouse'. It's reserved for internal use.")
+            return
+        if name == "interactive_mobject_dropdown":
+            self.communicate.print_gui.emit(
+                "Cannot add a position control with the name 'interactive_mobject_dropdown'. It's reserved for internal use.")
+            return
         position_control = PositionControl(
             self.communicate, name, np.array([float(x), float(y), float(z)]))
         self.controls_widget.add_controls(position_control)
@@ -682,14 +833,17 @@ class EditorWidget(QWidget):
         dialog.layout().addWidget(callback_label)
         callback_edit = CodeEdit()
         dialog.layout().addWidget(callback_edit)
+        set_shortcut_line = QLineEdit()
+        set_shortcut_line.setPlaceholderText("Set shortcut")
+        dialog.layout().addWidget(set_shortcut_line)
         ok_button = QPushButton("OK")
         dialog.layout().addWidget(ok_button)
         ok_button.clicked.connect(
-            lambda: self.add_button_command(name_edit.text(), callback_edit.toPlainText()))
+            lambda: self.add_button_command(name_edit.text(), callback_edit.toPlainText(), set_shortcut_line.text()))
         ok_button.clicked.connect(dialog.close)
         dialog.exec()
 
-    def add_button_command(self, name: str, callback: str):
+    def add_button_command(self, name: str, callback: str, shortcut: str = ""):
         if name == "":
             self.communicate.print_gui.emit(
                 "Please enter a name for the button.")
@@ -698,7 +852,17 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "A control with the same name already exists.")
             return
+        if name == "interactive_mobject_dropdown":
+            self.communicate.print_gui.emit(
+                "Cannot add a button with the name 'interactive_mobject_dropdown'. It's reserved for internal use.")
+            return
+        if name == "mouse":
+            self.communicate.print_gui.emit(
+                "Cannot add a button with the name 'mouse'. It's reserved for internal use.")
+            return
         button = Button(self.communicate, name, callback)
+        if shortcut:
+            button.setShortcut(shortcut)
         self.controls_widget.add_controls(button)
         self.controls[name] = button
         return button

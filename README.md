@@ -26,25 +26,7 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
 `pip` installs all the requirements automatically, but you must have installed Python 3.
 
 ## Steps to use
-1. If you're installing with `git`, clone the repository with
-   
-   ```
-   git clone https://github.com/MathItYT/manim-studio.git
-   cd manim-studio
-   pip install -e .
-   ```
-   
-   If you're installing with `pip`, install the package with
-   
-   ```pip install manim-studio```
-
-   Additionally, you can install an extra to create AI-powered animations with
-   
-   ```pip install manim-studio[ai]```
-
-   It has direct integration with OpenAI API, so you must have an API key to use it.
-
-2. Use the program! The documentation is available [here](https://mathityt.github.io/manim-studio/).
+   The documentation is available [here](https://mathityt.github.io/manim-studio/), so there you can learn how to use Manim Studio.
 
    **Warning:** The documentation is a work in progress, so it may not be complete. ⚠️
 

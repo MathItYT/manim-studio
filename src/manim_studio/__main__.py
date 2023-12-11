@@ -1,4 +1,3 @@
-from manim_studio.live_scene import LiveScene
 from manim_studio.communicate import Communicate
 from manim_studio.editor_widget import EditorWidget
 from manim_studio.preview_widget import PreviewWidget
@@ -29,6 +28,8 @@ def main():
                         action="store_true", default=False)
     parser.add_argument("--file_name", "-f", type=str, default="none")
     parser.add_argument("--from_project", "-p", type=str, default="")
+    parser.add_argument("--consider_manim_studio_time", "-c",
+                        action="store_true", default=False)
     parser.add_argument("--resolution", "-r", type=str, default="1920x1080")
     args = parser.parse_args()
     if args.file_name != "none":
@@ -49,7 +50,8 @@ def main():
     app = QApplication([])
     size = app.primaryScreen().size()
     size = (size.width(), size.height())
-    inherits_dialog = InheritsDialog(module, args.from_project)
+    inherits_dialog = InheritsDialog(
+        module, args.from_project, args.consider_manim_studio_time)
     inherits_dialog.exec()
     communicate = Communicate()
     controls_widget = ControlsWidget()

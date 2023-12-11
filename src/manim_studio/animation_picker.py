@@ -40,14 +40,22 @@ class AnimationWidget(QGroupBox):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.animation_label = QLabel()
         self.animation_label.setFixedSize(int(16 / 9 * 200), 200)
+        self.animation_label.setStyleSheet("background-color: black;")
         self.animation_label.setMovie(
             QMovie(get_animation_path(self.animation_name)))
         self.animation_label.movie().setScaledSize(
             self.animation_label.size())
-        self.animation_label.movie().start()
         self.layout().addWidget(self.animation_label)
         self.name_label = QLabel(self.animation_name)
         self.layout().addWidget(self.name_label)
+        self.preview_button = QPushButton("Preview")
+        self.preview_button.clicked.connect(
+            self.animation_label.movie().start)
+        self.layout().addWidget(self.preview_button)
+        self.stop_button = QPushButton("Stop Preview")
+        self.stop_button.clicked.connect(
+            self.animation_label.movie().stop)
+        self.layout().addWidget(self.stop_button)
         self.animation_label.mouseDoubleClickEvent = self.play_animation
 
     def play_animation(self, event):
