@@ -308,11 +308,11 @@ self.remove(getattr(self, {name.__repr__()}))
                 f"Control with name {name}_remove_from_scene already exists")
             return
         self.editor.communicate.update_scene.emit(
-            f"setattr(self, {name.__repr__()}, MathTex({f"\\text{{{name}}}".__repr__()}))")
+            f"setattr(self, {name.__repr__()}, MathTex({"\\ln x=\\int_1^x{dt\\over t}".__repr__()}))")
         self.editor.communicate.print_gui.emit(
             f"Added MathTex with name {name}.\nTo see on screen, press 'Add to Scene' button.\nTo remove, press 'Remove from Scene' button.")
         text_box = self.editor.add_text_box_command(f"{name}_edit")
-        text_box.text_edit.setText(f"\\text{{{name}}}")
+        text_box.text_edit.setText("\\ln x=\\int_1^x{dt\\over t}")
         self.editor.add_button_command(f"{name}_update", f"""
 try:
     getattr(self, {name.__repr__()}).become(
@@ -353,11 +353,11 @@ self.remove(getattr(self, {name.__repr__()}))
                 f"Control with name {name}_remove_from_scene already exists")
             return
         self.editor.communicate.update_scene.emit(
-            f"setattr(self, {name.__repr__()}, Tex({f"\\text{{{name}}}".__repr__()}))")
+            f"setattr(self, {name.__repr__()}, Tex({"\\LaTeX".__repr__()}))")
         self.editor.communicate.print_gui.emit(
             f"Added Tex with name {name}.\nTo see on screen, press 'Add to Scene' button.\nTo remove, press 'Remove from Scene' button.")
         text_box = self.editor.add_text_box_command(f"{name}_edit")
-        text_box.text_edit.setText(f"\\text{{{name}}}")
+        text_box.text_edit.setText(f"\\LaTeX")
         self.editor.add_button_command(f"{name}_update", f"""
 try:
     getattr(self, {name.__repr__()}).become(

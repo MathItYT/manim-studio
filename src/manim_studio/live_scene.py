@@ -230,7 +230,6 @@ from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 from manim_studio.value_trackers.dot_tracker import DotTracker
 from manim_studio.value_trackers.list_value_tracker import ListValueTracker
 from manim_studio.load_mobject import load_mobject
-from manim_studio.control_mobjects.manim_slider import ManimSlider
 from typing import Callable
 import time
 
