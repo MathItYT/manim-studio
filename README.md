@@ -30,10 +30,6 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
 
    **Warning:** The documentation is a work in progress, so it may not be complete. ⚠️
 
-
-## Manim Studio Client
-We removed the Manim Studio Client as an standalone application because anti-virus programs detected it as a virus. You can still use it by installing Manim Studio with `pip` and running `manim-studio -C` in the command line.
-
 ## Contributing
 If you want to contribute to Manim Studio, you can do it by forking the repository and making a pull request. You can also contribute by reporting bugs or suggesting new features.
 
