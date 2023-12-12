@@ -23,7 +23,7 @@ Manim Studio is a Manim plugin to live-preview animations rendered with Cairo, a
 - Installed Git.
 
 ### Install with `pip`
-`pip` installs all the requirements automatically, but you must have installed Python 3.
+`pip` installs all the requirements automatically, but you must have Python 3 installed.
 
 ## Steps to use
    The documentation is available [here](https://mathityt.github.io/manim-studio/), so there you can learn how to use Manim Studio.
