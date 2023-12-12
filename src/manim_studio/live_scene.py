@@ -404,12 +404,10 @@ class Result({}):
             with open(file_name, "w") as f:
                 f.write(self.__get_code(self.__current_state))
             self.__communicate.show_in_status_bar.emit(
-                f"The code of the state {
-                    self.__current_state} was saved successfully."
+                f"The code of the state {self.__current_state} was saved successfully."
             )
             self.__communicate.print_gui.emit(
-                f"The code of the state {
-                    self.__current_state} was saved successfully."
+                f"The code of the state {self.__current_state} was saved successfully."
             )
         else:
             self.__communicate.show_in_status_bar.emit(

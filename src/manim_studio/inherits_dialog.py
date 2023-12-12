@@ -31,8 +31,7 @@ class InheritsDialog(QDialog):
 
     def initUI(self):
         if self.project_path:
-            label = QLabel(f"You are loading from a project file in {
-                           self.project_path}")
+            label = QLabel(f"You are loading from a project file in {self.project_path}")
             self.layout().addWidget(label)
             self.ok_button = QPushButton("OK")
             self.ok_button.clicked.connect(self.accept)

@@ -68,8 +68,7 @@ class PreviewWidget(QWidget):
         for name, mobject in self.interactive_mobjects.items():
             center, width, height = mobject.get_center(), mobject.width, mobject.height
             if center[0] - width / 2 <= x <= center[0] + width / 2 and center[1] - height / 2 <= y <= center[1] + height / 2:
-                self.communicate.update_scene.emit(f"getattr(self, {name.__repr__(
-                )}).move_to(self.mouse.get_center())")
+                self.communicate.update_scene.emit(f"getattr(self, {name.__repr__()}).move_to(self.mouse.get_center())")
                 break
 
     def init_ui(self):
