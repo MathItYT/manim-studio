@@ -31,7 +31,6 @@ def main():
     parser.add_argument("--consider_manim_studio_time", "-c",
                         action="store_true", default=False)
     parser.add_argument("--resolution", "-r", type=str, default="1920x1080")
-    parser.add_argument("--no-ribbon", "-n", action="store_true", default=False)
     args = parser.parse_args()
     if args.file_name != "none":
         module = import_from_file(args.file_name)
@@ -62,7 +61,7 @@ def main():
     editor_widget = EditorWidget(
         communicate, controls_widget, scene, args.from_project)
     render_thread = RenderThread(scene)
-    preview_widget = PreviewWidget(communicate, size, render_thread, args.no_ribbon)
+    preview_widget = PreviewWidget(communicate, size, render_thread)
     preview_widget.show()
     editor_widget.show()
     controls_widget.show()
