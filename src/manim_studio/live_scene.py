@@ -90,7 +90,6 @@ from manim_studio.value_trackers.list_value_tracker import ListValueTracker
 from manim_studio.load_mobject import load_mobject
 from typing import Callable
 import time
-import dill
 
 
 class Result({}):
@@ -146,14 +145,14 @@ class Result({}):
                 exec(code, self.__current_globals)
             except EndSceneEarlyException:
                 self.__finished = True
+                self.__current_queue.clear()
             except Exception as e:
                 self.__communicate.print_gui.emit(
                     f"{e.__class__.__name__}: {e}")
-                self.__communicate.undo_state.emit()
                 self.__current_queue.clear()
-                self.__codes.pop(-1)
+                self.__communicate.undo_state.emit(True)
             else:
-                self.__current_globals = globals().copy()
+                self.__communicate.update_state.emit()
 
     def __save_mobject(self) -> None:
         """

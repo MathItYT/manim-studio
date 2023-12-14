@@ -36,8 +36,9 @@ from manim import Mobject
 
 
 class LiveSceneState:
-    def __init__(self, dict_: dict):
+    def __init__(self, dict_: dict, codes: list[str]):
         self.scene_dict = dict_
+        self.codes = codes
 
 
 class InteractiveMobjectsControl(QWidget):
@@ -111,6 +112,7 @@ class EditorWidget(QWidget):
         self.communicate.save_state.connect(self.save_state)
         self.communicate.undo_state.connect(self.undo_state)
         self.communicate.redo_state.connect(self.redo_state)
+        self.communicate.update_state.connect(self.update_state)
         self.scene = scene
         self.states = []
         self.states_to_redo = []
@@ -121,23 +123,31 @@ class EditorWidget(QWidget):
         self.init_ui()
     
     def save_state(self):
-        self.states.append(LiveSceneState(self.scene.__dict__.copy()))
-        self.states_to_redo = []
+        self.states.append(LiveSceneState(self.scene.__dict__.copy(), self.scene._LiveScene__codes.copy()))
+        self.states_to_redo.clear()
     
-    def undo_state(self):
-        if len(self.states) == 1:
+    def undo_state(self, error: bool):
+        if len(self.states) <= 1:
             self.print_gui("There's nothing to undo.")
             return
-        self.states_to_redo.append(self.states.pop())
+        state = self.states.pop()
+        if not error:
+            self.states_to_redo.append(state)
         self.scene.__dict__ = self.states[-1].scene_dict
+        self.scene._LiveScene__codes = self.states[-1].codes
         self.scene._LiveScene__update_scene("", append=False)
+    
+    def update_state(self):
+        self.states[-1].scene_dict = self.scene.__dict__.copy()
+        self.states[-1].codes = self.scene._LiveScene__codes.copy()
     
     def redo_state(self):
         if not self.states_to_redo:
             self.print_gui("There's nothing to redo.")
             return
-        self.states.append(self.states_to_redo.pop(0))
+        self.states.append(self.states_to_redo.pop())
         self.scene.__dict__ = self.states[-1].scene_dict
+        self.scene._LiveScene__codes = self.states[-1].codes
         self.scene._LiveScene__update_scene("", append=False)
 
     def save_controls(self):
@@ -182,7 +192,7 @@ class EditorWidget(QWidget):
         self.edit_menu = self.menu_bar.addMenu("Edit")
         self.undo_action = self.edit_menu.addAction("Undo")
         self.undo_action.setShortcut("Ctrl+Z")
-        self.undo_action.triggered.connect(self.communicate.undo_state.emit)
+        self.undo_action.triggered.connect(lambda: self.communicate.undo_state.emit(False))
         self.redo_action = self.edit_menu.addAction("Redo")
         self.redo_action.setShortcut("Ctrl+Y")
         self.redo_action.triggered.connect(self.communicate.redo_state.emit)
