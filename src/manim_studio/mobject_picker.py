@@ -317,8 +317,8 @@ self.remove(getattr(self, {name.__repr__()}))
 try:
     getattr(self, {name.__repr__()}).become(
         MathTex(getattr(self, {f"{name}_edit".__repr__()}).get_value()))
-except ValueError:
-    pass
+except ValueError as e:
+    raise e
 """.strip())
         self.editor.add_button_command(f"{name}_add_to_scene", f"""
 self.add(getattr(self, {name.__repr__()}))

@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QCheckBox, QLineEdit, QPushButton, QMessageBox
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QCheckBox, QLineEdit, QPushButton, QMessageBox, QTextEdit
 import inspect
 from PyQt6.QtGui import QValidator
 from manim import *
@@ -19,24 +19,17 @@ class PythonicValidator(QValidator):
 
 
 class InheritsDialog(QDialog):
-    def __init__(self, module, project_path: str, consider_manim_studio_time: bool):
+    def __init__(self, module, consider_manim_studio_time: bool, include_secrets: bool):
         super().__init__()
         self.setWindowTitle("Choose your kinds of scenes")
         self.setLayout(QVBoxLayout())
         self.setModal(True)
         self.module = module or manim
-        self.project_path = project_path
         self.consider_manim_studio_time = consider_manim_studio_time
+        self.include_secrets = include_secrets
         self.initUI()
 
     def initUI(self):
-        if self.project_path:
-            label = QLabel(f"You are loading from a project file in {self.project_path}")
-            self.layout().addWidget(label)
-            self.ok_button = QPushButton("OK")
-            self.ok_button.clicked.connect(self.accept)
-            self.layout().addWidget(self.ok_button)
-            return
         welcome_label = QLabel("Welcome to Manim Studio!")
         self.layout().addWidget(welcome_label)
         self.scene_types = [scene_type for _, scene_type in inspect.getmembers(
@@ -56,17 +49,21 @@ class InheritsDialog(QDialog):
         self.layout().addWidget(self.scene_name)
         self.layout().addWidget(self.ok_button)
         self.scene_name.setValidator(PythonicValidator())
+        if self.include_secrets:
+            self.layout().addWidget(QLabel("Put all your secrets as 'key=value' pairs in the text box below, separated by newlines."))
+            self.secrets_text_box = QTextEdit()
+            self.layout().addWidget(self.secrets_text_box)
 
-    def get_scene(self, communicate: Communicate):
+    def get_scene(self, communicate: Communicate, sandbox: bool = False):
         if self.result() != QDialog.DialogCode.Accepted:
             return None
-        if self.project_path:
-            with open(self.project_path) as f:
-                codes = f.read().split("\n---\n")
-            bases = codes[0].split(",")
-            bases = [eval(base) for base in bases]
-            class_name = codes[1]
-            return type(class_name, tuple(bases), {"communicate": communicate})(communicate=communicate, mro_without_live_scene=bases, project=self.project_path)
+        secrets = {}
+        if self.include_secrets:
+            for line in self.secrets_text_box.toPlainText().split("\n"):
+                if not line:
+                    continue
+                key, value = line.split("=")
+                secrets[key] = value
         if not self.scene_name.text():
             QMessageBox.critical(
                 self, "Error", "You must choose a name for your scene")
@@ -85,4 +82,4 @@ class InheritsDialog(QDialog):
         mro = right_mro.copy()
         mro_without_live_scene = [scene_type for scene_type in mro if not issubclass(
             scene_type, LiveScene)] or [Scene]
-        return type(self.scene_name.text(), tuple(mro), {"communicate": communicate})(communicate=communicate, mro_without_live_scene=mro_without_live_scene, module=self.module, consider_manim_studio_time=self.consider_manim_studio_time)
+        return type(self.scene_name.text(), tuple(mro), {"communicate": communicate})(communicate=communicate, mro_without_live_scene=mro_without_live_scene, module=self.module, consider_manim_studio_time=self.consider_manim_studio_time, secrets=secrets)

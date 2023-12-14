@@ -27,16 +27,18 @@ def main():
     parser.add_argument("--write_to_movie", "-w",
                         action="store_true", default=False)
     parser.add_argument("--file_name", "-f", type=str, default="none")
-    parser.add_argument("--from_project", "-p", type=str, default="")
     parser.add_argument("--consider_manim_studio_time", "-c",
                         action="store_true", default=False)
     parser.add_argument("--resolution", "-r", type=str, default="1920x1080")
+    parser.add_argument("--fps", "-fps", type=int, default=60)
+    parser.add_argument("--include_secrets", "-s", action="store_true", default=False)
     args = parser.parse_args()
     if args.file_name != "none":
         module = import_from_file(args.file_name)
     else:
         module = None
     config.write_to_movie = args.write_to_movie
+    config.frame_rate = args.fps
     config.disable_caching = True
     width, height = args.resolution.split("x")
     config.pixel_width, config.pixel_height = int(width), int(height)
@@ -51,7 +53,7 @@ def main():
     size = app.primaryScreen().size()
     size = (size.width(), size.height())
     inherits_dialog = InheritsDialog(
-        module, args.from_project, args.consider_manim_studio_time)
+        module, args.consider_manim_studio_time, args.include_secrets)
     inherits_dialog.exec()
     communicate = Communicate()
     controls_widget = ControlsWidget()
@@ -59,9 +61,10 @@ def main():
     if scene is None:
         return
     editor_widget = EditorWidget(
-        communicate, controls_widget, scene, args.from_project)
+        communicate, controls_widget, scene)
     render_thread = RenderThread(scene)
     preview_widget = PreviewWidget(communicate, size, render_thread)
+    render_thread.start()
     preview_widget.show()
     editor_widget.show()
     controls_widget.show()

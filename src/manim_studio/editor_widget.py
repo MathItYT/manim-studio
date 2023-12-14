@@ -35,6 +35,11 @@ import dill as pickle
 from manim import Mobject
 
 
+class LiveSceneState:
+    def __init__(self, dict_: dict):
+        self.scene_dict = dict_
+
+
 class InteractiveMobjectsControl(QWidget):
     def __init__(self, communicate: Communicate, editor_widget: QWidget):
         super().__init__()
@@ -98,22 +103,42 @@ class EditorWidget(QWidget):
         self,
         communicate: Communicate,
         controls_widget: ControlsWidget,
-        scene: LiveScene,
-        from_project: str
+        scene: LiveScene
     ):
         super().__init__()
+        self.communicate = communicate
+        self.communicate.print_gui.connect(self.print_gui)
+        self.communicate.save_state.connect(self.save_state)
+        self.communicate.undo_state.connect(self.undo_state)
+        self.communicate.redo_state.connect(self.redo_state)
+        self.scene = scene
+        self.states = []
+        self.states_to_redo = []
         self.setWindowTitle("Manim Studio Editor")
         self.controls_widget = controls_widget
         self.setWindowTitle("Manim Studio")
-        self.communicate = communicate
-        self.scene = scene
-        self.communicate.print_gui.connect(self.print_gui)
-        self.states = ["first"]
         self.controls = {}
-        self.from_project = from_project
         self.init_ui()
-        self.communicate.save_project.connect(self.save_controls)
-        self.communicate.load_project.connect(self.load_controls)
+    
+    def save_state(self):
+        self.states.append(LiveSceneState(self.scene.__dict__.copy()))
+        self.states_to_redo = []
+    
+    def undo_state(self):
+        if len(self.states) == 1:
+            self.print_gui("There's nothing to undo.")
+            return
+        self.states_to_redo.append(self.states.pop())
+        self.scene.__dict__ = self.states[-1].scene_dict
+        self.scene._LiveScene__update_scene("", append=False)
+    
+    def redo_state(self):
+        if not self.states_to_redo:
+            self.print_gui("There's nothing to redo.")
+            return
+        self.states.append(self.states_to_redo.pop(0))
+        self.scene.__dict__ = self.states[-1].scene_dict
+        self.scene._LiveScene__update_scene("", append=False)
 
     def save_controls(self):
         while not hasattr(self.scene, f"_LiveScene__file_name"):
@@ -126,13 +151,6 @@ class EditorWidget(QWidget):
         ) if not isinstance(control, InteractiveMobjectsControl)]
         with open(file_name + "_controls.pkl", "wb") as f:
             pickle.dump(controls, f)
-
-    def load_controls(self):
-        with open(self.from_project + "_controls.pkl", "rb") as f:
-            controls = pickle.load(f)
-        for control in controls:
-            self.add_custom_control_command(control["name"], eval(control["class"]).from_dict(
-                self.communicate, control))
 
     def print_gui(self, text: str):
         dialog = QDialog(self)
@@ -157,15 +175,17 @@ class EditorWidget(QWidget):
         self.menu_bar = QMenuBar()
         self.layout().setMenuBar(self.menu_bar)
         self.file_menu = self.menu_bar.addMenu("File")
-        self.save_manim_studio_project_action = self.file_menu.addAction(
-            "Save Manim Studio Project")
-        self.save_manim_studio_project_action.setShortcut("Ctrl+S")
-        self.save_manim_studio_project_action.triggered.connect(
-            self.communicate.save_project.emit)
         self.save_to_python_action = self.file_menu.addAction(
             "Save to Python Manim File")
-        self.save_to_python_action.setShortcut("Ctrl+Shift+S")
+        self.save_to_python_action.setShortcut("Ctrl+S")
         self.save_to_python_action.triggered.connect(self.save_to_python)
+        self.edit_menu = self.menu_bar.addMenu("Edit")
+        self.undo_action = self.edit_menu.addAction("Undo")
+        self.undo_action.setShortcut("Ctrl+Z")
+        self.undo_action.triggered.connect(self.communicate.undo_state.emit)
+        self.redo_action = self.edit_menu.addAction("Redo")
+        self.redo_action.setShortcut("Ctrl+Y")
+        self.redo_action.triggered.connect(self.communicate.redo_state.emit)
         self.controls_menu = self.menu_bar.addMenu("Controls")
         self.add_slider_action = self.controls_menu.addAction("Add Slider")
         self.add_slider_action.triggered.connect(self.add_slider)
@@ -194,16 +214,6 @@ class EditorWidget(QWidget):
             self.add_position_control)
         self.add_button_action = self.controls_menu.addAction("Add Button")
         self.add_button_action.triggered.connect(self.add_button)
-        self.states_menu = self.menu_bar.addMenu("States")
-        self.save_state_action = self.states_menu.addAction("New State")
-        self.save_state_action.setShortcut("Ctrl+Shift+S")
-        self.save_state_action.triggered.connect(self.save_state)
-        self.restore_state_action = self.states_menu.addAction("Restore State")
-        self.restore_state_action.setShortcut("Ctrl+Shift+R")
-        self.restore_state_action.triggered.connect(self.restore_state)
-        self.remove_state_action = self.states_menu.addAction("Remove State")
-        self.remove_state_action.setShortcut("Ctrl+Shift+D")
-        self.remove_state_action.triggered.connect(self.remove_state)
 
     def init_basic_ui(self):
         self.setLayout(QVBoxLayout(self))
@@ -270,77 +280,6 @@ class EditorWidget(QWidget):
 
     def save_to_python(self):
         self.communicate.save_to_python.emit()
-
-    def save_state(self):
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Save State")
-        dialog.setLayout(QVBoxLayout(dialog))
-        label = QLabel("Enter the name of the state:")
-        dialog.layout().addWidget(label)
-        name_edit = QLineEdit()
-        dialog.layout().addWidget(name_edit)
-        ok_button = QPushButton("OK")
-        dialog.layout().addWidget(ok_button)
-        ok_button.clicked.connect(
-            lambda: self.save_state_command(name_edit.text()))
-        ok_button.clicked.connect(dialog.close)
-        dialog.exec()
-
-    def save_state_command(self, name: str):
-        if name == "temp":
-            self.communicate.print_gui.emit(
-                "Cannot save a state with the name 'temp'. It's reserved for internal use.")
-            return
-        self.communicate.save_state.emit(name)
-        self.states.append(name)
-
-    def restore_state(self):
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Restore State")
-        dialog.setLayout(QVBoxLayout(dialog))
-        label = QLabel("Enter the name of the state:")
-        dialog.layout().addWidget(label)
-        name_edit = QComboBox()
-        dialog.layout().addWidget(name_edit)
-        name_edit.addItems(self.states)
-        ok_button = QPushButton("OK")
-        dialog.layout().addWidget(ok_button)
-        ok_button.clicked.connect(
-            lambda: self.restore_state_command(name_edit.currentText()))
-        ok_button.clicked.connect(dialog.close)
-        dialog.exec()
-
-    def restore_state_command(self, name: str):
-        if name == "":
-            self.communicate.print_gui.emit(
-                "Please select a state to restore.")
-            return
-        self.communicate.restore_state.emit(name)
-
-    def remove_state(self):
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Remove State")
-        dialog.setLayout(QVBoxLayout(dialog))
-        label = QLabel("Enter the name of the state:")
-        dialog.layout().addWidget(label)
-        name_edit = QComboBox()
-        name_edit.addItems(
-            [state for state in self.states if state != "first"])
-        dialog.layout().addWidget(name_edit)
-        ok_button = QPushButton("OK")
-        dialog.layout().addWidget(ok_button)
-        ok_button.clicked.connect(
-            lambda: self.remove_state_command(name_edit.currentText()))
-        ok_button.clicked.connect(dialog.close)
-        dialog.exec()
-
-    def remove_state_command(self, name: str):
-        if name == "":
-            self.communicate.print_gui.emit(
-                "Please select a state to remove.")
-            return
-        self.communicate.remove_state.emit(name)
-        self.states.remove(name)
 
     def add_slider(self):
         dialog = QDialog(self)
@@ -419,6 +358,8 @@ class EditorWidget(QWidget):
         self.controls_widget.add_controls(slider)
         self.communicate.add_value_tracker.emit(
             name, slider.value_tracker)
+        self.communicate.undo_state.connect(lambda: self.communicate.add_value_tracker.emit(
+            name, slider.value_tracker) if not hasattr(self, name) else None)
         self.controls[name] = slider
         return slider
 
@@ -458,6 +399,8 @@ class EditorWidget(QWidget):
         self.controls_widget.add_controls(text_box)
         self.communicate.add_value_tracker.emit(
             name, text_box.value_tracker)
+        self.communicate.undo_state.connect(lambda: self.communicate.add_value_tracker.emit(
+            name, text_box.value_tracker) if not hasattr(self, name) else None)
         self.controls[name] = text_box
         return text_box
 
@@ -497,6 +440,8 @@ class EditorWidget(QWidget):
         self.controls_widget.add_controls(line_box)
         self.communicate.add_value_tracker.emit(
             name, line_box.value_tracker)
+        self.communicate.undo_state.connect(lambda: self.communicate.add_value_tracker.emit(
+            name, line_box.value_tracker) if not hasattr(self, name) else None)
         self.controls[name] = line_box
         return line_box
 
@@ -536,6 +481,8 @@ class EditorWidget(QWidget):
         self.controls_widget.add_controls(color_picker)
         self.communicate.add_value_tracker.emit(
             name, color_picker.value_tracker)
+        self.communicate.undo_state.connect(lambda: self.communicate.add_value_tracker.emit(
+            name, color_picker.value_tracker) if not hasattr(self, name) else None)
         self.controls[name] = color_picker
         return color_picker
 
@@ -598,6 +545,10 @@ class EditorWidget(QWidget):
             name, dropdown.value_tracker)
         self.communicate.add_value_tracker.emit(
             name + "_items", dropdown.list_value_tracker)
+        self.communicate.undo_state.connect(lambda: self.communicate.add_value_tracker.emit(
+            name, dropdown.value_tracker) if not hasattr(self, name) else None)
+        self.communicate.undo_state.connect(lambda: self.communicate.add_value_tracker.emit(
+            name + "_items", dropdown.list_value_tracker) if not hasattr(self, name + "_items") else None)
         self.controls[name] = dropdown
         return dropdown
 
@@ -641,6 +592,8 @@ class EditorWidget(QWidget):
         self.controls_widget.add_controls(checkbox)
         self.communicate.add_value_tracker.emit(
             name, checkbox.value_tracker)
+        self.communicate.undo_state.connect(lambda: self.communicate.add_value_tracker.emit(
+            name, checkbox.value_tracker) if not hasattr(self, name) else None)
         self.controls[name] = checkbox
         return checkbox
 
@@ -712,6 +665,8 @@ class EditorWidget(QWidget):
         self.controls_widget.add_controls(spin_box)
         self.communicate.add_value_tracker.emit(
             name, spin_box.value_tracker)
+        self.communicate.undo_state.connect(lambda: self.communicate.add_value_tracker.emit(
+            name, spin_box.value_tracker) if not hasattr(self, name) else None)
         self.controls[name] = spin_box
         return spin_box
 
@@ -751,6 +706,8 @@ class EditorWidget(QWidget):
         self.controls_widget.add_controls(file_selector)
         self.communicate.add_value_tracker.emit(
             name, file_selector.value_tracker)
+        self.communicate.undo_state.connect(lambda: self.communicate.add_value_tracker.emit(
+            name, file_selector.value_tracker) if not hasattr(self, name) else None)
         self.controls[name] = file_selector
         return file_selector
 
@@ -818,6 +775,8 @@ class EditorWidget(QWidget):
         self.controls_widget.add_controls(position_control)
         self.communicate.add_value_tracker.emit(
             name, position_control.value_tracker)
+        self.communicate.undo_state.connect(lambda: self.communicate.add_value_tracker.emit(
+            name, position_control.value_tracker) if not hasattr(self, name) else None)
         self.controls[name] = position_control
         return position_control
 
