@@ -197,8 +197,8 @@ class Result({}):
         print(text)
 """
         if not self.__codes or all(code.strip() == "" for code in self.__codes):
-            return CODE.format(str(config.frame_rate), str(config.frame_width), str(config.frame_height), str(config.pixel_width), str(config.pixel_height), str(config.background_color), ",".join(self.__mro_without_live_scene), self.__value_trackers_code, "pass")
-        return CODE.format(str(config.frame_rate), str(config.frame_width), str(config.frame_height), str(config.pixel_width), str(config.pixel_height), str(config.background_color), ','.join(self.__mro_without_live_scene), self.__value_trackers_code, "\n        ".join(line for lines in self.__codes for line in lines.split("\n")))
+            return CODE.format(str(config.frame_rate), str(config.frame_width), str(config.frame_height), str(config.pixel_width), str(config.pixel_height), str(config.background_color.to_hex()).__repr__(), ",".join(self.__mro_without_live_scene), self.__value_trackers_code, "pass")
+        return CODE.format(str(config.frame_rate), str(config.frame_width), str(config.frame_height), str(config.pixel_width), str(config.pixel_height), str(config.background_color.to_hex()).__repr__(), ','.join(self.__mro_without_live_scene), self.__value_trackers_code, "\n        ".join(line for lines in self.__codes for line in lines.split("\n")))
 
     def construct(self):
         self.wait(1 / self.camera.frame_rate)
