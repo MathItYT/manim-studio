@@ -174,6 +174,14 @@ from typing import Callable
 import time
 
 
+config.frame_rate = {}
+config.frame_width = {}
+config.frame_height = {}
+config.pixel_width = {}
+config.pixel_height = {}
+config.background_color = {}
+
+
 class Result({}):
     slideshow = None
     start_inmediately = False
@@ -182,12 +190,15 @@ class Result({}):
 {}
         {}
     
+    def wait(self, duration: float = 1.0, stop_condition: Callable[[], bool] | None = None, frozen_frame: bool | None = False):
+        super().wait(duration, stop_condition, frozen_frame)
+    
     def print_gui(self, text: str) -> None:
         print(text)
 """
         if not self.__codes or all(code.strip() == "" for code in self.__codes):
-            return CODE.format(",".join(self.__mro_without_live_scene), self.__value_trackers_code, "pass")
-        return CODE.format(','.join(self.__mro_without_live_scene), self.__value_trackers_code, "\n        ".join(line for lines in self.__codes for line in lines.split("\n")))
+            return CODE.format(str(config.frame_rate), str(config.frame_width), str(config.frame_height), str(config.pixel_width), str(config.pixel_height), str(config.background_color), ",".join(self.__mro_without_live_scene), self.__value_trackers_code, "pass")
+        return CODE.format(str(config.frame_rate), str(config.frame_width), str(config.frame_height), str(config.pixel_width), str(config.pixel_height), str(config.background_color), ','.join(self.__mro_without_live_scene), self.__value_trackers_code, "\n        ".join(line for lines in self.__codes for line in lines.split("\n")))
 
     def construct(self):
         self.wait(1 / self.camera.frame_rate)
