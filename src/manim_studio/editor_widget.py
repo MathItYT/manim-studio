@@ -205,6 +205,19 @@ class EditorWidget(QWidget):
         self.add_line_box_action.triggered.connect(self.add_line_box)
         self.add_color_picker_action = self.controls_menu.addAction(
             "Add Color Picker")
+        self.communicate.add_slider.connect(self.add_slider_command)
+        self.communicate.add_text_box.connect(self.add_text_box_command)
+        self.communicate.add_line_box.connect(self.add_line_box_command)
+        self.communicate.add_color_picker.connect(
+            self.add_color_picker_command)
+        self.communicate.add_dropdown.connect(self.add_dropdown_command)
+        self.communicate.add_checkbox.connect(self.add_checkbox_command)
+        self.communicate.add_spin_box.connect(self.add_spin_box_command)
+        self.communicate.add_file_selector.connect(
+            self.add_file_selector_command)
+        self.communicate.add_position_control.connect(
+            self.add_position_control_command)
+        self.communicate.add_button.connect(self.add_button_command)
         self.add_color_picker_action.triggered.connect(self.add_color_picker)
         self.add_dropdown_action = self.controls_menu.addAction(
             "Add Dropdown")
@@ -264,6 +277,16 @@ class EditorWidget(QWidget):
         self.show_animation_picker_button.clicked.connect(
             self.animation_picker.show)
         self.layout().addWidget(self.show_animation_picker_button)
+        self.next_slide_button = QPushButton("Next Slide")
+        self.next_slide_button.clicked.connect(
+            self.next_slide_command)
+        self.next_slide_button.setShortcut("Ctrl+Right")
+        self.layout().addWidget(self.next_slide_button)
+        self.previous_slide_button = QPushButton("Previous Slide")
+        self.previous_slide_button.clicked.connect(
+            self.previous_slide_command)
+        self.previous_slide_button.setShortcut("Ctrl+Left")
+        self.layout().addWidget(self.previous_slide_button)
         self.interactive_preview_window_checkbox = QCheckBox(
             "Enable Interactive Preview Window")
         self.interactive_preview_window_checkbox.setChecked(False)
@@ -290,6 +313,23 @@ class EditorWidget(QWidget):
 
     def save_to_python(self):
         self.communicate.save_to_python.emit()
+    
+    def next_slide_command(self):
+        if self.scene._LiveScene__slide_number < len(self.scene.slideshow):
+            slide_number = self.scene._LiveScene__slide_number
+            self.scene._LiveScene__current_slide_states = 0
+            self.scene._LiveScene__update_scene(
+                self.scene.slideshow[self.scene._LiveScene__slide_number])
+            self.scene._LiveScene__slide_number = slide_number + 1
+    
+    def previous_slide_command(self):
+        if self.scene._LiveScene__slide_number > 0:
+            slide_number = self.scene._LiveScene__slide_number
+            print(self.scene._LiveScene__current_slide_states)
+            for _ in range(self.scene._LiveScene__current_slide_states):
+                self.undo_state(False)
+            self.scene._LiveScene__slide_number = slide_number - 1
+            self.scene._LiveScene__current_slide_states = 0
 
     def add_slider(self):
         dialog = QDialog(self)
@@ -322,7 +362,7 @@ class EditorWidget(QWidget):
         ok_button = QPushButton("OK")
         dialog.layout().addWidget(ok_button)
         ok_button.clicked.connect(
-            lambda: self.add_slider_command(name_edit.text(), min_edit.text(), max_edit.text(), step_edit.text(), default_edit.text()))
+            lambda: self.add_slider_command(name_edit.text(), min_edit.text(), max_edit.text(), step_edit.text(), default_edit.text())) or setattr(self.scene, "_LiveScene__error", True)
         ok_button.clicked.connect(dialog.close)
         dialog.exec()
 
@@ -363,6 +403,10 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "Cannot add a slider with the name 'mouse'. It's reserved for internal use.")
             return
+        if name == "drawings":
+            self.communicate.print_gui.emit(
+                "Cannot add a slider with the name 'drawings'. It's reserved for internal use.")
+            return
         slider = SliderControl(
             self.communicate, name, (int(min_), int(max_)), int(step), int(default))
         self.controls_widget.add_controls(slider)
@@ -384,7 +428,7 @@ class EditorWidget(QWidget):
         ok_button = QPushButton("OK")
         dialog.layout().addWidget(ok_button)
         ok_button.clicked.connect(
-            lambda: self.add_text_box_command(name_edit.text()))
+            lambda: self.add_text_box_command(name_edit.text()) or setattr(self.scene, "_LiveScene__error", True))
         ok_button.clicked.connect(dialog.close)
         dialog.exec()
 
@@ -404,6 +448,10 @@ class EditorWidget(QWidget):
         if name == "mouse":
             self.communicate.print_gui.emit(
                 "Cannot add a text box with the name 'mouse'. It's reserved for internal use.")
+            return
+        if name == "drawings":
+            self.communicate.print_gui.emit(
+                "Cannot add a text box with the name 'drawings'. It's reserved for internal use.")
             return
         text_box = TextControl(self.communicate, name)
         self.controls_widget.add_controls(text_box)
@@ -425,7 +473,7 @@ class EditorWidget(QWidget):
         ok_button = QPushButton("OK")
         dialog.layout().addWidget(ok_button)
         ok_button.clicked.connect(
-            lambda: self.add_line_box_command(name_edit.text()))
+            lambda: self.add_line_box_command(name_edit.text()) or setattr(self.scene, "_LiveScene__error", True))
         ok_button.clicked.connect(dialog.close)
         dialog.exec()
 
@@ -445,6 +493,10 @@ class EditorWidget(QWidget):
         if name == "mouse":
             self.communicate.print_gui.emit(
                 "Cannot add a line box with the name 'mouse'. It's reserved for internal use.")
+            return
+        if name == "drawings":
+            self.communicate.print_gui.emit(
+                "Cannot add a line box with the name 'drawings'. It's reserved for internal use.")
             return
         line_box = LineControl(self.communicate, name)
         self.controls_widget.add_controls(line_box)
@@ -466,7 +518,7 @@ class EditorWidget(QWidget):
         ok_button = QPushButton("OK")
         dialog.layout().addWidget(ok_button)
         ok_button.clicked.connect(
-            lambda: self.add_color_picker_command(name_edit.text()))
+            lambda: self.add_color_picker_command(name_edit.text()) or setattr(self.scene, "_LiveScene__error", True))
         ok_button.clicked.connect(dialog.close)
         dialog.exec()
 
@@ -486,6 +538,10 @@ class EditorWidget(QWidget):
         if name == "mouse":
             self.communicate.print_gui.emit(
                 "Cannot add a color picker with the name 'mouse'. It's reserved for internal use.")
+            return
+        if name == "drawings":
+            self.communicate.print_gui.emit(
+                "Cannot add a color picker with the name 'drawings'. It's reserved for internal use.")
             return
         color_picker = ColorControl(self.communicate, name)
         self.controls_widget.add_controls(color_picker)
@@ -519,7 +575,7 @@ class EditorWidget(QWidget):
         ok_button = QPushButton("OK")
         dialog.layout().addWidget(ok_button)
         ok_button.clicked.connect(
-            lambda: self.add_dropdown_command(name_edit.text(), dialog.options))
+            lambda: self.add_dropdown_command(name_edit.text(), dialog.options) or setattr(self.scene, "_LiveScene__error", True))
         ok_button.clicked.connect(dialog.close)
         dialog.exec()
 
@@ -549,6 +605,10 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "Cannot add a dropdown with the name 'mouse'. It's reserved for internal use.")
             return
+        if name == "drawings":
+            self.communicate.print_gui.emit(
+                "Cannot add a dropdown with the name 'drawings'. It's reserved for internal use.")
+            return
         dropdown = DropdownControl(self.communicate, name, options)
         self.controls_widget.add_controls(dropdown)
         self.communicate.add_value_tracker.emit(
@@ -577,7 +637,7 @@ class EditorWidget(QWidget):
         ok_button = QPushButton("OK")
         dialog.layout().addWidget(ok_button)
         ok_button.clicked.connect(
-            lambda: self.add_checkbox_command(name_edit.text(), default_checkbox.isChecked()))
+            lambda: self.add_checkbox_command(name_edit.text(), default_checkbox.isChecked()) or setattr(self.scene, "_LiveScene__error", True))
         ok_button.clicked.connect(dialog.close)
         dialog.exec()
 
@@ -597,6 +657,10 @@ class EditorWidget(QWidget):
         if name == "mouse":
             self.communicate.print_gui.emit(
                 "Cannot add a checkbox with the name 'mouse'. It's reserved for internal use.")
+            return
+        if name == "drawings":
+            self.communicate.print_gui.emit(
+                "Cannot add a checkbox with the name 'drawings'. It's reserved for internal use.")
             return
         checkbox = CheckboxControl(self.communicate, name, default)
         self.controls_widget.add_controls(checkbox)
@@ -633,7 +697,7 @@ class EditorWidget(QWidget):
         ok_button = QPushButton("OK")
         dialog.layout().addWidget(ok_button)
         ok_button.clicked.connect(
-            lambda: self.add_spin_box_command(name_edit.text(), min_edit.text(), max_edit.text(), default_edit.text()))
+            lambda: self.add_spin_box_command(name_edit.text(), min_edit.text(), max_edit.text(), default_edit.text()) or setattr(self.scene, "_LiveScene__error", True))
         ok_button.clicked.connect(dialog.close)
         dialog.exec()
 
@@ -670,6 +734,10 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "A control with the same name already exists.")
             return
+        if name == "drawings":
+            self.communicate.print_gui.emit(
+                "Cannot add a spin box with the name 'drawings'. It's reserved for internal use.")
+            return
         spin_box = SpinBoxControl(self.communicate, name, float(
             default), float(min_), float(max_))
         self.controls_widget.add_controls(spin_box)
@@ -691,7 +759,7 @@ class EditorWidget(QWidget):
         ok_button = QPushButton("OK")
         dialog.layout().addWidget(ok_button)
         ok_button.clicked.connect(
-            lambda: self.add_file_selector_command(name_edit.text()))
+            lambda: self.add_file_selector_command(name_edit.text()) or setattr(self.scene, "_LiveScene__error", True))
         ok_button.clicked.connect(dialog.close)
         dialog.exec()
 
@@ -711,6 +779,10 @@ class EditorWidget(QWidget):
         if name == "mouse":
             self.communicate.print_gui.emit(
                 "Cannot add a file selector with the name 'mouse'. It's reserved for internal use.")
+            return
+        if name == "drawings":
+            self.communicate.print_gui.emit(
+                "Cannot add a file selector with the name 'drawings'. It's reserved for internal use.")
             return
         file_selector = FileControl(self.communicate, name)
         self.controls_widget.add_controls(file_selector)
@@ -747,7 +819,7 @@ class EditorWidget(QWidget):
         ok_button = QPushButton("OK")
         dialog.layout().addWidget(ok_button)
         ok_button.clicked.connect(
-            lambda: self.add_position_control_command(name_edit.text(), x_edit.text(), y_edit.text(), z_edit.text()))
+            lambda: self.add_position_control_command(name_edit.text(), x_edit.text(), y_edit.text(), z_edit.text()) or setattr(self.scene, "_LiveScene__error", True))
         ok_button.clicked.connect(dialog.close)
         dialog.exec()
 
@@ -780,6 +852,10 @@ class EditorWidget(QWidget):
             self.communicate.print_gui.emit(
                 "Cannot add a position control with the name 'interactive_mobject_dropdown'. It's reserved for internal use.")
             return
+        if name == "drawings":
+            self.communicate.print_gui.emit(
+                "Cannot add a position control with the name 'drawings'. It's reserved for internal use.")
+            return
         position_control = PositionControl(
             self.communicate, name, np.array([float(x), float(y), float(z)]))
         self.controls_widget.add_controls(position_control)
@@ -808,7 +884,7 @@ class EditorWidget(QWidget):
         ok_button = QPushButton("OK")
         dialog.layout().addWidget(ok_button)
         ok_button.clicked.connect(
-            lambda: self.add_button_command(name_edit.text(), callback_edit.toPlainText(), set_shortcut_line.text()))
+            lambda: self.add_button_command(name_edit.text(), callback_edit.toPlainText(), set_shortcut_line.text()) or setattr(self.scene, "_LiveScene__error", True))
         ok_button.clicked.connect(dialog.close)
         dialog.exec()
 
@@ -828,6 +904,10 @@ class EditorWidget(QWidget):
         if name == "mouse":
             self.communicate.print_gui.emit(
                 "Cannot add a button with the name 'mouse'. It's reserved for internal use.")
+            return
+        if name == "drawings":
+            self.communicate.print_gui.emit(
+                "Cannot add a button with the name 'drawings'. It's reserved for internal use.")
             return
         button = Button(self.communicate, name, callback)
         if shortcut:

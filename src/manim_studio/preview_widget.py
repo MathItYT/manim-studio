@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap, QImage, QMouseEvent
+from PyQt6.QtGui import QPixmap, QImage, QMouseEvent, QTabletEvent
 from .communicate import Communicate
 from manim import config, Mobject
 from .render_thread import RenderThread
@@ -54,6 +54,9 @@ class PreviewWidget(QWidget):
         if not hasattr(self.scene, "mouse"):
             self.communicate.update_scene.emit(
                 "self.mouse = DotTracker()")
+        if not hasattr(self.scene, "drawings"):
+            self.communicate.update_scene.emit(
+                "self.drawings = VGroup(VMobject().make_smooth())\nself.add(self.drawings)")
 
     def interact(self, event: QMouseEvent):
         if not self.enable:
@@ -64,6 +67,14 @@ class PreviewWidget(QWidget):
         self.communicate.update_scene.emit(
             f"self.mouse.move_to(np.array([{x}, {y}, 0]))")
         if event.buttons() != Qt.MouseButton.LeftButton:
+            return
+        if event.buttons() == Qt.MouseButton.RightButton:
+            self.communicate.update_scene.emit(
+                f"self.drawings.remove(self.drawings.submobjects[-1])")
+            return
+        if event.buttons() == Qt.MouseButton.MiddleButton:
+            self.communicate.update_scene.emit(
+                f"self.drawings.submobjects.clear()")
             return
         for name, mobject in self.interactive_mobjects.items():
             center, width, height = mobject.get_center(), mobject.width, mobject.height
@@ -92,6 +103,28 @@ class PreviewWidget(QWidget):
         self.h = h
         self.layout().addWidget(self.preview_label)
         self.preview_label.mouseMoveEvent = self.interact
+        self.preview_label.tabletEvent = self.draw
+    
+    def draw(self, event: QTabletEvent):
+        if not self.enable:
+            return
+        pos = event.position()
+        x, y = pos.x(), pos.y()
+        x, y = convert_to_manim_coords(x, y, self.preview_label)
+        # If the pen is touching the tablet, then update the latest vmobject with the new point
+        # Otherwise, create a new vmobject
+        if event.pressure() > 0:
+            self.communicate.update_scene.emit(
+                f"""
+if self.drawings[-1].has_no_points():
+    self.drawings[-1].start_new_path(np.array([{x}, {y}, 0]))
+else:
+    self.drawings[-1].add_line_to(np.array([{x}, {y}, 0]))
+""".strip())
+        else:
+            self.communicate.update_scene.emit(
+                f"self.drawings.add(VMobject().make_smooth())")
+        # To clear the drawings, press the button on the pen
 
     def update_image(self, image: np.ndarray):
         self.preview_label.setPixmap(QPixmap.fromImage(

@@ -17,6 +17,9 @@ import time
 
 
 class LiveScene(Scene):
+    slideshow = None
+    start_inmediately = False
+
     def __init__(
         self,
         communicate: Communicate,
@@ -26,6 +29,7 @@ class LiveScene(Scene):
         secrets: dict = {},
         **kwargs
     ):
+        self.__current_slide_states = 0
         self.__communicate = communicate
         super().__init__(**kwargs)
         self.__codes = []
@@ -33,7 +37,9 @@ class LiveScene(Scene):
         self.__current_globals = globals().copy()
         self.__value_trackers_code = ""
         self.__finished = False
+        self.__error = False
         self.__current_queue = []
+        self.__slide_number = 0
         self.__consider_manim_studio_time = consider_manim_studio_time
         self.__mro_without_live_scene = list(
             map(lambda x: x.__name__, mro_without_live_scene))
@@ -51,6 +57,82 @@ class LiveScene(Scene):
         self.__secrets = secrets
         for name, value in self.__secrets.items():
             self.__codes.append(f"setattr(self, {name.__repr__()}, {value.__repr__()})")
+    
+    def add_slider(self, name: str, min_value: int, max_value: int, step: int, value: int):
+        self.__communicate.add_slider.emit(name, min_value, max_value, step, value)
+        while not name in self.__value_trackers and self.__error is False:
+            time.sleep(0)
+        if self.__error:
+            self.__error = False
+    
+    def add_text_box(self, name: str):
+        self.__communicate.add_text_box.emit(name)
+        while not name in self.__value_trackers and self.__error is False:
+            time.sleep(0)
+        if self.__error:
+            self.__error = False
+    
+    def add_line_box(self, name: str):
+        self.__communicate.add_line_box.emit(name)
+        while not name in self.__value_trackers and self.__error is False:
+            time.sleep(0)
+        if self.__error:
+            self.__error = False
+    
+    def add_color_picker(self, name: str):
+        self.__communicate.add_color_picker.emit(name)
+        while not name in self.__value_trackers and self.__error is False:
+            time.sleep(0)
+        if self.__error:
+            self.__error = False
+    
+    def add_dropdown(self, name: str, options: list):
+        self.__communicate.add_dropdown.emit(name, options)
+        while not name in self.__value_trackers and self.__error is False:
+            time.sleep(0)
+        if self.__error:
+            self.__error = False
+            
+    
+    def add_checkbox(self, name: str, value: bool):
+        self.__communicate.add_checkbox.emit(name, value)
+        while not name in self.__value_trackers and self.__error is False:
+            time.sleep(0)
+        if self.__error:
+            self.__error = False
+            
+    
+    def add_spin_box(self, name: str, min_value: float, max_value: float, value: float):
+        self.__communicate.add_spin_box.emit(name, min_value, max_value, value)
+        while not name in self.__value_trackers and self.__error is False:
+            time.sleep(0)
+        if self.__error:
+            self.__error = False
+            
+    
+    def add_file_selector(self, name: str):
+        self.__communicate.add_file_selector.emit(name)
+        while not name in self.__value_trackers and self.__error is False:
+            time.sleep(0)
+        if self.__error:
+            self.__error = False
+            
+    
+    def add_position_control(self, name: str, x: float, y: float, z: float):
+        self.__communicate.add_position_control.emit(name, x, y, z)
+        while not name in self.__value_trackers and self.__error is False:
+            time.sleep(0)
+        if self.__error:
+            self.__error = False
+            
+    
+    def add_button(self, name: str, command: str, shortcut: str):
+        self.__communicate.add_button.emit(name, command, shortcut)
+        while not name in self.__value_trackers and self.__error is False:
+            time.sleep(0)
+        if self.__error:
+            self.__error = False
+            
 
     def wait(self, duration: float = 1.0, stop_condition: Callable[[], bool] | None = None, frozen_frame: bool | None = False):
         super().wait(duration, stop_condition, frozen_frame)
@@ -93,6 +175,9 @@ import time
 
 
 class Result({}):
+    slideshow = None
+    start_inmediately = False
+
     def construct(self):
 {}
         {}
@@ -107,6 +192,9 @@ class Result({}):
     def construct(self):
         self.wait(1 / self.camera.frame_rate)
         self.__communicate.save_state.emit()
+        if self.slideshow is not None and self.start_inmediately:
+            self.__update_scene(self.slideshow[0])
+            self.__slide_number += 1
         while not self.__finished:
             if self.__consider_manim_studio_time:
                 self.__current_animation_start_time = self.renderer.time
@@ -117,8 +205,9 @@ class Result({}):
                     self.__current_animation_start_time
                 frames_passed = round(
                     frames_passed * self.camera.frame_rate)
-                self.__codes.append(
-                    f"self.wait({frames_passed} / self.camera.frame_rate)")
+                if frames_passed > 0:
+                    self.__codes.append(
+                        f"self.wait({frames_passed} / self.camera.frame_rate)")
             self.__run_current_code()
 
     def __update_scene(self, code: str, append: bool = True) -> None:
@@ -151,8 +240,11 @@ class Result({}):
                     f"{e.__class__.__name__}: {e}")
                 self.__current_queue.clear()
                 self.__communicate.undo_state.emit(True)
+                
             else:
                 self.__communicate.update_state.emit()
+            if append_code:
+                self.__current_slide_states += 1
 
     def __save_mobject(self) -> None:
         """
