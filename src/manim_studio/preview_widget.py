@@ -68,19 +68,23 @@ class PreviewWidget(QWidget):
             f"self.mouse.move_to(np.array([{x}, {y}, 0]))")
         if event.buttons() != Qt.MouseButton.LeftButton:
             return
-        if event.buttons() == Qt.MouseButton.RightButton:
-            self.communicate.update_scene.emit(
-                f"self.drawings.remove(self.drawings.submobjects[-1])")
-            return
-        if event.buttons() == Qt.MouseButton.MiddleButton:
-            self.communicate.update_scene.emit(
-                f"self.drawings.submobjects.clear()")
-            return
         for name, mobject in self.interactive_mobjects.items():
             center, width, height = mobject.get_center(), mobject.width, mobject.height
             if center[0] - width / 2 <= x <= center[0] + width / 2 and center[1] - height / 2 <= y <= center[1] + height / 2:
                 self.communicate.update_scene.emit(f"getattr(self, {name.__repr__()}).move_to(self.mouse.get_center())")
                 break
+
+    def modify_drawings(self, event: QMouseEvent):
+        if not self.enable:
+            return
+        if event.button() == Qt.MouseButton.RightButton:
+            self.communicate.update_scene.emit(
+                "if self.drawings.submobjects: self.drawings.submobjects.pop()")
+            return
+        if event.button() == Qt.MouseButton.MiddleButton:
+            self.communicate.update_scene.emit(
+                "self.drawings.submobjects.clear()")
+            return
 
     def init_ui(self):
         self.setLayout(QVBoxLayout(self))
@@ -103,6 +107,7 @@ class PreviewWidget(QWidget):
         self.h = h
         self.layout().addWidget(self.preview_label)
         self.preview_label.mouseMoveEvent = self.interact
+        self.preview_label.mousePressEvent = self.modify_drawings
         self.preview_label.tabletEvent = self.draw
     
     def draw(self, event: QTabletEvent):
