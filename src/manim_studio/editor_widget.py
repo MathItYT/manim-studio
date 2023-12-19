@@ -36,9 +36,10 @@ from manim import Mobject
 
 
 class LiveSceneState:
-    def __init__(self, dict_: dict, codes: list[str]):
+    def __init__(self, dict_: dict, codes: list[str], slide_number: int):
         self.scene_dict = dict_
         self.codes = codes
+        self.slide_number = slide_number
 
 
 class InteractiveMobjectsControl(QWidget):
@@ -116,6 +117,7 @@ class EditorWidget(QWidget):
         self.scene = scene
         self.states = []
         self.states_to_redo = []
+        self.slide_states = []
         self.setWindowTitle("Manim Studio Editor")
         self.controls_widget = controls_widget
         self.setWindowTitle("Manim Studio")
@@ -123,7 +125,9 @@ class EditorWidget(QWidget):
         self.init_ui()
     
     def save_state(self):
-        self.states.append(LiveSceneState(self.scene.__dict__.copy(), self.scene._LiveScene__codes.copy()))
+        self.states.append(LiveSceneState(self.scene.__dict__.copy(), self.scene._LiveScene__codes.copy(), len(self.slide_states) - 1))
+        if self.slide_states:
+            self.slide_states[-1].append(self.states[-1])
         self.states_to_redo.clear()
     
     def undo_state(self, error: bool):
@@ -131,6 +135,10 @@ class EditorWidget(QWidget):
             self.print_gui("There's nothing to undo.")
             return
         state = self.states.pop()
+        if self.slide_states:
+            self.slide_states[-1].pop()
+            if not self.slide_states[-1]:
+                self.slide_states.pop()
         if not error:
             self.states_to_redo.append(state)
         self.scene.__dict__ = self.states[-1].scene_dict
@@ -146,6 +154,11 @@ class EditorWidget(QWidget):
             self.print_gui("There's nothing to redo.")
             return
         self.states.append(self.states_to_redo.pop())
+        if self.slide_states:
+            if self.states[-1].slide_number == len(self.slide_states) - 1:
+                self.slide_states[-1].append(self.states[-1])
+            else:
+                self.slide_states.append([self.states[-1]])
         self.scene.__dict__ = self.states[-1].scene_dict
         self.scene._LiveScene__codes = self.states[-1].codes
         self.scene._LiveScene__update_scene("", append=False)
@@ -315,21 +328,14 @@ class EditorWidget(QWidget):
         self.communicate.save_to_python.emit()
     
     def next_slide_command(self):
-        if self.scene._LiveScene__slide_number < len(self.scene.slideshow):
-            slide_number = self.scene._LiveScene__slide_number
-            self.scene._LiveScene__current_slide_states = 0
-            self.scene._LiveScene__update_scene(
-                self.scene.slideshow[self.scene._LiveScene__slide_number])
-            self.scene._LiveScene__slide_number = slide_number + 1
+        if len(self.slide_states) < len(self.scene.slideshow):
+            self.slide_states.append([])
+            self.communicate.update_scene.emit(self.scene.slideshow[len(self.slide_states) - 1])
     
     def previous_slide_command(self):
-        if self.scene._LiveScene__slide_number > 0:
-            slide_number = self.scene._LiveScene__slide_number
-            print(self.scene._LiveScene__current_slide_states)
-            for _ in range(self.scene._LiveScene__current_slide_states):
+        if self.slide_states:
+            for _ in range(len(self.slide_states[-1])):
                 self.undo_state(False)
-            self.scene._LiveScene__slide_number = slide_number - 1
-            self.scene._LiveScene__current_slide_states = 0
 
     def add_slider(self):
         dialog = QDialog(self)

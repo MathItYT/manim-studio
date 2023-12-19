@@ -29,7 +29,6 @@ class LiveScene(Scene):
         secrets: dict = {},
         **kwargs
     ):
-        self.__current_slide_states = 0
         self.__communicate = communicate
         super().__init__(**kwargs)
         self.__codes = []
@@ -39,7 +38,6 @@ class LiveScene(Scene):
         self.__finished = False
         self.__error = False
         self.__current_queue = []
-        self.__slide_number = 0
         self.__consider_manim_studio_time = consider_manim_studio_time
         self.__mro_without_live_scene = list(
             map(lambda x: x.__name__, mro_without_live_scene))
@@ -205,7 +203,6 @@ class Result({}):
         self.__communicate.save_state.emit()
         if self.slideshow is not None and self.start_inmediately:
             self.__update_scene(self.slideshow[0])
-            self.__slide_number += 1
         while not self.__finished:
             if self.__consider_manim_studio_time:
                 self.__current_animation_start_time = self.renderer.time
@@ -254,8 +251,6 @@ class Result({}):
                 
             else:
                 self.__communicate.update_state.emit()
-            if append_code:
-                self.__current_slide_states += 1
 
     def __save_mobject(self) -> None:
         """

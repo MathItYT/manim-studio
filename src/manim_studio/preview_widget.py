@@ -4,20 +4,26 @@ from PyQt6.QtWidgets import (
     QVBoxLayout
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap, QImage, QMouseEvent, QTabletEvent
+from PyQt6.QtGui import QPixmap, QImage, QMouseEvent, QTabletEvent, QWheelEvent, QKeyEvent
 from .communicate import Communicate
-from manim import config, Mobject
+from manim import config, Mobject, ScreenRectangle, MovingCameraScene, ThreeDScene
 from .render_thread import RenderThread
 import numpy as np
 
 
-def convert_to_manim_coords(x: int, y: int, label: QLabel) -> tuple[float, float]:
+def convert_to_manim_coords(x: int, y: int, label: QLabel, frame: ScreenRectangle | None = None) -> tuple[float, float]:
     w, h = label.width(), label.height()
     top_left = label.mapToGlobal(label.rect().topLeft())
     x -= top_left.x()
     y -= top_left.y()
-    x = x / w * config.frame_width - config.frame_width / 2
-    y = (h - y) / h * config.frame_height - config.frame_height / 2
+    if frame is not None:
+        frame_width, frame_height = frame.width, frame.height
+        frame_center = frame.get_center()
+    else:
+        frame_width, frame_height = config.frame_width, config.frame_height
+        frame_center = np.array([0, 0, 0])
+    x = (x - w / 2) / w * frame_width + frame_center[0]
+    y = (h / 2 - y) / h * frame_height + frame_center[1]
     return x, y
 
 
@@ -38,6 +44,8 @@ class PreviewWidget(QWidget):
         self.enable = False
         self.scene = self.render_thread.scene
         self.init_ui()
+        self.setMouseTracking(True)
+        self.preview_label.setMouseTracking(True)
 
     def add_to_interactive_mobjects(self, name: str):
         if name in self.interactive_mobjects:
@@ -58,12 +66,15 @@ class PreviewWidget(QWidget):
             self.communicate.update_scene.emit(
                 "self.drawings = VGroup(VMobject().make_smooth())\nself.add(self.drawings)")
 
-    def interact(self, event: QMouseEvent):
-        if not self.enable:
+    def mouseMoveEvent(self, event: QMouseEvent):
+        if not self.enable or isinstance(self.scene, ThreeDScene):
             return
         pos = event.pos()
         x, y = pos.x(), pos.y()
-        x, y = convert_to_manim_coords(x, y, self.preview_label)
+        if not isinstance(self.scene, MovingCameraScene):
+            x, y = convert_to_manim_coords(x, y, self.preview_label)
+        elif isinstance(self.scene, MovingCameraScene):
+            x, y = convert_to_manim_coords(x, y, self.preview_label, self.scene.camera.frame)
         self.communicate.update_scene.emit(
             f"self.mouse.move_to(np.array([{x}, {y}, 0]))")
         if event.buttons() != Qt.MouseButton.LeftButton:
@@ -74,16 +85,16 @@ class PreviewWidget(QWidget):
                 self.communicate.update_scene.emit(f"getattr(self, {name.__repr__()}).move_to(self.mouse.get_center())")
                 break
 
-    def modify_drawings(self, event: QMouseEvent):
-        if not self.enable:
+    def mousePressEvent(self, event: QMouseEvent):
+        if not self.enable or isinstance(self.scene, ThreeDScene):
             return
         if event.button() == Qt.MouseButton.RightButton:
             self.communicate.update_scene.emit(
-                "if self.drawings.submobjects: self.drawings.submobjects.pop()")
+                "if self.drawings.submobjects: self.drawings.submobjects.pop()\nif not self.drawings.submobjects: self.drawings.add(VMobject().make_smooth())")
             return
         if event.button() == Qt.MouseButton.MiddleButton:
             self.communicate.update_scene.emit(
-                "self.drawings.submobjects.clear()")
+                "self.drawings.submobjects.clear()\nself.drawings.add(VMobject().make_smooth())")
             return
 
     def init_ui(self):
@@ -106,18 +117,49 @@ class PreviewWidget(QWidget):
         self.w = w
         self.h = h
         self.layout().addWidget(self.preview_label)
-        self.preview_label.mouseMoveEvent = self.interact
-        self.preview_label.mousePressEvent = self.modify_drawings
-        self.preview_label.tabletEvent = self.draw
     
-    def draw(self, event: QTabletEvent):
-        if not self.enable:
+    def wheelEvent(self, event: QWheelEvent):
+        if not self.enable or not isinstance(self.scene, MovingCameraScene) or isinstance(self.scene, ThreeDScene):
+            return
+        delta = event.angleDelta().y()
+        mouse_pos = event.position()
+        if isinstance(self.scene, MovingCameraScene):
+            x, y = mouse_pos.x(), mouse_pos.y()
+            x, y = convert_to_manim_coords(x, y, self.preview_label, self.scene.camera.frame)
+            self.communicate.update_scene.emit(
+                f"self.camera.frame.scale(1 - {delta / 1000}).move_to(np.array([{x}, {y}, 0]))")
+    
+    def keyPressEvent(self, event: QKeyEvent):
+        if not self.enable or isinstance(self.scene, ThreeDScene):
+            return
+        key = event.key()
+        if key == Qt.Key.Key_R and isinstance(self.scene, MovingCameraScene):
+            self.communicate.update_scene.emit(
+                "self.camera.frame.scale_to_fit_height(config.frame_height).move_to(np.array([0, 0, 0]))")
+        if key == Qt.Key.Key_H:
+            x, y = self.scene.mouse.get_center()[:2]
+            for name, mobject in self.interactive_mobjects.items():
+                center, width, height = mobject.get_center(), mobject.width, mobject.height
+                if center[0] - width / 2 <= x <= center[0] + width / 2 and center[1] - height / 2 <= y <= center[1] + height / 2:
+                    self.communicate.update_scene.emit(f"self.play(Indicate(getattr(self, {name.__repr__()})))")
+                    break
+        if key == Qt.Key.Key_C:
+            x, y = self.scene.mouse.get_center()[:2]
+            for name, mobject in self.interactive_mobjects.items():
+                center, width, height = mobject.get_center(), mobject.width, mobject.height
+                if center[0] - width / 2 <= x <= center[0] + width / 2 and center[1] - height / 2 <= y <= center[1] + height / 2:
+                    self.communicate.update_scene.emit(f"self.play(Circumscribe(getattr(self, {name.__repr__()})))")
+                    break
+    
+    def tabletEvent(self, event: QTabletEvent):
+        if not self.enable or isinstance(self.scene, ThreeDScene):
             return
         pos = event.position()
         x, y = pos.x(), pos.y()
-        x, y = convert_to_manim_coords(x, y, self.preview_label)
-        # If the pen is touching the tablet, then update the latest vmobject with the new point
-        # Otherwise, create a new vmobject
+        if not isinstance(self.scene, MovingCameraScene):
+            x, y = convert_to_manim_coords(x, y, self.preview_label)
+        elif isinstance(self.scene, MovingCameraScene):
+            x, y = convert_to_manim_coords(x, y, self.preview_label, self.scene.camera.frame)
         if event.pressure() > 0:
             self.communicate.update_scene.emit(
                 f"""
@@ -129,7 +171,6 @@ else:
         else:
             self.communicate.update_scene.emit(
                 f"self.drawings.add(VMobject().make_smooth())")
-        # To clear the drawings, press the button on the pen
 
     def update_image(self, image: np.ndarray):
         self.preview_label.setPixmap(QPixmap.fromImage(
