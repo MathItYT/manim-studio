@@ -32,6 +32,7 @@ class PreviewWidget(QWidget):
         super().__init__()
         self.setWindowTitle("Preview")
         self.communicate = communicate
+        self.mouse_coords = None
         self.w, self.h = screen_size
         self.interactive_mobjects: dict[str, Mobject] = {}
         self.communicate.update_image.connect(self.update_image)
@@ -59,9 +60,6 @@ class PreviewWidget(QWidget):
 
     def enable_interact(self, enable: bool):
         self.enable = enable
-        if not hasattr(self.scene, "mouse"):
-            self.communicate.update_scene.emit(
-                "self.mouse = DotTracker()")
         if not hasattr(self.scene, "drawings"):
             self.communicate.update_scene.emit(
                 "self.drawings = VGroup(VMobject().make_smooth())\nself.add(self.drawings)")
@@ -75,14 +73,13 @@ class PreviewWidget(QWidget):
             x, y = convert_to_manim_coords(x, y, self.preview_label)
         elif isinstance(self.scene, MovingCameraScene):
             x, y = convert_to_manim_coords(x, y, self.preview_label, self.scene.camera.frame)
-        self.communicate.update_scene.emit(
-            f"self.mouse.move_to(np.array([{x}, {y}, 0]))")
+        self.mouse_coords = x, y
         if event.buttons() != Qt.MouseButton.LeftButton:
             return
         for name, mobject in self.interactive_mobjects.items():
             center, width, height = mobject.get_center(), mobject.width, mobject.height
             if center[0] - width / 2 <= x <= center[0] + width / 2 and center[1] - height / 2 <= y <= center[1] + height / 2:
-                self.communicate.update_scene.emit(f"getattr(self, {name.__repr__()}).move_to(self.mouse.get_center())")
+                self.communicate.update_scene.emit(f"getattr(self, {name.__repr__()}).move_to(np.array([{x}, {y}, 0]))")
                 break
 
     def mousePressEvent(self, event: QMouseEvent):
@@ -137,14 +134,14 @@ class PreviewWidget(QWidget):
             self.communicate.update_scene.emit(
                 "self.camera.frame.scale_to_fit_height(config.frame_height).move_to(np.array([0, 0, 0]))")
         if key == Qt.Key.Key_H:
-            x, y = self.scene.mouse.get_center()[:2]
+            x, y = self.mouse_coords
             for name, mobject in self.interactive_mobjects.items():
                 center, width, height = mobject.get_center(), mobject.width, mobject.height
                 if center[0] - width / 2 <= x <= center[0] + width / 2 and center[1] - height / 2 <= y <= center[1] + height / 2:
                     self.communicate.update_scene.emit(f"self.play(Indicate(getattr(self, {name.__repr__()})))")
                     break
         if key == Qt.Key.Key_C:
-            x, y = self.scene.mouse.get_center()[:2]
+            x, y = self.mouse_coords
             for name, mobject in self.interactive_mobjects.items():
                 center, width, height = mobject.get_center(), mobject.width, mobject.height
                 if center[0] - width / 2 <= x <= center[0] + width / 2 and center[1] - height / 2 <= y <= center[1] + height / 2:

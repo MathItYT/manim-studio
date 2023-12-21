@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manim-studio"
-version = "0.6.6"
+version = "0.6.8"
 description = "A GUI to easier make Manim animations"
 authors = ["MathLike"]
 readme = "README.md"
@@ -19,6 +19,7 @@ PyQt6 = ">=6.6.0"
 PyQt6-QScintilla = ">=2.14.1"
 dill = ">=0.3.7"
 setuptools = ">=68.2.2"
+RestrictedPython = ">=7.0"
 
 [tool.poetry.dev-dependencies]
 furo = ">=2023.9.10"

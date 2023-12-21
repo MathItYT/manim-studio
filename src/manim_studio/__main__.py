@@ -9,18 +9,7 @@ from .inherits_dialog import InheritsDialog
 from manim import config, Scene
 import sys
 import argparse
-import importlib.util
-from pathlib import Path
-
-
-def import_from_file(file_name):
-    file_name = Path(file_name)
-    if file_name.suffix != ".py":
-        raise ValueError("File name must end with .py")
-    spec = importlib.util.spec_from_file_location(file_name.stem, file_name)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+from manim_studio.import_from_file import import_from_file
 
 
 def main():

@@ -14,6 +14,35 @@ from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 from manim_studio.value_trackers.list_value_tracker import ListValueTracker
 from manim_studio.value_trackers.dot_tracker import DotTracker
 import time
+import manim
+
+del sys
+
+
+def write_guard():
+    from RestrictedPython.Guards import _write_wrapper
+    safetypes = {dict, list, Scene, Mobject, Animation}
+    Wrapper = _write_wrapper()
+
+    def guard(ob):
+        if type(ob) in safetypes or hasattr(ob, '_guarded_writes'):
+            return ob
+        return Wrapper(ob)
+    return guard
+
+
+def safe_exec(code: str, current_globals: dict) -> None:
+    from RestrictedPython import compile_restricted, utility_builtins, safe_builtins, limited_builtins
+    from RestrictedPython.PrintCollector import PrintCollector
+
+    safe_builtins["_print_"] = PrintCollector
+    safe_builtins["_getattr_"] = getattr
+    safe_builtins["_write_"] = write_guard()
+    safe_globals = {"__builtins__": safe_builtins}
+    safe_globals["__builtins__"].update(limited_builtins)
+    safe_globals["__builtins__"].update(utility_builtins)
+
+    exec(compile_restricted(code, '<inline>', 'exec'), safe_globals, current_globals)
 
 
 class LiveScene(Scene):
@@ -32,6 +61,10 @@ class LiveScene(Scene):
         self.__communicate = communicate
         super().__init__(**kwargs)
         self.__codes = []
+        if module is manim:
+            self.module_file_name = None
+        else:
+            self.module_file_name = str(Path(module.__file__).absolute())
         globals()["self"] = self
         self.__current_globals = globals().copy()
         self.__value_trackers_code = ""
@@ -42,7 +75,6 @@ class LiveScene(Scene):
         self.__mro_without_live_scene = list(
             map(lambda x: x.__name__, mro_without_live_scene))
         self.__value_trackers = {}
-        globals().update(module.__dict__)
         globals()["self"] = self
         del globals()["console"]
         del globals()["error_console"]
@@ -131,6 +163,35 @@ class LiveScene(Scene):
         if self.__error:
             self.__error = False
             
+    def __guarded_setattr__(self, name: str, value: Any) -> None:
+        if name.startswith("_"):
+            raise AttributeError(
+                "Cannot set attribute starting with '_'")
+        if name in self.__value_trackers:
+            raise AttributeError(
+                "Cannot set attribute that is already a value tracker")
+        if name in self.__secrets:
+            raise AttributeError(
+                "Cannot set attribute that is already a secret")
+        if hasattr(Scene(), name):
+            raise AttributeError(
+                "Cannot set internal attribute")
+        setattr(self, name, value)
+    
+    def __guarded_delattr__(self, name: str) -> None:
+        if name.startswith("_"):
+            raise AttributeError(
+                "Cannot delete attribute starting with '_'")
+        if name in self.__value_trackers:
+            raise AttributeError(
+                "Cannot delete attribute that is already a value tracker")
+        if name in self.__secrets:
+            raise AttributeError(
+                "Cannot delete attribute that is already a secret")
+        if hasattr(Scene(), name):
+            raise AttributeError(
+                "Cannot delete internal attribute")
+        delattr(self, name)
 
     def wait(self, duration: float = 1.0, stop_condition: Callable[[], bool] | None = None, frozen_frame: bool | None = False):
         super().wait(duration, stop_condition, frozen_frame)
@@ -159,6 +220,7 @@ class LiveScene(Scene):
         state
             The name of the state.
         """
+        from manim_studio.import_from_file import import_from_file
         CODE = """from manim import *
 from manim_studio.value_trackers.boolean_value_tracker import BooleanValueTracker
 from manim_studio.value_trackers.string_value_tracker import StringValueTracker
@@ -168,8 +230,15 @@ from manim_studio.value_trackers.color_value_tracker import ColorValueTracker
 from manim_studio.value_trackers.dot_tracker import DotTracker
 from manim_studio.value_trackers.list_value_tracker import ListValueTracker
 from manim_studio.load_mobject import load_mobject
+{}
 from typing import Callable
 import time
+import math
+import random
+import string
+
+
+{}
 
 
 config.frame_rate = {}
@@ -195,8 +264,10 @@ class Result({}):
         print(text)
 """
         if not self.__codes or all(code.strip() == "" for code in self.__codes):
-            return CODE.format(str(config.frame_rate), str(config.frame_width), str(config.frame_height), str(config.pixel_width), str(config.pixel_height), str(config.background_color.to_hex()).__repr__(), ",".join(self.__mro_without_live_scene), self.__value_trackers_code, "pass")
-        return CODE.format(str(config.frame_rate), str(config.frame_width), str(config.frame_height), str(config.pixel_width), str(config.pixel_height), str(config.background_color.to_hex()).__repr__(), ','.join(self.__mro_without_live_scene), self.__value_trackers_code, "\n        ".join(line for lines in self.__codes for line in lines.split("\n")))
+            return CODE.format("" if self.module_file_name is None else "from manim_studio.import_from_file import import_from_file", f"import_from_file({self.module_file_name.__repr__()})" if self.module_file_name is not None else "",
+                               str(config.frame_rate), str(config.frame_width), str(config.frame_height), str(config.pixel_width), str(config.pixel_height), str(config.background_color.to_hex()).__repr__(), ",".join(self.__mro_without_live_scene), self.__value_trackers_code, "pass")
+        return CODE.format("" if self.module_file_name is None else "from manim_studio.import_from_file import import_from_file", f"import_from_file({self.module_file_name.__repr__()})" if self.module_file_name is not None else "",
+                           str(config.frame_rate), str(config.frame_width), str(config.frame_height), str(config.pixel_width), str(config.pixel_height), str(config.background_color.to_hex()).__repr__(), ','.join(self.__mro_without_live_scene), self.__value_trackers_code, "\n        ".join(line for lines in self.__codes for line in lines.split("\n")))
 
     def construct(self):
         self.wait(1 / self.camera.frame_rate)
@@ -239,7 +310,7 @@ class Result({}):
             if append_code:
                 self.__communicate.save_state.emit()
             try:
-                exec(code, self.__current_globals)
+                safe_exec(code, self.__current_globals)
             except EndSceneEarlyException:
                 self.__finished = True
                 self.__current_queue.clear()
