@@ -62,7 +62,7 @@ class PreviewWidget(QWidget):
         self.enable = enable
         if not hasattr(self.scene, "drawings"):
             self.communicate.update_scene.emit(
-                "self.drawings = VGroup(VMobject().make_smooth())\nself.add(self.drawings)")
+                "self.init_drawings()")
 
     def mouseMoveEvent(self, event: QMouseEvent):
         if not self.enable or isinstance(self.scene, ThreeDScene):
@@ -79,7 +79,10 @@ class PreviewWidget(QWidget):
         for name, mobject in self.interactive_mobjects.items():
             center, width, height = mobject.get_center(), mobject.width, mobject.height
             if center[0] - width / 2 <= x <= center[0] + width / 2 and center[1] - height / 2 <= y <= center[1] + height / 2:
-                self.communicate.update_scene.emit(f"getattr(self, {name.__repr__()}).move_to(np.array([{x}, {y}, 0]))")
+                if not hasattr(mobject, "on_mouse_drag"):
+                    self.communicate.update_scene.emit(f"getattr(self, {name.__repr__()}).move_to(np.array([{x}, {y}, 0]))")
+                else:
+                    self.communicate.update_scene.emit(f"getattr(self, {name.__repr__()}).on_mouse_drag(np.array([{x}, {y}, 0]))")
                 break
 
     def mousePressEvent(self, event: QMouseEvent):
@@ -87,11 +90,11 @@ class PreviewWidget(QWidget):
             return
         if event.button() == Qt.MouseButton.RightButton:
             self.communicate.update_scene.emit(
-                "if self.drawings.submobjects: self.drawings.submobjects.pop()\nif not self.drawings.submobjects: self.drawings.add(VMobject().make_smooth())")
+                "self.pop_drawings()")
             return
         if event.button() == Qt.MouseButton.MiddleButton:
             self.communicate.update_scene.emit(
-                "self.drawings.submobjects.clear()\nself.drawings.add(VMobject().make_smooth())")
+                "self.clear_drawings()")
             return
 
     def init_ui(self):
@@ -147,6 +150,18 @@ class PreviewWidget(QWidget):
                 if center[0] - width / 2 <= x <= center[0] + width / 2 and center[1] - height / 2 <= y <= center[1] + height / 2:
                     self.communicate.update_scene.emit(f"self.play(Circumscribe(getattr(self, {name.__repr__()})))")
                     break
+        if key == Qt.Key.Key_W:
+            self.communicate.update_scene.emit(
+                "self.change_drawing_main_color_to(WHITE)")
+        if key == Qt.Key.Key_B:
+            self.communicate.update_scene.emit(
+                "self.change_drawing_main_color_to(BLUE)")
+        if key == Qt.Key.Key_Y:
+            self.communicate.update_scene.emit(
+                "self.change_drawing_main_color_to(YELLOW)")
+        if key == Qt.Key.Key_D:
+            self.communicate.update_scene.emit(
+                "self.change_drawing_main_color_to(BLACK)")
     
     def tabletEvent(self, event: QTabletEvent):
         if not self.enable or isinstance(self.scene, ThreeDScene):
@@ -159,15 +174,10 @@ class PreviewWidget(QWidget):
             x, y = convert_to_manim_coords(x, y, self.preview_label, self.scene.camera.frame)
         if event.pressure() > 0:
             self.communicate.update_scene.emit(
-                f"""
-if self.drawings[-1].has_no_points():
-    self.drawings[-1].start_new_path(np.array([{x}, {y}, 0]))
-else:
-    self.drawings[-1].add_line_to(np.array([{x}, {y}, 0]))
-""".strip())
+                f"self.add_line_to_drawing(np.array([{x}, {y}, 0]))".strip())
         else:
             self.communicate.update_scene.emit(
-                f"self.drawings.add(VMobject().make_smooth())")
+                f"self.drawings.add(VMobject(color=self.drawing_main_color).make_smooth())".strip())
 
     def update_image(self, image: np.ndarray):
         self.preview_label.setPixmap(QPixmap.fromImage(

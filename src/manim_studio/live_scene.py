@@ -16,7 +16,9 @@ from manim_studio.value_trackers.dot_tracker import DotTracker
 import time
 import manim
 
-del sys
+
+if "sys" in globals():
+    del globals()["sys"]
 
 
 def write_guard():
@@ -37,6 +39,11 @@ def safe_exec(code: str, current_globals: dict) -> None:
 
     safe_builtins["_print_"] = PrintCollector
     safe_builtins["_getattr_"] = getattr
+    safe_builtins["getattr"] = getattr
+    safe_builtins["setattr"] = setattr
+    safe_builtins["delattr"] = delattr
+    safe_builtins["_getitem_"] = lambda x, y: x[y]
+    safe_builtins["_getiter_"] = iter
     safe_builtins["_write_"] = write_guard()
     safe_globals = {"__builtins__": safe_builtins}
     safe_globals["__builtins__"].update(limited_builtins)
@@ -220,7 +227,6 @@ class LiveScene(Scene):
         state
             The name of the state.
         """
-        from manim_studio.import_from_file import import_from_file
         CODE = """from manim import *
 from manim_studio.value_trackers.boolean_value_tracker import BooleanValueTracker
 from manim_studio.value_trackers.string_value_tracker import StringValueTracker
@@ -256,6 +262,32 @@ class Result({}):
     def construct(self):
 {}
         {}
+    
+    def init_drawings(self) -> None:
+        self.drawings = VGroup(VMobject().make_smooth())
+        self.add(self.drawings)
+        self.drawing_main_color = WHITE
+
+    def add_line_to_drawing(self, point: np.ndarray) -> None:
+        if self.drawings[-1].has_no_points():
+            self.drawings[-1].start_new_path(point)
+        else:
+            self.drawings[-1].add_line_to(point)
+
+    def pop_drawings(self) -> None:
+        if self.drawings.submobjects:
+            self.drawings.submobjects.pop()
+            self.drawings.submobjects.pop()
+        self.drawings.add(VMobject(stroke_color=self.drawing_main_color).make_smooth())
+    
+    def clear_drawings(self) -> None:
+        self.drawings.submobjects.clear()
+        self.drawings.add(VMobject(stroke_color=self.drawing_main_color).make_smooth())
+    
+    def change_drawing_main_color_to(self, color: str) -> None:
+        self.drawings.submobjects.pop()
+        self.drawing_main_color = color
+        self.drawings.add(VMobject(stroke_color=self.drawing_main_color).make_smooth())
     
     def wait(self, duration: float = 1.0, stop_condition: Callable[[], bool] | None = None, frozen_frame: bool | None = False):
         super().wait(duration, stop_condition, frozen_frame)
@@ -404,6 +436,32 @@ class Result({}):
             self.__communicate.print_gui.emit(
                 "No file name is given. The mobject was not loaded."
             )
+    
+    def init_drawings(self) -> None:
+        self.drawings = VGroup(VMobject().make_smooth())
+        self.add(self.drawings)
+        self.drawing_main_color = WHITE
+
+    def add_line_to_drawing(self, point: np.ndarray) -> None:
+        if self.drawings[-1].has_no_points():
+            self.drawings[-1].start_new_path(point)
+        else:
+            self.drawings[-1].add_line_to(point)
+
+    def pop_drawings(self) -> None:
+        if self.drawings.submobjects:
+            self.drawings.submobjects.pop()
+            self.drawings.submobjects.pop()
+        self.drawings.add(VMobject(stroke_color=self.drawing_main_color).make_smooth())
+    
+    def clear_drawings(self) -> None:
+        self.drawings.submobjects.clear()
+        self.drawings.add(VMobject(stroke_color=self.drawing_main_color).make_smooth())
+    
+    def change_drawing_main_color_to(self, color: str) -> None:
+        self.drawings.submobjects.pop()
+        self.drawing_main_color = color
+        self.drawings.add(VMobject(stroke_color=self.drawing_main_color).make_smooth())
 
     def print_gui(self, text: str) -> None:
         """
