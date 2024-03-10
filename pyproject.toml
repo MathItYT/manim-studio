@@ -1,36 +1,19 @@
 [tool.poetry]
 name = "manim-studio"
-version = "0.6.9"
-description = "A GUI to easier make Manim animations"
-authors = ["MathLike"]
+version = "0.7.0"
+description = "A GUI for Manim"
+authors = ["MathItYT <benjamin.ubilla@uc.cl>"]
 readme = "README.md"
-repository = "https://github.com/MathItYT/manim-studio"
-license = "MIT"
-keywords = ["manim", "gui", "animation", "video", "editor"]
-documentation = "https://mathityt.github.io/manim-studio/"
-
-[tool.poetry.urls]
-"Bug Tracker" = "https://github.com/MathItYT/manim-studio/issues"
 
 [tool.poetry.dependencies]
-python = "3.12"
-manim = ">=0.18.0"
-PyQt6 = ">=6.6.0"
-PyQt6-QScintilla = ">=2.14.1"
-dill = ">=0.3.7"
-setuptools = ">=68.2.2"
-RestrictedPython = ">=7.0"
-
-[tool.poetry.dev-dependencies]
-furo = ">=2023.9.10"
-sphinxcontrib-video = ">=0.2.0"
-
-[tool.poetry.scripts]
-manim-studio = "manim_studio.__main__:main"
+python = ">=3.9,<3.13"
+manim = "^0.18.0"
+pyqt6 = "^6.6.1"
+setuptools = "^69.1.1"
 
 [tool.poetry.plugins."manim.plugins"]
 "manim_studio" = "manim_studio"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

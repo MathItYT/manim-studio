@@ -1,5 +1,0 @@
-{
-  "dependencies": {
-    "manim-mathjax": "file:src/manim_studio/mathjax_mobject"
-  }
-}
