@@ -1,10 +1,7 @@
 from copy import copy
 from pathlib import Path
 from subprocess import Popen
-from typing import Union
-from types import NoneType
 import shutil
-import string
 
 from PyQt6.QtWidgets import (
     QVBoxLayout,
@@ -18,7 +15,9 @@ from PyQt6.QtWidgets import (
     QInputDialog,
     QMessageBox,
     QComboBox,
-    QMenu
+    QMenu,
+    QScrollArea,
+    QLabel
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QIcon, QAction, QColor
@@ -32,7 +31,6 @@ from manim import (
     MathTex,
     Text,
     VMobject,
-    rgb_to_color,
     BLACK,
     DL,
     UR
@@ -42,9 +40,12 @@ from PIL.ImageQt import ImageQt
 from PIL import Image
 
 from .api import ManimStudioAPI
+from .input_widgets.range_slider import RangeSlider
+from .input_widgets.color_picker import ColorPicker
 from .mobject_picker import MobjectPicker
 from .preview import Preview
 from .syntax_highlighting import PythonHighlighter
+from .utils import make_camel_case
 
 
 FILE_CONTENT_TEMPLATE = """
@@ -102,6 +103,16 @@ class Window(QMainWindow):
         set_stroke_width_action.triggered.connect(self.set_stroke_width)
         edit_menu.addAction(set_stroke_width_action)
         self.menuBar().addMenu(edit_menu)
+
+        input_widgets_menu = QMenu("Input Widgets", self)
+        add_range_slider_action = QAction("Add Range Slider", self)
+        add_range_slider_action.triggered.connect(self.add_range_slider)
+        input_widgets_menu.addAction(add_range_slider_action)
+        add_color_picker_action = QAction("Add Color Picker", self)
+        add_color_picker_action.triggered.connect(self.add_color_picker)
+        input_widgets_menu.addAction(add_color_picker_action)
+        self.menuBar().addMenu(input_widgets_menu)
+
         self.menuBar().setNativeMenuBar(False)
 
         self.generate_python_file_button = QPushButton("Generate Python File")
@@ -119,6 +130,17 @@ class Window(QMainWindow):
         self.add_mobject_button.setShortcut("Ctrl+A")
         self.add_mobject_button.clicked.connect(self.select_mobject)
         v_layout_2.addWidget(self.add_mobject_button)
+
+        label = QLabel("Input Widgets")
+        label.setFixedHeight(10)
+        v_layout_2.addWidget(label)
+        self.input_widgets_zone = QScrollArea()
+        self.input_widgets_zone.setWidgetResizable(True)
+        self.input_widgets_zone.setFixedHeight(window_size[1] // 2 - 100)
+        self.input_widgets_zone.setFixedWidth(window_size[0] // 2 - 100)
+        self.input_widgets_zone.setWidget(QWidget())
+        self.input_widgets_zone.widget().setLayout(QVBoxLayout())
+        v_layout_2.addWidget(self.input_widgets_zone)
 
         self.label = Preview(window_size, self.mobject_picker_combobox, scene)
         v_layout_1.addWidget(self.label)
@@ -145,13 +167,48 @@ class Window(QMainWindow):
         self.execute_button.setShortcut("Ctrl+Return")
         v_layout_1.addWidget(self.execute_button)
     
+        plugins_menu = QMenu("Plugins", self)
+        for name, module in ManimStudioAPI.plugins.items():
+            plugin_menu = QAction(name, self)
+            plugin_menu.triggered.connect(lambda: ManimStudioAPI.run_plugin(name))
+            if hasattr(module, "init_widgets"):
+                module.init_widgets(self)
+            plugins_menu.addAction(plugin_menu)
+        self.menuBar().addMenu(plugins_menu)
+
     def execute(self, code: str):
         setattr(self.scene, "code", code)
+    
+    def add_range_slider(self):
+        variable_name, ok = QInputDialog.getText(self, "Variable Name", "Enter the name of the variable")
+        if not ok:
+            return
+        minimum, ok = QInputDialog.getDouble(self, "Minimum Value", "Enter the minimum value", 0.0, -1000000.0, 1000000.0, 6)
+        if not ok:
+            return
+        maximum, ok = QInputDialog.getDouble(self, "Maximum Value", "Enter the maximum value", 100.0, -1000000.0, 1000000.0, 6)
+        if not ok:
+            return
+        step, ok = QInputDialog.getDouble(self, "Step", "Enter the step", 1.0, -1000000.0, 1000000.0, 6)
+        if not ok:
+            return
+        value, ok = QInputDialog.getDouble(self, "Value", "Enter the value", 0.0, -1000000.0, 1000000.0, 6)
+        if not ok:
+            return
+        range_slider = RangeSlider(variable_name, value, minimum, maximum, step, self.width())
+        self.input_widgets_zone.widget().layout().addWidget(range_slider)
+    
+    def add_color_picker(self):
+        variable_name, ok = QInputDialog.getText(self, "Variable Name", "Enter the name of the variable")
+        if not ok:
+            return
+        color_picker = ColorPicker(variable_name, self.width())
+        self.input_widgets_zone.widget().layout().addWidget(color_picker)
     
     def set_fill_color(self):
         mobject_picker = MobjectPicker(
             self.width(),
-            self.scene.camera.frame_width / self.scene.camera.frame_height,
+            self.scene.camera,
             VMobject
         )
         selected_mobject = mobject_picker.wait_for_selection()
@@ -172,7 +229,7 @@ class Window(QMainWindow):
     def set_stroke_color(self):
         mobject_picker = MobjectPicker(
             self.width(),
-            self.scene.camera.frame_width / self.scene.camera.frame_height,
+            self.scene.camera,
             VMobject
         )
         selected_mobject = mobject_picker.wait_for_selection()
@@ -193,7 +250,7 @@ class Window(QMainWindow):
     def set_stroke_width(self):
         mobject_picker = MobjectPicker(
             self.width(),
-            self.scene.camera.frame_width / self.scene.camera.frame_height,
+            self.scene.camera,
             VMobject
         )
         selected_mobject = mobject_picker.wait_for_selection()
@@ -281,23 +338,13 @@ class Window(QMainWindow):
                                                     .get_image(camera)))),
                     "Text"
                 )
-    
-    @staticmethod
-    def make_camel_case(text: str, default: str) -> str:
-        text = text.lstrip(string.punctuation + string.whitespace + string.digits)
-        text = text.rstrip(string.punctuation + string.whitespace)
-        if text == "":
-            return default
-        text = text.split()
-        text = "".join(word.capitalize() for word in text)
-        return text
 
     def generate_python_file(self):
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Python File", "", "Python Files (*.py)")
         if not file_name:
             return
         scene_class_name = QInputDialog.getText(self, "Scene Class Name", "Enter the name of the scene class")[0]
-        scene_class_name = self.make_camel_case(
+        scene_class_name = make_camel_case(
             scene_class_name,
             f"{ManimStudioAPI.scene.__class__.__name__}Generated"
         )

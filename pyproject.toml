@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manim-studio"
-version = "0.7.0"
+version = "0.7.1"
 description = "A GUI for Manim"
 authors = ["MathItYT <benjamin.ubilla@uc.cl>"]
 readme = "README.md"
@@ -13,6 +13,9 @@ setuptools = "^69.1.1"
 
 [tool.poetry.plugins."manim.plugins"]
 "manim_studio" = "manim_studio"
+
+[tool.poetry.scripts]
+manim-studio = "manim_studio.__main__:main"
 
 [build-system]
 requires = ["poetry-core"]

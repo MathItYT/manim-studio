@@ -9,7 +9,7 @@ from manim import Scene
 from manim._config import config
 
 from .api import ManimStudioAPI
-from .utils import import_from_file
+from .utils import import_module_by_name_or_path, import_from_file
 from .window import Window
 
 
@@ -30,7 +30,7 @@ def main():
     scene_class: type[Scene] = getattr(module, args.scene) if module else Scene
     plugins = args.plugins or []
     plugins: list[ModuleType] = [
-        import_from_file(Path(plugin))
+        import_module_by_name_or_path(plugin)
         for plugin in plugins
     ]
     config.write_to_movie = False

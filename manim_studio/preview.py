@@ -18,7 +18,7 @@ from manim import (
 import numpy as np
 
 from .api import ManimStudioAPI
-from .utils import qt_coords_to_manim_coords
+from .utils import qt_coords_to_manim_coords, make_snake_case
 
 
 class Preview(QLabel):
@@ -57,15 +57,6 @@ class Preview(QLabel):
 
         self.setFixedSize(width, height)
     
-    @staticmethod
-    def make_snake_case(name: str) -> str:
-        name = name.lstrip(string.digits + string.punctuation + string.whitespace)
-        name = name.rstrip(string.punctuation + string.whitespace)
-        name = name.split()
-        name = "_".join(name)
-        name = name.lower()
-        return name
-    
     def add_mobject(self, mobject: Mobject):
         if isinstance(mobject, Circle):
             self.setting_radius = mobject
@@ -79,7 +70,7 @@ class Preview(QLabel):
             radius = side_length / (2 * np.sin(np.pi / number_of_sides))
             mobject = RegularPolygon(number_of_sides, radius=radius).move_to(mobject.get_center())
             name = QInputDialog.getText(self, "Set name", "Enter the mobject's name (default: reg_poly)")[0]
-            name = self.make_snake_case(name) or "reg_poly"
+            name = make_snake_case(name) or "reg_poly"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None
             ManimStudioAPI.execute(f"""
@@ -190,7 +181,7 @@ self.add({name})
             circle = self.setting_radius
             self.setting_radius = None
             name = QInputDialog.getText(self, "Set name", "Enter the circle's name (default: circ)")[0]
-            name = self.make_snake_case(name) or "circ"
+            name = make_snake_case(name) or "circ"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None
             ManimStudioAPI.execute(f"""
@@ -207,7 +198,7 @@ self.add({name})
             line = self.setting_line_end
             self.setting_line_end = None
             name = QInputDialog.getText(self, "Set name", "Enter the line's name (default: line)")[0]
-            name = self.make_snake_case(name) or "line"
+            name = make_snake_case(name) or "line"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None
             start_x, start_y, _ = line.get_start()
@@ -222,7 +213,7 @@ self.add({name})
             mathtex = self.setting_mathtex_size
             self.setting_mathtex_size = None
             text = QInputDialog.getText(self, "Set name", "Enter the MathTex's name (default: math_tex)")[0]
-            text = self.make_snake_case(text) or "math_tex"
+            text = make_snake_case(text) or "math_tex"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None
             ManimStudioAPI.execute(f"""
@@ -236,7 +227,7 @@ self.add({text})
             text = self.setting_text_size
             self.setting_text_size = None
             name = QInputDialog.getText(self, "Set name", "Enter the Text's name (default: text)")[0]
-            name = self.make_snake_case(name) or "text"
+            name = make_snake_case(name) or "text"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None
             ManimStudioAPI.execute(f"""

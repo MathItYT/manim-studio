@@ -43,6 +43,7 @@ class ManimStudioAPI:
             return
 
         cls.scene = scene
+        cls.plugins: dict[str, ModuleType] = {}
         cls.scope = globals().copy()
         cls.scope["self"] = scene
         cls.update_scope_with_module(manim)
@@ -97,6 +98,11 @@ class ManimStudioAPI:
         It is useful to add new variables or functions that you want to use.
         """
         cls.scope.update(module.__dict__)
+    
+    @classmethod
+    def is_in_scope(cls, name: str):
+        """Return whether the given name is in the scope of the scene."""
+        return name in cls.scope
     
     @classmethod
     def add_plugin(
