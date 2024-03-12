@@ -57,11 +57,11 @@ class ColorPicker(QGroupBox):
         expression = self.expression_editor.toPlainText()
         if expression:
             value = f"ManimColor(({color.redF()}, {color.greenF()}, {color.blueF()}))"
-            ManimStudioAPI.execute(f"""
+            ManimStudioAPI.scene.code = f"""
 self.{make_snake_case(self.name)} = {value}
 self.{make_snake_case(self.name)}_opacity = {color.alphaF()}
 {expression}
-""".strip())
+""".strip()
     
     def update_expression(self, index: int):
         if index == 2:
@@ -84,7 +84,7 @@ self.{make_snake_case(self.name)}_opacity = {color.alphaF()}
             self.expression_selector.setCurrentIndex(2)
             return
         mobject_name = mobject_name[0]
-        if self.expression_selector.currentIndex() in range(2) and not isinstance(ManimStudioAPI.scope[mobject_name], VMobject):
+        if self.expression_selector.currentIndex() in range(2) and not isinstance(getattr(ManimStudioAPI.scene, mobject_name), VMobject):
             QMessageBox.warning(
                 self,
                 "Invalid Input",
@@ -98,13 +98,13 @@ self.{make_snake_case(self.name)}_opacity = {color.alphaF()}
         self.expression_editor.setReadOnly(True)
         if self.expression_selector.currentIndex() == 0:
             self.expression_editor.setPlainText(
-                f"{mobject_name}"
+                f"self.{mobject_name}"
                 f".set_fill(color=self.{make_snake_case(self.name)}, "
                 f"opacity=self.{make_snake_case(self.name)}_opacity)"
             )
         elif self.expression_selector.currentIndex() == 1:
             self.expression_editor.setPlainText(
-                f"{mobject_name}"
+                f"self.{mobject_name}"
                 f".set_stroke(color=self.{make_snake_case(self.name)}, "
                 f"opacity=self.{make_snake_case(self.name)}_opacity)"
             )

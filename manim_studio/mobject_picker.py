@@ -25,7 +25,7 @@ class MobjectPicker(QDialog):
         self.setWindowTitle("Mobject Picker")
         aspect_ratio = camera.frame_width / camera.frame_height
         
-        self.mobjects_available = {k: v for k, v in ManimStudioAPI.scope.items() if isinstance(v, mobject_class)}
+        self.mobjects_available = {k: v for k, v in ManimStudioAPI.scene.__dict__.items() if isinstance(v, mobject_class)}
         self.mobjects_buttons = {}
 
         for i, (name, mobject) in enumerate(self.mobjects_available.items()):

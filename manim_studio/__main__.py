@@ -18,10 +18,18 @@ def main():
     parser.add_argument("--file", help="The file to open")
     parser.add_argument("--scene", help="The scene to open")
     parser.add_argument("--plugins", nargs="*", help="The plugins to load")
+    parser.add_argument(
+        "--consider_studio_time",
+        action="store_true",
+        help="Whether to consider Manim Studio time"
+    )
     args = parser.parse_args()
 
     if args.scene and not args.file:
         raise ValueError("You must provide a file when providing a scene to use.")
+    
+    if args.consider_studio_time:
+        ManimStudioAPI.consider_studio_time = True
 
     path_to_file = Path(args.file) if args.file else None
 
@@ -39,6 +47,7 @@ def main():
     scene = scene_class()
     path_to_file = str(path_to_file) if path_to_file else None
     ManimStudioAPI(scene, module, path_to_file, plugins)
+    scene.setup_deepness()
     thread = Thread(target=scene.render, daemon=True)
     thread.start()
 

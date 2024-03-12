@@ -118,10 +118,10 @@ class RangeSlider(QGroupBox):
         self.label.setText(f"{self.name}: {value}")
         expression = self.expression_editor.toPlainText()
         if expression:
-            ManimStudioAPI.execute(f"""
+            ManimStudioAPI.scene.code = f"""
 self.{make_snake_case(self.name)} = {value}
 {expression}
-""".strip())
+""".strip()
     
     def update_expression(self):
         if self.expression_selector.currentIndex() == 5:
@@ -144,7 +144,7 @@ self.{make_snake_case(self.name)} = {value}
             self.expression_selector.setCurrentIndex(5)
             return
         mobject_name = mobject_name[0]
-        if self.expression_selector.currentIndex() in range(3) and not isinstance(ManimStudioAPI.scope[mobject_name], VMobject):
+        if self.expression_selector.currentIndex() in range(3) and not isinstance(getattr(ManimStudioAPI.scene, mobject_name), VMobject):
             QMessageBox.warning(
                 self,
                 "Invalid Input",
@@ -158,27 +158,27 @@ self.{make_snake_case(self.name)} = {value}
         self.expression_editor.setReadOnly(True)
         if self.expression_selector.currentIndex() == 0:
             self.expression_editor.setPlainText(
-                f"{mobject_name}"
+                f"self.{mobject_name}"
                 f".set_stroke(width=self.{make_snake_case(self.name)})"
             )
         elif self.expression_selector.currentIndex() == 1:
             self.expression_editor.setPlainText(
-                f"{mobject_name}"
+                f"self.{mobject_name}"
                 f".set_fill(opacity=self.{make_snake_case(self.name)})"
             )
         elif self.expression_selector.currentIndex() == 2:
             self.expression_editor.setPlainText(
-                f"{mobject_name}"
+                f"self.{mobject_name}"
                 f".set_stroke(opacity=self.{make_snake_case(self.name)})"
             )
         elif self.expression_selector.currentIndex() == 3:
             self.expression_editor.setPlainText(
-                f"{mobject_name}"
+                f"self.{mobject_name}"
                 f".scale_to_fit_height(self.{make_snake_case(self.name)})"
             )
         elif self.expression_selector.currentIndex() == 4:
             self.expression_editor.setPlainText(
-                f"{mobject_name}"
+                f"self.{mobject_name}"
                 f".scale_to_fit_width(self.{make_snake_case(self.name)})"
             )
         self.execute_expression(self.slider.value())

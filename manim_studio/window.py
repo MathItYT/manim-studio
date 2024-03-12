@@ -50,12 +50,18 @@ from .utils import make_camel_case
 
 FILE_CONTENT_TEMPLATE = """
 from manim import *
+from manim_studio import *
 %s
 
 class %s(%s):
     def construct(self):
         super().construct()
 %s
+        hold_on(self, locals())
+
+    def setup_deepness(self):
+        super().setup_deepness()
+        self.deepness += 1
 """.strip()
 
 
@@ -78,6 +84,8 @@ class Window(QMainWindow):
         scene: Scene
     ):
         super().__init__(None)
+        ManimStudioAPI.print_signal_wrapper.print_signal.connect(self.print_gui)
+        ManimStudioAPI.print_signal_wrapper.show_error_signal.connect(self.show_error)
         self.setWindowTitle("Manim Studio")
         self.saved_file = None
         self.saved_scene_class_name = None
@@ -179,6 +187,9 @@ class Window(QMainWindow):
     def execute(self, code: str):
         setattr(self.scene, "code", code)
     
+    def print_gui(self, text: str):
+        QMessageBox.information(self, "Manim Studio - PrintGUI", text)
+    
     def add_range_slider(self):
         variable_name, ok = QInputDialog.getText(self, "Variable Name", "Enter the name of the variable")
         if not ok:
@@ -223,7 +234,7 @@ class Window(QMainWindow):
         if not fill_color.isValid():
             return
         r, g, b, a = fill_color.getRgbF()
-        ManimStudioAPI.execute(f"{name}.set_fill(rgb_to_color(({r}, {g}, {b})), {a})")
+        ManimStudioAPI.scene.code = f"self.{name}.set_fill(rgb_to_color(({r}, {g}, {b})), {a})"
         QMessageBox.information(self, "Fill Color Set", "The fill color has been set successfully")
     
     def set_stroke_color(self):
@@ -244,7 +255,7 @@ class Window(QMainWindow):
         if not stroke_color.isValid():
             return
         r, g, b, a = stroke_color.getRgbF()
-        ManimStudioAPI.execute(f"{name}.set_stroke(rgb_to_color(({r}, {g}, {b})), opacity={a})")
+        ManimStudioAPI.scene.code = f"self.{name}.set_stroke(rgb_to_color(({r}, {g}, {b})), opacity={a})"
         QMessageBox.information(self, "Stroke Color Set", "The stroke color has been set successfully")
     
     def set_stroke_width(self):
@@ -261,7 +272,7 @@ class Window(QMainWindow):
         stroke_width, ok = QInputDialog.getDouble(self, "Set Stroke Width", "Enter the stroke width", selected_mobject.get_stroke_width(), 0, 100, 1)
         if not ok:
             return
-        ManimStudioAPI.execute(f"{name}.set_stroke(width={stroke_width})")
+        ManimStudioAPI.scene.code = f"self.{name}.set_stroke(width={stroke_width})"
         QMessageBox.information(self, "Stroke Width Set", "The stroke width has been set successfully")
     
     def select_mobject(self):
@@ -339,7 +350,17 @@ class Window(QMainWindow):
                     "Text"
                 )
 
+    def show_error(self, error: Exception):
+        """Show the given error in the GUI."""
+        QMessageBox.critical(
+            self,
+            "Error",
+            "¡Ha ocurrido un error!\n\n"
+            f"{error.__class__.__name__}: {error}"
+        )
+
     def generate_python_file(self):
+        self.scene.code = ""
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Python File", "", "Python Files (*.py)")
         if not file_name:
             return

@@ -1,25 +1,40 @@
-from typing import Union
+from __future__ import annotations
+
+from typing import Union, Any
 from types import ModuleType, NoneType
-import time
 
 import manim
 
 from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtCore import pyqtSignal, QObject
 
 
-def hold_on(scene: manim.Scene):
+def hold_on(scene: manim.Scene, locals_dict: dict[str, Any]):
     """Hold the scene until the user executes something on Manim Studio."""
     if not ManimStudioAPI.enabled:
         return
+    if ManimStudioAPI.scene.deepness > 0:
+        ManimStudioAPI.scene.deepness -= 1
+        return
+    ManimStudioAPI.scope.update(locals_dict)
     scene.code = None
-    last_time = time.time()
+    if ManimStudioAPI.consider_studio_time:
+        frames_waited = 0
     while scene.code is None:
-        dt = time.time() - last_time
-        scene.wait(dt, frozen_frame=False)
-        last_time = time.time()
+        scene.wait(1 / scene.camera.frame_rate, frozen_frame=False)
+        if ManimStudioAPI.consider_studio_time:
+            frames_waited += 1
+    if ManimStudioAPI.consider_studio_time:
+        ManimStudioAPI.codes.append(f"self.wait({frames_waited / scene.camera.frame_rate})")
     ManimStudioAPI.execute(scene.code)
-    hold_on(scene)
+    hold_on(scene, {})
 
+
+class PrintSignalWrapper(QObject):
+    """A signal to print text in the GUI."""
+    print_signal = pyqtSignal(str)
+    show_error_signal = pyqtSignal(Exception)
+    
 
 class ManimStudioAPI:
     """The API for Manim Studio"""
@@ -31,6 +46,7 @@ class ManimStudioAPI:
         "MathTex": manim.MathTex,
         "Text": manim.Text
     }
+    consider_studio_time: bool = False
 
     def __new__(
         cls,
@@ -38,11 +54,12 @@ class ManimStudioAPI:
         module: Union[ModuleType, NoneType],
         path_to_file: Union[str, NoneType],
         plugins: list[ModuleType]
-    ):
+    ) -> ManimStudioAPI:
         if not cls.enabled:
             return
 
         cls.scene = scene
+        cls.print_signal_wrapper = PrintSignalWrapper()
         cls.plugins: dict[str, ModuleType] = {}
         cls.scope = globals().copy()
         cls.scope["self"] = scene
@@ -51,7 +68,7 @@ class ManimStudioAPI:
 
         if type(scene) == manim.Scene:
             def new_construct():
-                hold_on(scene)
+                hold_on(scene, {})
             scene.construct = new_construct
 
         if module is not None:
@@ -63,6 +80,13 @@ class ManimStudioAPI:
         cls.codes = []
 
         return super().__new__(cls)
+
+    @classmethod
+    def print(cls, *args):
+        """Print the given arguments in the GUI."""
+        if cls.enabled:
+            cls.print_signal_wrapper.print_signal.emit(" ".join(map(str, args)))
+        print(*args)
     
     @classmethod
     def execute(cls, code: str):
@@ -78,19 +102,9 @@ class ManimStudioAPI:
             exec(code, cls.scope)
         except Exception as e:
             cls.scene.__dict__ = state
-            cls.show_error(e)
+            cls.print_signal_wrapper.show_error_signal.emit(e)
         else:
             cls.codes.append(code)
-    
-    @classmethod
-    def show_error(cls, error: Exception):
-        """Show the given error in the GUI."""
-        QMessageBox.critical(
-            None,
-            "Error",
-            "¡Ha ocurrido un error!\n\n"
-            f"{error.__class__.__name__}: {error}"
-        )
     
     @classmethod
     def update_scope_with_module(cls, module: ModuleType):

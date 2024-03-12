@@ -1,5 +1,3 @@
-import string
-
 from PyQt6.QtWidgets import QLabel, QComboBox, QInputDialog, QMessageBox
 from PyQt6.QtGui import QMouseEvent
 
@@ -73,10 +71,10 @@ class Preview(QLabel):
             name = make_snake_case(name) or "reg_poly"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None
-            ManimStudioAPI.execute(f"""
-{name} = RegularPolygon({number_of_sides}, radius={radius}).move_to(RIGHT*{mobject.get_x()} + UP*{mobject.get_y()})
-self.add({name})
-""".strip())
+            ManimStudioAPI.scene.code = f"""
+self.{name} = RegularPolygon({number_of_sides}, radius={radius}).move_to(RIGHT*{mobject.get_x()} + UP*{mobject.get_y()})
+self.add(self.{name})
+""".strip()
             self.mobject_picker_combobox.setDisabled(False)
             return
         if isinstance(mobject, Line):
@@ -184,10 +182,10 @@ self.add({name})
             name = make_snake_case(name) or "circ"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None
-            ManimStudioAPI.execute(f"""
-{name} = Circle(radius={circle.radius}).move_to(RIGHT*{circle.get_x()} + UP*{circle.get_y()})
-self.add({name})
-""".strip())
+            ManimStudioAPI.scene.code = f"""
+self.{name} = Circle(radius={circle.radius}).move_to(RIGHT*{circle.get_x()} + UP*{circle.get_y()})
+self.add(self.{name})
+""".strip()
             self.mobject_picker_combobox.setDisabled(False)
             return
         if self.setting_line_start:
@@ -203,10 +201,10 @@ self.add({name})
             self.saved_state = None
             start_x, start_y, _ = line.get_start()
             end_x, end_y, _ = line.get_end()
-            ManimStudioAPI.execute(f"""
-{name} = Line(RIGHT*{start_x} + UP*{start_y}, RIGHT*{end_x} + UP*{end_y})
-self.add({name})
-""".strip())
+            ManimStudioAPI.scene.code = f"""
+self.{name} = Line(RIGHT*{start_x} + UP*{start_y}, RIGHT*{end_x} + UP*{end_y})
+self.add(self.{name})
+""".strip()
             self.mobject_picker_combobox.setDisabled(False)
             return
         if self.setting_mathtex_size:
@@ -216,10 +214,10 @@ self.add({name})
             text = make_snake_case(text) or "math_tex"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None
-            ManimStudioAPI.execute(f"""
-{text} = MathTex({repr(self.mathtex_string)}).scale_to_fit_height({mathtex.height}).move_to(RIGHT*{mathtex.get_x()} + UP*{mathtex.get_y()})
-self.add({text})
-""".strip())
+            ManimStudioAPI.scene.code = f"""
+self.{text} = MathTex({repr(self.mathtex_string)}).scale_to_fit_height({mathtex.height}).move_to(RIGHT*{mathtex.get_x()} + UP*{mathtex.get_y()})
+self.add(self.{text})
+""".strip()
             self.mathtex_string = None
             self.mobject_picker_combobox.setDisabled(False)
             return
@@ -230,10 +228,10 @@ self.add({text})
             name = make_snake_case(name) or "text"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None
-            ManimStudioAPI.execute(f"""
-{name} = Text({repr(self.text_string)}).scale_to_fit_height({text.height}).move_to(RIGHT*{text.get_x()} + UP*{text.get_y()})
-self.add({name})
-""".strip())
+            ManimStudioAPI.scene.code = f"""
+self.{name} = Text({repr(self.text_string)}).scale_to_fit_height({text.height}).move_to(RIGHT*{text.get_x()} + UP*{text.get_y()})
+self.add(self.{name})
+""".strip()
             self.text_string = None
             self.mobject_picker_combobox.setDisabled(False)
             return
