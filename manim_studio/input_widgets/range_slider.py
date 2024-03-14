@@ -112,13 +112,11 @@ class RangeSlider(QGroupBox):
         layout.addWidget(self.expression_selector)
         layout.addWidget(self.expression_editor)
         self.slider.doubleValueChanged.connect(self.execute_expression)
-        setattr(ManimStudioAPI.scene, make_snake_case(self.name), value)
 
     def execute_expression(self, value: float):
         self.label.setText(f"{self.name}: {value}")
         expression = self.expression_editor.toPlainText()
-        if expression:
-            ManimStudioAPI.scene.code = f"""
+        ManimStudioAPI.scene.code = f"""
 self.{make_snake_case(self.name)} = {value}
 {expression}
 """.strip()

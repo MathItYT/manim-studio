@@ -45,6 +45,7 @@ def main():
 
     ManimStudioAPI.enabled = True
     scene = scene_class()
+    scene.code = None
     path_to_file = str(path_to_file) if path_to_file else None
     ManimStudioAPI(scene, module, path_to_file, plugins)
     scene.setup_deepness()

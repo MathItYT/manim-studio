@@ -5,7 +5,6 @@ from types import ModuleType, NoneType
 
 import manim
 
-from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import pyqtSignal, QObject
 
 
@@ -17,9 +16,10 @@ def hold_on(scene: manim.Scene, locals_dict: dict[str, Any]):
         ManimStudioAPI.scene.deepness -= 1
         return
     ManimStudioAPI.scope.update(locals_dict)
-    scene.code = None
     if ManimStudioAPI.consider_studio_time:
         frames_waited = 0
+    if scene.code:
+        ManimStudioAPI.codes.append("")
     while scene.code is None:
         scene.wait(1 / scene.camera.frame_rate, frozen_frame=False)
         if ManimStudioAPI.consider_studio_time:
@@ -47,6 +47,7 @@ class ManimStudioAPI:
         "Text": manim.Text
     }
     consider_studio_time: bool = False
+    max_list_length: int = 50
 
     def __new__(
         cls,
@@ -59,6 +60,9 @@ class ManimStudioAPI:
             return
 
         cls.scene = scene
+        cls.states_to_undo: list[dict[str, Any]] = []
+        cls.states_to_redo: list[dict[str, Any]] = []
+        cls.codes_to_redo: list[str] = []
         cls.print_signal_wrapper = PrintSignalWrapper()
         cls.plugins: dict[str, ModuleType] = {}
         cls.scope = globals().copy()
@@ -97,6 +101,7 @@ class ManimStudioAPI:
         The code is executed directly. This means that it can be dangerous to
         use this method with untrusted code. Use it at your own risk.
         """
+        cls.scene.code = None
         state = cls.scene.__dict__.copy()
         try:
             exec(code, cls.scope)
@@ -105,6 +110,32 @@ class ManimStudioAPI:
             cls.print_signal_wrapper.show_error_signal.emit(e)
         else:
             cls.codes.append(code)
+            cls.states_to_undo.append(state)
+            cls.states_to_redo.clear()
+    
+    @classmethod
+    def undo(cls):
+        """Undo the last change in the scene."""
+        if len(cls.states_to_undo) == 0:
+            return
+        cls.states_to_redo.append(cls.scene.__dict__.copy())
+        cls.scene.__dict__ = cls.states_to_undo.pop()
+        cls.codes_to_redo.append(cls.codes.pop())
+        cls.codes_to_redo.append(cls.codes.pop())
+        if len(cls.states_to_redo) == cls.max_list_length:
+            cls.states_to_redo.pop(0)
+    
+    @classmethod
+    def redo(cls):
+        """Redo the last change in the scene."""
+        if len(cls.states_to_redo) == 0:
+            return
+        cls.states_to_undo.append(cls.scene.__dict__.copy())
+        cls.scene.__dict__ = cls.states_to_redo.pop()
+        cls.codes.append(cls.codes_to_redo.pop())
+        cls.codes.append(cls.codes_to_redo.pop())
+        if len(cls.states_to_undo) == cls.max_list_length:
+            cls.states_to_undo.pop(0)
     
     @classmethod
     def update_scope_with_module(cls, module: ModuleType):

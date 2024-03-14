@@ -48,16 +48,13 @@ class ColorPicker(QGroupBox):
         layout.addWidget(self.expression_selector)
         layout.addWidget(self.expression_editor)
         self.color_dialog.currentColorChanged.connect(self.execute_expression)
-        setattr(ManimStudioAPI.scene, make_snake_case(self.name), ManimColor((1.0, 1.0, 1.0)))
-        setattr(ManimStudioAPI.scene, f"{make_snake_case(self.name)}_opacity", 1.0)
         self.color_dialog.setCurrentColor(QColor(255, 255, 255, 255))
     
     def execute_expression(self, color: QColor):
         self.label.setText(f"{self.name}: RGBA({color.red()}, {color.green()}, {color.blue()}, {color.alpha()})")
         expression = self.expression_editor.toPlainText()
-        if expression:
-            value = f"ManimColor(({color.redF()}, {color.greenF()}, {color.blueF()}))"
-            ManimStudioAPI.scene.code = f"""
+        value = f"ManimColor(({color.redF()}, {color.greenF()}, {color.blueF()}))"
+        ManimStudioAPI.scene.code = f"""
 self.{make_snake_case(self.name)} = {value}
 self.{make_snake_case(self.name)}_opacity = {color.alphaF()}
 {expression}
