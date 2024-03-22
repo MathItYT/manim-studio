@@ -268,8 +268,8 @@ class Window(QMainWindow):
         if not fill_color.isValid():
             return
         r, g, b, a = fill_color.getRgbF()
-        ManimStudioAPI.scene.code = f"self.{
-            name}.set_fill(rgb_to_color(({r}, {g}, {b})), {a})"
+        ManimStudioAPI.scene.code = f"self.{name}" \
+            f".set_fill(rgb_to_color(({r}, {g}, {b})), {a})"
         QMessageBox.information(self, "Fill Color Set",
                                 "The fill color has been set successfully")
 
@@ -292,8 +292,8 @@ class Window(QMainWindow):
         if not stroke_color.isValid():
             return
         r, g, b, a = stroke_color.getRgbF()
-        ManimStudioAPI.scene.code = f"self.{
-            name}.set_stroke(rgb_to_color(({r}, {g}, {b})), opacity={a})"
+        ManimStudioAPI.scene.code = f"self.{name}" \
+            f".set_stroke(rgb_to_color(({r}, {g}, {b})), opacity={a})"
         QMessageBox.information(self, "Stroke Color Set",
                                 "The stroke color has been set successfully")
 
@@ -312,8 +312,8 @@ class Window(QMainWindow):
             self, "Set Stroke Width", "Enter the stroke width", selected_mobject.get_stroke_width(), 0, 100, 1)
         if not ok:
             return
-        ManimStudioAPI.scene.code = f"self.{
-            name}.set_stroke(width={stroke_width})"
+        ManimStudioAPI.scene.code = f"self.{name}" \
+            f".set_stroke(width={stroke_width})"
         QMessageBox.information(self, "Stroke Width Set",
                                 "The stroke width has been set successfully")
 
@@ -411,8 +411,8 @@ class Window(QMainWindow):
         animation = ManimStudioAPI.supported_animations[self.animation_picker_combobox.currentText(
         )]
         if animation not in (Transform, ReplacementTransform):
-            ManimStudioAPI.scene.code = f"self.play({
-                animation.__name__}(self.{name}))"
+            ManimStudioAPI.scene.code = f"self.play({animation.__name__}" \
+                f"(self.{name}))"
             QMessageBox.information(
                 self, "Animation Added", "The animation has been added successfully. If you don't like it, you can undo")
             return
@@ -426,8 +426,8 @@ class Window(QMainWindow):
             return
         name_2, selected_mobject_2 = selected_mobject_2
         selected_mobject_2: VMobject
-        ManimStudioAPI.scene.code = f"self.play({animation.__name__}(self.{
-            name}, self.{name_2}))"
+        ManimStudioAPI.scene.code = f"self.play({animation.__name__}" \
+            f"(self.{name}, self.{name_2}))"
         QMessageBox.information(
             self, "Animation Added", "The animation has been added successfully. If you don't like it, you can undo")
 

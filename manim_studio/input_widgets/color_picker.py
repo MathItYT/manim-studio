@@ -59,8 +59,8 @@ class ColorPicker(QGroupBox):
         self.label.setText(f"{self.name}: RGBA({color.red()}, {
                            color.green()}, {color.blue()}, {color.alpha()})")
         expression = self.expression_editor.toPlainText()
-        value = f"ManimColor(({color.redF()}, {
-            color.greenF()}, {color.blueF()}))"
+        value = f"ManimColor(({color.redF()}, " \
+            f"{color.greenF()}, {color.blueF()}))"
         ManimStudioAPI.scene.code = f"""
 self.{make_snake_case(self.name)} = {value}
 self.{make_snake_case(self.name)}_opacity = {color.alphaF()}
