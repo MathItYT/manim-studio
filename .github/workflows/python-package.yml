@@ -28,14 +28,17 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y build-essential python3-dev libcairo2-dev libpango1.0-dev ffmpeg
-        sudo apt install -y python3-pyqt6
+        sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
+        sudo apt install -y xvfb x11-utils libxkbcommon-x11-0
+        sudo apt-get install -y '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
+        sudo apt install -y python3-qtpy
     - name: Install Python dependencies
       run: |
-        python -m pip install coverage pytest
+        python -m pip install pytest
         python -m pip install .
     - name: Test with pytest
       env:
         QT_DEBUG_PLUGINS: 1
         QT_QPA_PLATFORM: xcb
       run: |
-        xvfb-run --auto-servernum `which coverage` run -m pytest
+        sudo xvfb-run --auto-servernum --server-num=1 --server-args="-screen 1 1920x1080x24 -ac +extension GLX" pytest
