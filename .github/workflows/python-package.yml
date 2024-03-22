@@ -35,5 +35,7 @@ jobs:
         python -m pip install coverage pytest
         python -m pip install .
     - name: Test with pytest
+      env:
+        QT_DEBUG_PLUGINS: 1
       run: |
         xvfb-run --auto-servernum `which coverage` run -m pytest
