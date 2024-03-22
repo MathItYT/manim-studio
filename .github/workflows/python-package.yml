@@ -24,8 +24,13 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install Ubuntu dependencies
       run: |
+        sudo apt-get update
+        sudo apt install -y build-essential python3-dev libcairo2-dev libpango1.0-dev ffmpeg
+    - name: Install Python dependencies
+      run: |
+        python -m pip install -U coverage
         python -m pip install -U pipx
         python -m pipx install poetry
         poetry install
