@@ -56,8 +56,8 @@ class ColorPicker(QGroupBox):
         self.color_dialog.setCurrentColor(QColor(255, 255, 255, 255))
 
     def execute_expression(self, color: QColor):
-        self.label.setText(f"{self.name}: RGBA({color.red()}, {
-                           color.green()}, {color.blue()}, {color.alpha()})")
+        self.label.setText(f"{self.name}: RGBA({color.red()}, "
+                           f"{color.green()}, {color.blue()}, {color.alpha()})")
         expression = self.expression_editor.toPlainText()
         value = f"ManimColor(({color.redF()}, " \
             f"{color.greenF()}, {color.blueF()}))"
