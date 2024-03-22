@@ -36,4 +36,5 @@ jobs:
         poetry install
     - name: Test with pytest
       run: |
-        xvfb-run --auto-servernum `which coverage` run -m "poetry run pytest"
+        poetry shell
+        xvfb-run --auto-servernum `which coverage` run -m pytest
