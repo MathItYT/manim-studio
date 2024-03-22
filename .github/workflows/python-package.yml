@@ -37,5 +37,6 @@ jobs:
     - name: Test with pytest
       env:
         QT_DEBUG_PLUGINS: 1
+        QT_QPA_PLATFORM: xcb
       run: |
         xvfb-run --auto-servernum `which coverage` run -m pytest
