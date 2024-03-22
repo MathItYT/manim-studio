@@ -33,7 +33,9 @@ from manim import (
     VMobject,
     BLACK,
     DL,
-    UR
+    UR,
+    Transform,
+    ReplacementTransform
 )
 
 from PIL.ImageQt import ImageQt
@@ -84,8 +86,10 @@ class Window(QMainWindow):
         scene: Scene
     ):
         super().__init__(None)
-        ManimStudioAPI.print_signal_wrapper.print_signal.connect(self.print_gui)
-        ManimStudioAPI.print_signal_wrapper.show_error_signal.connect(self.show_error)
+        ManimStudioAPI.print_signal_wrapper.print_signal.connect(
+            self.print_gui)
+        ManimStudioAPI.print_signal_wrapper.show_error_signal.connect(
+            self.show_error)
         self.setWindowTitle("Manim Studio")
         self.saved_file = None
         self.saved_scene_class_name = None
@@ -132,7 +136,8 @@ class Window(QMainWindow):
         self.menuBar().setNativeMenuBar(False)
 
         self.generate_python_file_button = QPushButton("Generate Python File")
-        self.generate_python_file_button.clicked.connect(self.generate_python_file)
+        self.generate_python_file_button.clicked.connect(
+            self.generate_python_file)
         v_layout_2.addWidget(self.generate_python_file_button)
         self.generate_video_file_button = QPushButton("Render Video File")
         self.generate_video_file_button.clicked.connect(self.render_video_file)
@@ -146,6 +151,15 @@ class Window(QMainWindow):
         self.add_mobject_button.setShortcut("Ctrl+A")
         self.add_mobject_button.clicked.connect(self.select_mobject)
         v_layout_2.addWidget(self.add_mobject_button)
+
+        self.animation_picker_combobox = QComboBox()
+        self.setup_animation_picker_combobox()
+        v_layout_2.addWidget(self.animation_picker_combobox)
+
+        self.animate_mobject_button = QPushButton("Animate Mobject")
+        self.animate_mobject_button.setShortcut("Ctrl+Shift+A")
+        self.animate_mobject_button.clicked.connect(self.animate_mobject)
+        v_layout_2.addWidget(self.animate_mobject_button)
 
         label = QLabel("Input Widgets")
         label.setFixedHeight(10)
@@ -175,18 +189,20 @@ class Window(QMainWindow):
         def update_to_time(time: float):
             old_update_to_time(time)
             self.update_image()
-        
+
         scene.update_to_time = update_to_time
 
         self.execute_button = QPushButton("Execute")
-        self.execute_button.clicked.connect(lambda: self.execute(self.editor.toPlainText()))
+        self.execute_button.clicked.connect(
+            lambda: self.execute(self.editor.toPlainText()))
         self.execute_button.setShortcut("Ctrl+Return")
         v_layout_1.addWidget(self.execute_button)
-    
+
         plugins_menu = QMenu("Plugins", self)
         for name, module in ManimStudioAPI.plugins.items():
             plugin_menu = QAction(name, self)
-            plugin_menu.triggered.connect(lambda: ManimStudioAPI.run_plugin(name))
+            plugin_menu.triggered.connect(
+                lambda: ManimStudioAPI.run_plugin(name))
             if hasattr(module, "init_widgets"):
                 module.init_widgets(self)
             plugins_menu.addAction(plugin_menu)
@@ -194,36 +210,43 @@ class Window(QMainWindow):
 
     def execute(self, code: str):
         setattr(self.scene, "code", code)
-    
+
     def print_gui(self, text: str):
-        QMessageBox.information(self, "Manim Studio - PrintGUI", text)
-    
+        QMessageBox.information(self, "Manim Studio - Print GUI", text)
+
     def add_range_slider(self):
-        variable_name, ok = QInputDialog.getText(self, "Variable Name", "Enter the name of the variable")
+        variable_name, ok = QInputDialog.getText(
+            self, "Variable Name", "Enter the name of the variable")
         if not ok:
             return
-        minimum, ok = QInputDialog.getDouble(self, "Minimum Value", "Enter the minimum value", 0.0, -1000000.0, 1000000.0, 6)
+        minimum, ok = QInputDialog.getDouble(
+            self, "Minimum Value", "Enter the minimum value", 0.0, -1000000.0, 1000000.0, 6)
         if not ok:
             return
-        maximum, ok = QInputDialog.getDouble(self, "Maximum Value", "Enter the maximum value", 100.0, -1000000.0, 1000000.0, 6)
+        maximum, ok = QInputDialog.getDouble(
+            self, "Maximum Value", "Enter the maximum value", 100.0, -1000000.0, 1000000.0, 6)
         if not ok:
             return
-        step, ok = QInputDialog.getDouble(self, "Step", "Enter the step", 1.0, -1000000.0, 1000000.0, 6)
+        step, ok = QInputDialog.getDouble(
+            self, "Step", "Enter the step", 1.0, -1000000.0, 1000000.0, 6)
         if not ok:
             return
-        value, ok = QInputDialog.getDouble(self, "Value", "Enter the value", 0.0, -1000000.0, 1000000.0, 6)
+        value, ok = QInputDialog.getDouble(
+            self, "Value", "Enter the value", 0.0, -1000000.0, 1000000.0, 6)
         if not ok:
             return
-        range_slider = RangeSlider(variable_name, value, minimum, maximum, step, self.width())
+        range_slider = RangeSlider(
+            variable_name, value, minimum, maximum, step, self.width())
         self.input_widgets_zone.widget().layout().addWidget(range_slider)
-    
+
     def add_color_picker(self):
-        variable_name, ok = QInputDialog.getText(self, "Variable Name", "Enter the name of the variable")
+        variable_name, ok = QInputDialog.getText(
+            self, "Variable Name", "Enter the name of the variable")
         if not ok:
             return
         color_picker = ColorPicker(variable_name, self.width())
         self.input_widgets_zone.widget().layout().addWidget(color_picker)
-    
+
     def set_fill_color(self):
         mobject_picker = MobjectPicker(
             self.width(),
@@ -238,13 +261,16 @@ class Window(QMainWindow):
         color = selected_mobject.get_fill_color()
         (r, g, b), a = color.to_rgb(), selected_mobject.get_fill_opacity()
         color = int(r*255), int(g*255), int(b*255), int(a*255)
-        fill_color = QColorDialog.getColor(QColor(*color), self, "Select Fill Color", QColorDialog.ColorDialogOption.ShowAlphaChannel)
+        fill_color = QColorDialog.getColor(QColor(
+            *color), self, "Select Fill Color", QColorDialog.ColorDialogOption.ShowAlphaChannel)
         if not fill_color.isValid():
             return
         r, g, b, a = fill_color.getRgbF()
-        ManimStudioAPI.scene.code = f"self.{name}.set_fill(rgb_to_color(({r}, {g}, {b})), {a})"
-        QMessageBox.information(self, "Fill Color Set", "The fill color has been set successfully")
-    
+        ManimStudioAPI.scene.code = f"self.{
+            name}.set_fill(rgb_to_color(({r}, {g}, {b})), {a})"
+        QMessageBox.information(self, "Fill Color Set",
+                                "The fill color has been set successfully")
+
     def set_stroke_color(self):
         mobject_picker = MobjectPicker(
             self.width(),
@@ -259,13 +285,16 @@ class Window(QMainWindow):
         color = selected_mobject.get_stroke_color()
         (r, g, b), a = color.to_rgb(), selected_mobject.get_stroke_opacity()
         color = int(r*255), int(g*255), int(b*255), int(a*255)
-        stroke_color = QColorDialog.getColor(QColor(*color), self, "Select Stroke Color", QColorDialog.ColorDialogOption.ShowAlphaChannel)
+        stroke_color = QColorDialog.getColor(QColor(
+            *color), self, "Select Stroke Color", QColorDialog.ColorDialogOption.ShowAlphaChannel)
         if not stroke_color.isValid():
             return
         r, g, b, a = stroke_color.getRgbF()
-        ManimStudioAPI.scene.code = f"self.{name}.set_stroke(rgb_to_color(({r}, {g}, {b})), opacity={a})"
-        QMessageBox.information(self, "Stroke Color Set", "The stroke color has been set successfully")
-    
+        ManimStudioAPI.scene.code = f"self.{
+            name}.set_stroke(rgb_to_color(({r}, {g}, {b})), opacity={a})"
+        QMessageBox.information(self, "Stroke Color Set",
+                                "The stroke color has been set successfully")
+
     def set_stroke_width(self):
         mobject_picker = MobjectPicker(
             self.width(),
@@ -277,16 +306,20 @@ class Window(QMainWindow):
             return
         name, selected_mobject = selected_mobject
         selected_mobject: VMobject
-        stroke_width, ok = QInputDialog.getDouble(self, "Set Stroke Width", "Enter the stroke width", selected_mobject.get_stroke_width(), 0, 100, 1)
+        stroke_width, ok = QInputDialog.getDouble(
+            self, "Set Stroke Width", "Enter the stroke width", selected_mobject.get_stroke_width(), 0, 100, 1)
         if not ok:
             return
-        ManimStudioAPI.scene.code = f"self.{name}.set_stroke(width={stroke_width})"
-        QMessageBox.information(self, "Stroke Width Set", "The stroke width has been set successfully")
-    
+        ManimStudioAPI.scene.code = f"self.{
+            name}.set_stroke(width={stroke_width})"
+        QMessageBox.information(self, "Stroke Width Set",
+                                "The stroke width has been set successfully")
+
     def select_mobject(self):
-        self.label.mobject_to_put = ManimStudioAPI.supported_mobjects[self.mobject_picker_combobox.currentText()]
+        self.label.mobject_to_put = ManimStudioAPI.supported_mobjects[self.mobject_picker_combobox.currentText(
+        )]
         self.mobject_picker_combobox.setDisabled(True)
-    
+
     def setup_mobject_picker_combobox(self):
         for mobject in ManimStudioAPI.supported_mobjects:
             if mobject == "Circle":
@@ -298,7 +331,7 @@ class Window(QMainWindow):
                     background_opacity=0
                 )
                 self.mobject_picker_combobox.addItem(
-                    QIcon(QPixmap.fromImage(ImageQt(Circle(stroke_width=16) \
+                    QIcon(QPixmap.fromImage(ImageQt(Circle(stroke_width=16)
                                                     .get_image(camera)))),
                     "Circle"
                 )
@@ -311,7 +344,7 @@ class Window(QMainWindow):
                     background_opacity=0
                 )
                 self.mobject_picker_combobox.addItem(
-                    QIcon(QPixmap.fromImage(ImageQt(RegularPolygon(6, stroke_width=16) \
+                    QIcon(QPixmap.fromImage(ImageQt(RegularPolygon(6, stroke_width=16)
                                                     .get_image(camera)))),
                     "Regular Polygon"
                 )
@@ -338,8 +371,8 @@ class Window(QMainWindow):
                     background_opacity=0
                 )
                 self.mobject_picker_combobox.addItem(
-                    QIcon(QPixmap.fromImage(ImageQt(MathTex("x^2", color=BLACK) \
-                                                    .scale_to_fit_width(2) \
+                    QIcon(QPixmap.fromImage(ImageQt(MathTex("x^2", color=BLACK)
+                                                    .scale_to_fit_width(2)
                                                     .get_image(camera)))),
                     "MathTex"
                 )
@@ -352,11 +385,49 @@ class Window(QMainWindow):
                     background_opacity=0
                 )
                 self.mobject_picker_combobox.addItem(
-                    QIcon(QPixmap.fromImage(ImageQt(Text("T", color=BLACK) \
-                                                    .scale_to_fit_width(2) \
+                    QIcon(QPixmap.fromImage(ImageQt(Text("T", color=BLACK)
+                                                    .scale_to_fit_width(2)
                                                     .get_image(camera)))),
                     "Text"
                 )
+
+    def setup_animation_picker_combobox(self):
+        for animation in ManimStudioAPI.supported_animations:
+            self.animation_picker_combobox.addItem(animation)
+
+    def animate_mobject(self):
+        mobject_picker = MobjectPicker(
+            self.width(),
+            self.scene.camera,
+            VMobject
+        )
+        selected_mobject = mobject_picker.wait_for_selection()
+        if selected_mobject is None:
+            return
+        name, selected_mobject = selected_mobject
+        selected_mobject: VMobject
+        animation = ManimStudioAPI.supported_animations[self.animation_picker_combobox.currentText(
+        )]
+        if animation not in (Transform, ReplacementTransform):
+            ManimStudioAPI.scene.code = f"self.play({
+                animation.__name__}(self.{name}))"
+            QMessageBox.information(
+                self, "Animation Added", "The animation has been added successfully. If you don't like it, you can undo")
+            return
+        mobject_picker_2 = MobjectPicker(
+            self.width(),
+            self.scene.camera,
+            VMobject
+        )
+        selected_mobject_2 = mobject_picker_2.wait_for_selection()
+        if selected_mobject_2 is None:
+            return
+        name_2, selected_mobject_2 = selected_mobject_2
+        selected_mobject_2: VMobject
+        ManimStudioAPI.scene.code = f"self.play({animation.__name__}(self.{
+            name}, self.{name_2}))"
+        QMessageBox.information(
+            self, "Animation Added", "The animation has been added successfully. If you don't like it, you can undo")
 
     def show_error(self, error: Exception):
         """Show the given error in the GUI."""
@@ -369,10 +440,12 @@ class Window(QMainWindow):
 
     def generate_python_file(self):
         self.scene.code = ""
-        file_name, _ = QFileDialog.getSaveFileName(self, "Save Python File", "", "Python Files (*.py)")
+        file_name, _ = QFileDialog.getSaveFileName(
+            self, "Save Python File", "", "Python Files (*.py)")
         if not file_name:
             return
-        scene_class_name = QInputDialog.getText(self, "Scene Class Name", "Enter the name of the scene class")[0]
+        scene_class_name = QInputDialog.getText(
+            self, "Scene Class Name", "Enter the name of the scene class")[0]
         scene_class_name = make_camel_case(
             scene_class_name,
             f"{ManimStudioAPI.scene.__class__.__name__}Generated"
@@ -381,7 +454,8 @@ class Window(QMainWindow):
         codes = [line for code in codes for line in code.split("\n")]
         with open(file_name, "w") as f:
             f.write(FILE_CONTENT_TEMPLATE % (
-                CONTENT_IF_IMPORTED % repr(str(Path(ManimStudioAPI.path_to_file).absolute()))
+                CONTENT_IF_IMPORTED % repr(
+                    str(Path(ManimStudioAPI.path_to_file).absolute()))
                 if ManimStudioAPI.path_to_file else "",
                 scene_class_name,
                 f"module.{ManimStudioAPI.scene.__class__.__name__}"
@@ -390,16 +464,20 @@ class Window(QMainWindow):
             ))
         self.saved_file = file_name
         self.saved_scene_class_name = scene_class_name
-        QMessageBox.information(self, "File Saved", "The file has been saved successfully")
-    
+        QMessageBox.information(
+            self, "File Saved", "The file has been saved successfully")
+
     def render_video_file(self):
         if not self.saved_file:
-            QMessageBox.critical(self, "Error", "You must generate a Python file before rendering")
+            QMessageBox.critical(
+                self, "Error", "You must generate a Python file before rendering")
             return
-        file_name, _ = QFileDialog.getSaveFileName(self, "Save Video File", "", "Video Files (*.mp4)")
+        file_name, _ = QFileDialog.getSaveFileName(
+            self, "Save Video File", "", "Video Files (*.mp4)")
         if not file_name:
             return
-        preview = QMessageBox.question(self, "Preview", "Do you want to preview the video?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        preview = QMessageBox.question(self, "Preview", "Do you want to preview the video?",
+                                       QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         path = Path(file_name)
 
         process = Popen(
@@ -414,13 +492,16 @@ class Window(QMainWindow):
         )
         process.wait()
 
-        output_path = Path("media") / "videos" / Path(self.saved_file).stem / "1080p60" / f"{path.stem}.mp4"
+        output_path = Path("media") / "videos" / \
+            Path(self.saved_file).stem / "1080p60" / f"{path.stem}.mp4"
         if output_path.exists():
             shutil.move(str(output_path), str(path))
-            QMessageBox.information(self, "File Saved", "The video has been rendered successfully")
+            QMessageBox.information(
+                self, "File Saved", "The video has been rendered successfully")
         else:
-            QMessageBox.critical(self, "Error", "The video could not be rendered")
-    
+            QMessageBox.critical(
+                self, "Error", "The video could not be rendered")
+
     def update_image(self):
         frame = self.scene.renderer.get_frame()
         qimage = ImageQt(Image.fromarray(frame))

@@ -19,7 +19,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         light_format.setFontPointSize(16)
         light_format.setFontWeight(150)
         self.highlight(QRegularExpression(r"."), light_format, text)
-    
+
     def highlight_numbers(self, text: str):
         number_format = QTextCharFormat()
         number_format.setForeground(QColor(180, 210, 115))

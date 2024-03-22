@@ -165,3 +165,6 @@ media/
 
 # Manim Studio
 *_generated.py
+
+# Makefile
+Makefile

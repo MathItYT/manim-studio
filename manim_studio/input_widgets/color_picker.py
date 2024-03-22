@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QColor
 
-from manim import ManimColor, VMobject, Mobject
+from manim import VMobject, Mobject
 
 from ..api import ManimStudioAPI
 from ..mobject_picker import MobjectPicker
@@ -28,9 +28,12 @@ class ColorPicker(QGroupBox):
 
         self.color_dialog = QColorDialog()
         self.color_dialog.currentColorChanged.connect(self.execute_expression)
-        self.color_dialog.setOption(QColorDialog.ColorDialogOption.ShowAlphaChannel, True)
-        self.color_dialog.setOption(QColorDialog.ColorDialogOption.NoButtons, True)
-        self.color_dialog.setOption(QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
+        self.color_dialog.setOption(
+            QColorDialog.ColorDialogOption.ShowAlphaChannel, True)
+        self.color_dialog.setOption(
+            QColorDialog.ColorDialogOption.NoButtons, True)
+        self.color_dialog.setOption(
+            QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
         layout.addWidget(self.color_dialog)
 
         expression_label = QLabel("Expression")
@@ -42,24 +45,28 @@ class ColorPicker(QGroupBox):
             "Custom Expression"
         ])
         self.expression_selector.setCurrentIndex(2)
-        self.expression_selector.currentIndexChanged.connect(self.update_expression)
+        self.expression_selector.currentIndexChanged.connect(
+            self.update_expression)
         self.expression_editor = QPlainTextEdit()
-        self.expression_editor.setPlaceholderText("Enter a valid Python expression")
+        self.expression_editor.setPlaceholderText(
+            "Enter a valid Python expression")
         layout.addWidget(self.expression_selector)
         layout.addWidget(self.expression_editor)
         self.color_dialog.currentColorChanged.connect(self.execute_expression)
         self.color_dialog.setCurrentColor(QColor(255, 255, 255, 255))
-    
+
     def execute_expression(self, color: QColor):
-        self.label.setText(f"{self.name}: RGBA({color.red()}, {color.green()}, {color.blue()}, {color.alpha()})")
+        self.label.setText(f"{self.name}: RGBA({color.red()}, {
+                           color.green()}, {color.blue()}, {color.alpha()})")
         expression = self.expression_editor.toPlainText()
-        value = f"ManimColor(({color.redF()}, {color.greenF()}, {color.blueF()}))"
+        value = f"ManimColor(({color.redF()}, {
+            color.greenF()}, {color.blueF()}))"
         ManimStudioAPI.scene.code = f"""
 self.{make_snake_case(self.name)} = {value}
 self.{make_snake_case(self.name)}_opacity = {color.alphaF()}
 {expression}
 """.strip()
-    
+
     def update_expression(self, index: int):
         if index == 2:
             self.expression_editor.setReadOnly(False)

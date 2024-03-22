@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Union, Any
-from types import ModuleType, NoneType
+from types import ModuleType
 
 import manim
 
@@ -25,7 +25,8 @@ def hold_on(scene: manim.Scene, locals_dict: dict[str, Any]):
         if ManimStudioAPI.consider_studio_time:
             frames_waited += 1
     if ManimStudioAPI.consider_studio_time:
-        ManimStudioAPI.codes.append(f"self.wait({frames_waited / scene.camera.frame_rate})")
+        ManimStudioAPI.codes.append(
+            f"self.wait({frames_waited / scene.camera.frame_rate})")
     ManimStudioAPI.execute(scene.code)
     hold_on(scene, {})
 
@@ -34,7 +35,7 @@ class PrintSignalWrapper(QObject):
     """A signal to print text in the GUI."""
     print_signal = pyqtSignal(str)
     show_error_signal = pyqtSignal(Exception)
-    
+
 
 class ManimStudioAPI:
     """The API for Manim Studio"""
@@ -46,14 +47,26 @@ class ManimStudioAPI:
         "MathTex": manim.MathTex,
         "Text": manim.Text
     }
+    supported_animations: dict[str, type[manim.Animation]] = {
+        "Fade In": manim.FadeIn,
+        "Fade Out": manim.FadeOut,
+        "Grow From Center": manim.GrowFromCenter,
+        "Shrink To Center": manim.ShrinkToCenter,
+        "Draw Border Then Fill": manim.DrawBorderThenFill,
+        "Create": manim.Create,
+        "Uncreate": manim.Uncreate,
+        "Write": manim.Write,
+        "Transform": manim.Transform,
+        "Replacement Transform": manim.ReplacementTransform
+    }
     consider_studio_time: bool = False
     max_list_length: int = 50
 
     def __new__(
         cls,
         scene: manim.Scene,
-        module: Union[ModuleType, NoneType],
-        path_to_file: Union[str, NoneType],
+        module: Union[ModuleType, None],
+        path_to_file: Union[str, None],
         plugins: list[ModuleType]
     ) -> ManimStudioAPI:
         if not cls.enabled:
@@ -80,7 +93,7 @@ class ManimStudioAPI:
 
         for plugin in plugins:
             cls.add_plugin(plugin)
-        
+
         cls.codes = []
 
         return super().__new__(cls)
@@ -89,13 +102,14 @@ class ManimStudioAPI:
     def print(cls, *args):
         """Print the given arguments in the GUI."""
         if cls.enabled:
-            cls.print_signal_wrapper.print_signal.emit(" ".join(map(str, args)))
+            cls.print_signal_wrapper.print_signal.emit(
+                " ".join(map(str, args)))
         print(*args)
-    
+
     @classmethod
     def execute(cls, code: str):
         """Execute the given code in the scope of the scene.
-        
+
         Warning
         -------
         The code is executed directly. This means that it can be dangerous to
@@ -112,7 +126,7 @@ class ManimStudioAPI:
             cls.codes.append(code)
             cls.states_to_undo.append(state)
             cls.states_to_redo.clear()
-    
+
     @classmethod
     def undo(cls):
         """Undo the last change in the scene."""
@@ -124,7 +138,7 @@ class ManimStudioAPI:
         cls.codes_to_redo.append(cls.codes.pop())
         if len(cls.states_to_redo) == cls.max_list_length:
             cls.states_to_redo.pop(0)
-    
+
     @classmethod
     def redo(cls):
         """Redo the last change in the scene."""
@@ -136,26 +150,26 @@ class ManimStudioAPI:
         cls.codes.append(cls.codes_to_redo.pop())
         if len(cls.states_to_undo) == cls.max_list_length:
             cls.states_to_undo.pop(0)
-    
+
     @classmethod
     def update_scope_with_module(cls, module: ModuleType):
         """Update the scope of the scene with the given module.
         It is useful to add new variables or functions that you want to use.
         """
         cls.scope.update(module.__dict__)
-    
+
     @classmethod
     def is_in_scope(cls, name: str):
         """Return whether the given name is in the scope of the scene."""
         return name in cls.scope
-    
+
     @classmethod
     def add_plugin(
         cls,
         plugin: ModuleType
     ):
         """Add a plugin to Manim Studio application.
-        
+
         Parameters
         ----------
         plugin : ModuleType
@@ -164,11 +178,13 @@ class ManimStudioAPI:
         if not hasattr(plugin, "main"):
             raise ValueError("The plugin must have a 'main' function")
         if not callable(plugin.main):
-            raise ValueError("The 'main' function of the plugin must be callable")
+            raise ValueError(
+                "The 'main' function of the plugin must be callable")
         if plugin.main.__code__.co_argcount != 1:
-            raise ValueError("The 'main' function of the plugin must take exactly one argument")
+            raise ValueError(
+                "The 'main' function of the plugin must take exactly one argument")
         cls.plugins[plugin.__name__] = plugin
-    
+
     @classmethod
     def run_plugin(
         cls,
@@ -178,7 +194,7 @@ class ManimStudioAPI:
         if plugin_name not in cls.plugins:
             raise ValueError(f"The plugin '{plugin_name}' does not exist")
         cls.plugins[plugin_name].main(cls)
-    
+
     @classmethod
     def get_all_code(cls):
         """Return all the code executed in the application."""

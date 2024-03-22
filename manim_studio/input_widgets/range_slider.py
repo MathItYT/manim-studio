@@ -21,7 +21,7 @@ class DoubleSlider(QSlider):
     doubleValueChanged = pyqtSignal(float)
 
     def __init__(self, decimals: int = 3, *args, **kwargs):
-        super().__init__( *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._multi = 10 ** decimals
 
         self.valueChanged.connect(self.emitDoubleValueChanged)
@@ -73,7 +73,7 @@ class RangeSlider(QGroupBox):
 
         self.slider = DoubleSlider(decimals=decimals)
         self.slider.setOrientation(Qt.Orientation.Horizontal)
-        
+
         self.min_label = QLabel(str(min_val))
         self.max_label = QLabel(str(max_val))
         self.min_val = min_val
@@ -106,9 +106,11 @@ class RangeSlider(QGroupBox):
             "Custom Expression"
         ])
         self.expression_selector.setCurrentIndex(5)
-        self.expression_selector.currentIndexChanged.connect(self.update_expression)
+        self.expression_selector.currentIndexChanged.connect(
+            self.update_expression)
         self.expression_editor = QPlainTextEdit()
-        self.expression_editor.setPlaceholderText("Enter a valid Python expression")
+        self.expression_editor.setPlaceholderText(
+            "Enter a valid Python expression")
         layout.addWidget(self.expression_selector)
         layout.addWidget(self.expression_editor)
         self.slider.doubleValueChanged.connect(self.execute_expression)
@@ -120,7 +122,7 @@ class RangeSlider(QGroupBox):
 self.{make_snake_case(self.name)} = {value}
 {expression}
 """.strip()
-    
+
     def update_expression(self):
         if self.expression_selector.currentIndex() == 5:
             self.expression_editor.setReadOnly(False)

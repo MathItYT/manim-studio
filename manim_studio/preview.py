@@ -54,20 +54,24 @@ class Preview(QLabel):
             height = max_height
 
         self.setFixedSize(width, height)
-    
+
     def add_mobject(self, mobject: Mobject):
         if isinstance(mobject, Circle):
             self.setting_radius = mobject
             return
         if isinstance(mobject, RegularPolygon):
-            number_of_sides = QInputDialog.getInt(self, "Set number of sides", "Enter the number of sides (default: 6)")[0]
+            number_of_sides = QInputDialog.getInt(
+                self, "Set number of sides", "Enter the number of sides (default: 6)")[0]
             number_of_sides = number_of_sides or 6
-            side_length = QInputDialog.getDouble(self, "Set side length", "Enter the side length (default: 1)")[0]
+            side_length = QInputDialog.getDouble(
+                self, "Set side length", "Enter the side length (default: 1)")[0]
             side_length = side_length or 1
             # Using radius formula given the side length and number of sides
             radius = side_length / (2 * np.sin(np.pi / number_of_sides))
-            mobject = RegularPolygon(number_of_sides, radius=radius).move_to(mobject.get_center())
-            name = QInputDialog.getText(self, "Set name", "Enter the mobject's name (default: reg_poly)")[0]
+            mobject = RegularPolygon(
+                number_of_sides, radius=radius).move_to(mobject.get_center())
+            name = QInputDialog.getText(
+                self, "Set name", "Enter the mobject's name (default: reg_poly)")[0]
             name = make_snake_case(name) or "reg_poly"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None
@@ -85,26 +89,30 @@ self.add(self.{name})
             error = True
             while error:
                 try:
-                    text = QInputDialog.getText(self, "Set text", "Enter the text (default: x^2)")[0]
+                    text = QInputDialog.getText(
+                        self, "Set text", "Enter the text (default: x^2)")[0]
                     text = text or "x^2"
                     mobject.become(MathTex(text).move_to(center))
                 except (ValueError, RuntimeError):
-                    QMessageBox.critical(self, "Error", "Invalid LaTeX code, try again")
+                    QMessageBox.critical(
+                        self, "Error", "Invalid LaTeX code, try again")
                 else:
                     error = False
-            QMessageBox.information(self, "Info", "LaTeX rendered successfully")
+            QMessageBox.information(
+                self, "Info", "LaTeX rendered successfully")
             self.setting_mathtex_size = mobject
             self.mathtex_string = text
             return
         if isinstance(mobject, Text):
             center = mobject.get_center()
-            text = QInputDialog.getText(self, "Set text", "Enter the text (default: T)")[0]
+            text = QInputDialog.getText(
+                self, "Set text", "Enter the text (default: T)")[0]
             text = text or "T"
             mobject.become(Text(text).move_to(center))
             self.setting_text_size = mobject
             self.text_string = text
             return
-    
+
     def mouseMoveEvent(self, a0: QMouseEvent) -> None:
         super().mouseMoveEvent(a0)
         if (
@@ -134,19 +142,23 @@ self.add(self.{name})
             self.setting_radius.radius = radius
             return
         if self.setting_line_start:
-            self.setting_line_start.put_start_and_end_on(frame_pos, self.setting_line_start.get_end())
+            self.setting_line_start.put_start_and_end_on(
+                frame_pos, self.setting_line_start.get_end())
             return
         if self.setting_line_end:
-            self.setting_line_end.put_start_and_end_on(self.setting_line_end.get_start(), frame_pos)
+            self.setting_line_end.put_start_and_end_on(
+                self.setting_line_end.get_start(), frame_pos)
             return
         if self.setting_mathtex_size:
             center = self.setting_mathtex_size.get_center()
-            self.setting_mathtex_size.scale_to_fit_height(2 * abs(frame_y - self.setting_mathtex_size.get_y()))
+            self.setting_mathtex_size.scale_to_fit_height(
+                2 * abs(frame_y - self.setting_mathtex_size.get_y()))
             self.setting_mathtex_size.move_to(center)
             return
         if self.setting_text_size:
             center = self.setting_text_size.get_center()
-            self.setting_text_size.scale_to_fit_height(2 * abs(frame_y - self.setting_text_size.get_y()))
+            self.setting_text_size.scale_to_fit_height(
+                2 * abs(frame_y - self.setting_text_size.get_y()))
             self.setting_text_size.move_to(center)
             return
         if isinstance(self.mobject_to_put, type):
@@ -163,7 +175,7 @@ self.add(self.{name})
                 self.mobject_to_put = Text("T")
             self.scene.add(self.mobject_to_put)
         self.mobject_to_put.move_to(frame_pos)
-    
+
     def mousePressEvent(self, a0: QMouseEvent) -> None:
         super().mousePressEvent(a0)
         if (
@@ -178,7 +190,8 @@ self.add(self.{name})
         if self.setting_radius:
             circle = self.setting_radius
             self.setting_radius = None
-            name = QInputDialog.getText(self, "Set name", "Enter the circle's name (default: circ)")[0]
+            name = QInputDialog.getText(
+                self, "Set name", "Enter the circle's name (default: circ)")[0]
             name = make_snake_case(name) or "circ"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None
@@ -195,7 +208,8 @@ self.add(self.{name})
         if self.setting_line_end:
             line = self.setting_line_end
             self.setting_line_end = None
-            name = QInputDialog.getText(self, "Set name", "Enter the line's name (default: line)")[0]
+            name = QInputDialog.getText(
+                self, "Set name", "Enter the line's name (default: line)")[0]
             name = make_snake_case(name) or "line"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None
@@ -210,7 +224,8 @@ self.add(self.{name})
         if self.setting_mathtex_size:
             mathtex = self.setting_mathtex_size
             self.setting_mathtex_size = None
-            text = QInputDialog.getText(self, "Set name", "Enter the MathTex's name (default: math_tex)")[0]
+            text = QInputDialog.getText(
+                self, "Set name", "Enter the MathTex's name (default: math_tex)")[0]
             text = make_snake_case(text) or "math_tex"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None
@@ -224,7 +239,8 @@ self.add(self.{text})
         if self.setting_text_size:
             text = self.setting_text_size
             self.setting_text_size = None
-            name = QInputDialog.getText(self, "Set name", "Enter the Text's name (default: text)")[0]
+            name = QInputDialog.getText(
+                self, "Set name", "Enter the Text's name (default: text)")[0]
             name = make_snake_case(name) or "text"
             self.scene.__dict__ = self.saved_state
             self.saved_state = None

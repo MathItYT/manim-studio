@@ -15,14 +15,15 @@ def import_module_by_name_or_path(name_or_path: str) -> ModuleType:
 
 def import_from_file(path_to_file: Path) -> ModuleType:
     """Import a module from a file."""
-    spec = importlib.util.spec_from_file_location(path_to_file.stem, path_to_file)
+    spec = importlib.util.spec_from_file_location(
+        path_to_file.stem, path_to_file)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
 def qt_coords_to_manim_coords(
-    scene: Scene, 
+    scene: Scene,
     x: float,
     y: float,
     label_x: int,

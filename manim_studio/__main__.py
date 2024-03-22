@@ -26,8 +26,9 @@ def main():
     args = parser.parse_args()
 
     if args.scene and not args.file:
-        raise ValueError("You must provide a file when providing a scene to use.")
-    
+        raise ValueError(
+            "You must provide a file when providing a scene to use.")
+
     if args.consider_studio_time:
         ManimStudioAPI.consider_studio_time = True
 
