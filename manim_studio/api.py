@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from typing import Union, Any
 from types import ModuleType
+from time import time
 
 import manim
 
 from PyQt6.QtCore import pyqtSignal, QObject
+from PyQt6.QtWidgets import QWidget
 
 
 def hold_on(scene: manim.Scene, locals_dict: dict[str, Any]):
@@ -20,10 +22,21 @@ def hold_on(scene: manim.Scene, locals_dict: dict[str, Any]):
         frames_waited = 0
     if scene.code:
         ManimStudioAPI.codes.append("")
+    if ManimStudioAPI.timeout is not None:
+        time_now = time()
+        if ManimStudioAPI.time_running > ManimStudioAPI.timeout:
+            ManimStudioAPI.signals_wrapper.close_window_signal.emit()
+            return
     while scene.code is None:
         scene.wait(1 / scene.camera.frame_rate, frozen_frame=False)
         if ManimStudioAPI.consider_studio_time:
             frames_waited += 1
+        if ManimStudioAPI.timeout is not None:
+            ManimStudioAPI.time_running += time() - time_now
+            time_now = time()
+            if ManimStudioAPI.time_running > ManimStudioAPI.timeout:
+                ManimStudioAPI.signals_wrapper.close_window_signal.emit()
+                return
     if ManimStudioAPI.consider_studio_time:
         ManimStudioAPI.codes.append(
             f"self.wait({frames_waited / scene.camera.frame_rate})")
@@ -31,10 +44,11 @@ def hold_on(scene: manim.Scene, locals_dict: dict[str, Any]):
     hold_on(scene, {})
 
 
-class PrintSignalWrapper(QObject):
+class SignalsWrapper(QObject):
     """A signal to print text in the GUI."""
     print_signal = pyqtSignal(str)
     show_error_signal = pyqtSignal(Exception)
+    close_window_signal = pyqtSignal()
 
 
 class ManimStudioAPI:
@@ -67,26 +81,32 @@ class ManimStudioAPI:
         scene: manim.Scene,
         module: Union[ModuleType, None],
         path_to_file: Union[str, None],
-        plugins: list[ModuleType]
+        plugins: list[ModuleType],
+        timeout: Union[int, None]
     ) -> ManimStudioAPI:
         if not cls.enabled:
             return
-
         cls.scene = scene
         cls.states_to_undo: list[dict[str, Any]] = []
         cls.states_to_redo: list[dict[str, Any]] = []
         cls.codes_to_redo: list[str] = []
-        cls.print_signal_wrapper = PrintSignalWrapper()
+        cls.signals_wrapper = SignalsWrapper()
         cls.plugins: dict[str, ModuleType] = {}
         cls.scope = globals().copy()
         cls.scope["self"] = scene
         cls.update_scope_with_module(manim)
         cls.path_to_file = path_to_file
+        cls.timeout = timeout
+        cls.time_running = 0.0
 
         if type(scene) == manim.Scene:
             def new_construct():
                 hold_on(scene, {})
             scene.construct = new_construct
+
+            def setup_deepness():
+                scene.deepness = 0
+            scene.setup_deepness = setup_deepness
 
         if module is not None:
             cls.update_scope_with_module(module)
@@ -102,7 +122,7 @@ class ManimStudioAPI:
     def print(cls, *args):
         """Print the given arguments in the GUI."""
         if cls.enabled:
-            cls.print_signal_wrapper.print_signal.emit(
+            cls.signals_wrapper.print_signal.emit(
                 " ".join(map(str, args)))
         print(*args)
 
@@ -121,7 +141,7 @@ class ManimStudioAPI:
             exec(code, cls.scope)
         except Exception as e:
             cls.scene.__dict__ = state
-            cls.print_signal_wrapper.show_error_signal.emit(e)
+            cls.signals_wrapper.show_error_signal.emit(e)
         else:
             cls.codes.append(code)
             cls.states_to_undo.append(state)

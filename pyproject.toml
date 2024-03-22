@@ -17,6 +17,9 @@ setuptools = "^69.1.1"
 [tool.poetry.scripts]
 manim-studio = "manim_studio.__main__:main"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.1.1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

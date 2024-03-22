@@ -86,10 +86,12 @@ class Window(QMainWindow):
         scene: Scene
     ):
         super().__init__(None)
-        ManimStudioAPI.print_signal_wrapper.print_signal.connect(
+        ManimStudioAPI.signals_wrapper.print_signal.connect(
             self.print_gui)
-        ManimStudioAPI.print_signal_wrapper.show_error_signal.connect(
+        ManimStudioAPI.signals_wrapper.show_error_signal.connect(
             self.show_error)
+        ManimStudioAPI.signals_wrapper.close_window_signal.connect(
+            self.close)
         self.setWindowTitle("Manim Studio")
         self.saved_file = None
         self.saved_scene_class_name = None

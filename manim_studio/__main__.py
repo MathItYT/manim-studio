@@ -18,6 +18,8 @@ def main():
     parser.add_argument("--file", help="The file to open")
     parser.add_argument("--scene", help="The scene to open")
     parser.add_argument("--plugins", nargs="*", help="The plugins to load")
+    parser.add_argument("--timeout", type=float,
+                        help="The timeout of Manim Studio in seconds")
     parser.add_argument(
         "--consider_studio_time",
         action="store_true",
@@ -44,23 +46,22 @@ def main():
     ]
     config.write_to_movie = False
 
-    ManimStudioAPI.enabled = True
-    scene = scene_class()
-    scene.code = None
-    path_to_file = str(path_to_file) if path_to_file else None
-    ManimStudioAPI(scene, module, path_to_file, plugins)
-    scene.setup_deepness()
-    thread = Thread(target=scene.render, daemon=True)
-    thread.start()
-
     app = QApplication([])
     screen = app.primaryScreen()
     window_size = screen.size()
     window_size_as_tuple = (window_size.width(), window_size.height())
+    ManimStudioAPI.enabled = True
+    scene = scene_class()
+    ManimStudioAPI(scene, module, path_to_file, plugins, args.timeout)
     window = Window(
         window_size_as_tuple,
-        ManimStudioAPI.scene
+        ManimStudioAPI.scene,
     )
+    scene.code = None
+    path_to_file = str(path_to_file) if path_to_file else None
+    scene.setup_deepness()
+    thread = Thread(target=scene.render, daemon=True)
+    thread.start()
     window.showMaximized()
     app.exec()
 
