@@ -48,7 +48,7 @@ class Preview(QLabel):
 
         if aspect_ratio > max_width / max_height:
             width = max_width
-            height = max_width // aspect_ratio
+            height = int(max_width / aspect_ratio)
         else:
             width = int(max_height * aspect_ratio)
             height = max_height
