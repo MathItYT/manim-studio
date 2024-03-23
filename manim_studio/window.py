@@ -31,12 +31,14 @@ from manim import (
     MathTex,
     Text,
     VMobject,
+    Transform,
+    ReplacementTransform,
+    open_file,
     BLACK,
     DL,
-    UR,
-    Transform,
-    ReplacementTransform
+    UR
 )
+from manim._config import config
 
 from PIL.ImageQt import ImageQt
 from PIL import Image
@@ -490,7 +492,7 @@ class Window(QMainWindow):
                 "-o",
                 f"{path.stem}.mp4",
                 "--format=mp4",
-            ] + (["-p"] if preview == QMessageBox.StandardButton.Yes else [])
+            ]
         )
         process.wait()
 
@@ -498,6 +500,8 @@ class Window(QMainWindow):
             Path(self.saved_file).stem / "1080p60" / f"{path.stem}.mp4"
         if output_path.exists():
             shutil.move(str(output_path), str(path))
+            if preview == QMessageBox.StandardButton.Yes:
+                open_file(path)
             QMessageBox.information(
                 self, "File Saved", "The video has been rendered successfully")
         else:
